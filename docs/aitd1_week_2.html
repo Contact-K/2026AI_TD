@@ -484,6 +484,7 @@ a.sub-item:hover {
   <a href="#sec-ex3" class="nav-assignment">演習3 用途でモデルを選ぶ</a>
   <a href="#sec-lecture">読む：勾配と学習率</a>
   <a href="#sec-rooms" class="nav-assignment">3つの部屋（選択）</a>
+  <a href="#sec-opt" class="nav-assignment">オプション課題</a>
   <a href="#sec-submit" class="nav-exam">提出</a>
 </nav>
 
@@ -527,6 +528,7 @@ a.sub-item:hover {
         <a href="#sec-ex2" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習2</span>ex2.ipynb ／ c1_d2_ex2_&lt;グループ&gt;.csv</a>
         <a href="#sec-ex3" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習3</span>ex3.ipynb ／ c1_d2_ex3_&lt;グループ&gt;.csv</a>
         <a href="#sec-rooms" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">部屋</span>選んだ部屋のノートブック（報告を記入）／ c1_d2_room_&lt;a|b|c&gt;_&lt;グループ&gt;.csv</a>
+        <a href="#sec-opt" class="sub-item" style="text-decoration:none;color:inherit;border-color:#66BB6A"><span class="sub-count" style="background:#66BB6A">任意</span><span class="tag" style="background:#0a1a2e;color:#66BB6A">オプション</span>opt_optimizer.ipynb ／ c1_d2_opt1_&lt;グループ&gt;.csv</a>
       </div>
       <div style="background:#0a1a2e;border:1px solid #2a6a9a;border-radius:8px;padding:0.8rem 1rem;margin-top:1rem;font-size:0.85rem;color:#81D4FA">
         <strong>手順:</strong> ① グループ（部屋B・C は同じ部屋の仲間）で CSV を共有 → ② 自分の <code>results/</code> に集める → ③ Open-LMS の<a href="https://musashino-u.myopenlms.net/mod/assign/view.php?id=42573" target="_blank" rel="noopener" style="color:#4FC3F7">「第2回 課題提出」</a>へ<strong>自分で</strong>アップロード
@@ -1147,6 +1149,75 @@ correct <span class="op">+=</span> (predicted <span class="op">==</span> labels)
       <h4>部屋B・C の CSV の共有</h4>
       <p style="font-size:0.9rem">自分の <code>results/c1_d2_room_b_&lt;グループ&gt;.csv</code>（部屋C は <code>room_c</code>）を同じ部屋の仲間に送り、受け取った CSV は <code>results/room_b_shared/</code>（部屋C は <code>results/room_c_shared/</code>）に入れる。</p>
     </div>
+  </div>
+</section>
+
+<!-- ============ OPTION ============ -->
+<section id="sec-opt">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#66BB6A">任意</div>
+      <h2>オプション課題：勾配が消えても学習できるのはなぜか ― <code>opt_optimizer.ipynb</code></h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">部屋C では、シグモイドを6層重ねると入力側の層1の勾配がずっと小さくなったのに、正解率は大きくは下がらなかった（部屋C の報告の問3）。「読む」の勾配消失の図と食い違って見える理由を、<strong>最適化手法を Adam から SGD に替えて</strong>確かめる。<strong>どの部屋を選んだ人も取り組める</strong>。<strong>3〜4グループで組んで</strong>8つの条件を分担する。TODO は4つで、部屋A〜C より手がかりが少ない。提出は任意。</p>
+
+    <div class="card group">
+      <div class="card-header"><h3>問い</h3></div>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li>勾配が何万分の1になっても、Adam で学習できるのはなぜか</li>
+        <li>勾配に学習率を掛けて引くだけの SGD（<code>重み ← 重み − 学習率 × 勾配</code>）にすると、何が起きるか</li>
+        <li>勾配消失を、最適化手法に頼らずに直す方法はあるか</li>
+      </ol>
+      <p style="font-size:0.88rem;color:#ccc;margin-top:0.4rem"><strong>鍵：</strong>「勾配の大きさ」と「重みが実際に動いた量」は別物。部屋A の <code>GradNormRecorder</code>（勾配）に加えて、<code>optimizer.step()</code> の前後で重みを比べ、層ごとに <strong>更新量 ‖W<sub>後</sub> − W<sub>前</sub>‖ ÷ ‖W<sub>前</sub>‖</strong> を記録する仕組みを自分で作る。</p>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>分担表（組んだ3〜4グループで8つの条件を埋める）</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th>番号</th><th>活性化関数</th><th>隠れ層</th><th>BatchNorm</th><th>最適化手法</th><th>学習率</th><th>何と比べるか</th><th>担当</th></tr>
+        <tr><td>1</td><td>シグモイド</td><td>6</td><td>なし</td><td>Adam</td><td>0.001</td><td>部屋C と同じ。基準</td><td></td></tr>
+        <tr><td>2</td><td>シグモイド</td><td>6</td><td>なし</td><td>SGD</td><td>0.1</td><td>1 と最適化手法だけが違う</td><td></td></tr>
+        <tr><td>3</td><td>シグモイド</td><td>6</td><td>なし</td><td>SGD</td><td>1.0</td><td>2 の学習率を10倍</td><td></td></tr>
+        <tr><td>4</td><td>シグモイド</td><td>2</td><td>なし</td><td>SGD</td><td>0.1</td><td>2 を浅くする</td><td></td></tr>
+        <tr><td>5</td><td>tanh</td><td>6</td><td>なし</td><td>SGD</td><td>0.1</td><td>2 の活性化関数を替える</td><td></td></tr>
+        <tr><td>6</td><td>ReLU</td><td>6</td><td>なし</td><td>SGD</td><td>0.1</td><td>2 の活性化関数を替える</td><td></td></tr>
+        <tr><td>7</td><td>ReLU</td><td>6</td><td>なし</td><td>Adam</td><td>0.001</td><td>6 と最適化手法だけが違う</td><td></td></tr>
+        <tr><td>8</td><td>シグモイド</td><td>6</td><td>あり</td><td>SGD</td><td>0.1</td><td>2 に BatchNorm を足す</td><td></td></tr>
+      </table>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">1条件1〜3分（5エポック）。条件1・2・8 は必ず埋める。同じ条件を2人以上が実行すると、値のぶれも見える。</p>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>手順</h3></div>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li><strong>予測</strong>：実行する前に、ノートブック冒頭の「予測」を書く</li>
+        <li><strong>担当</strong>：(3) の <code>COND</code> に分担表の番号を書く</li>
+        <li><strong style="color:#FFB800">TODO 1・2</strong>（(4)）：step の前の重みの控えを作り、更新量を1つの数にする。セルの最後の動作確認で、どの層も 0.01 と出れば正しい</li>
+        <li><strong style="color:#FFB800">TODO 3</strong>（(6)）：学習率 <code>LR</code> の SGD を作る（条件2〜6・8）</li>
+        <li><strong style="color:#FFB800">TODO 4</strong>（(5)）：隠れ層ごとに BatchNorm を足す（条件8）</li>
+        <li><strong>学習 → グラフ</strong>：(7)・(8) で、層ごとの勾配と更新量を並べたグラフと表を出す</li>
+        <li><strong>共有</strong>：自分の <code>results/c1_d2_opt1_&lt;グループ&gt;.csv</code> を仲間全員に送り、受け取った CSV は <code>results/d2_opt_shared/</code> に入れる</li>
+        <li><strong>まとめ</strong>：(9) で全員分の表とグラフを作り、(9-2) で Adam の一歩を手で確かめ、(10) の考察5問に答える</li>
+      </ol>
+      <details>
+        <summary>TODO のヒント ― まず自分で考えてから開く</summary>
+        <div class="answer-content">
+          <p style="font-size:0.85rem;color:#ccc">TODO 1：<code>layer.weight</code> をそのまま控えると、<code>optimizer.step()</code> で中身が書き換わり、差が0になる。</p>
+<pre>self.saved <span class="op">=</span> [layer.weight.detach().clone() <span class="op">for</span> layer <span class="op">in</span> self.layers]</pre>
+          <p style="font-size:0.85rem;color:#ccc">TODO 2：</p>
+<pre>self.history[name].append(((layer.weight <span class="op">-</span> w_before).norm() <span class="op">/</span> w_before.norm()).item())</pre>
+          <p style="font-size:0.85rem;color:#ccc">TODO 3・4：</p>
+<pre>optimizer <span class="op">=</span> optim.SGD(model.parameters(), lr<span class="op">=</span>LR)
+layers.append(nn.BatchNorm1d(width))</pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout-tip">
+      <h4>考察のための手がかり：Adam の一歩</h4>
+      <p style="font-size:0.9rem">Adam は勾配 <i>g</i> をそのまま使わず、過去の勾配の平均 <i>m</i> と、勾配の2乗の平均 <i>v</i> を使って <code>W ← W − lr × m ÷ (√v + ε)</code> と一歩を決める。<i>m</i> と √<i>v</i> は、どちらも勾配と同じ「大きさ」を持つ。割り算すると何が起きるか。(9-2) では、勾配が1万倍違う2つの重みを Adam と SGD で1歩ずつ動かして確かめる。</p>
+    </div>
+    <div class="notion-submit"><div><strong>提出（任意）:</strong> <code>opt_optimizer.ipynb</code> と自分の <code>c1_d2_opt1_&lt;グループ&gt;.csv</code> を Open-LMS の<a href="https://musashino-u.myopenlms.net/mod/assign/view.php?id=42573" target="_blank" rel="noopener" style="color:#4FC3F7">「第2回 課題提出」</a>へ。期限は次回の授業開始まで</div></div>
   </div>
 </section>
 

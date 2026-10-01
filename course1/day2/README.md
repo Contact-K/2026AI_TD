@@ -21,6 +21,7 @@ code .                           # カーネルに .venv の Python 3.12 を選�
 | `room_a_gradnorm.ipynb` | 部屋A：勾配を記録する仕組みを組み立て，層ごとの勾配をグラフにする |
 | `room_b_lr.ipynb` | 部屋B：学習率 9 通りを分担し，どこで学習が壊れるかを調べる |
 | `room_c_activation.ipynb` | 部屋C：活性化関数 3 種 × 深さ 2 通りを分担し，勾配と正解率を比べる |
+| `opt_optimizer.ipynb` | オプション課題（任意）：勾配が消えても学習できるのはなぜか．Adam と SGD で層ごとの勾配と更新量を比べる．3〜4 グループで 8 条件を分担 |
 
 部屋A〜C はグループで 1 つ選ぶ．題材はどれも第1回 GW3 試行①（FashionMNIST × MLP）．
 
