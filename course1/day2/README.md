@@ -7,7 +7,7 @@
 ```bash
 cd ~/AI_TD && git pull
 source .venv/bin/activate
-python setup/download_assets.py  # 映画レビューのデータ（SST-2）と学習済み重みを確認・取得
+python setup/download_assets_day2.py  # 第2回のデータ（映画レビュー SST-2）と学習済み重みを確認・取得
 code .                           # カーネルに .venv の Python 3.12 を選ぶ
 ```
 
