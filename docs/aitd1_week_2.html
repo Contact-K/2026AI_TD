@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第2回：学習の中身を見る ― 勾配と学習率 | AI_TD1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============ RESET & BASE ============ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: clamp(13px, 1.6vw, 28px); }
+html, body { overflow-x: hidden; max-width: 100%; }
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: #111111;
+  color: #e0e0e0;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+/* Media and embeds should never overflow their container */
+img, video, iframe, svg, canvas { max-width: 100%; height: auto; }
+
+/* ============ LAYOUT ============ */
+.container { max-width: 1600px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 3rem); }
+section { padding: clamp(2rem, 5vw, 4rem) 0; }
+section + section { border-top: 1px solid #222; }
+
+/* ============ HEADER ============ */
+.hero {
+  background: linear-gradient(135deg, #111111, #0a1a2e, #0a0f1a);
+  color: white;
+  padding: clamp(3rem, 8vw, 6rem) 0;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(108,99,255,0.3), transparent 50%),
+              radial-gradient(circle at 20% 80%, rgba(155,89,182,0.2), transparent 50%);
+}
+.hero .container { position: relative; z-index: 1; }
+.hero-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 100px;
+  padding: 0.35rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+}
+.hero h1 {
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+}
+.hero p { font-size: clamp(0.95rem, 1.8vw, 1.15rem); opacity: 0.85; max-width: 600px; }
+
+/* ============ SUBMISSION BOX ============ */
+.submission-box {
+  background: linear-gradient(135deg, #1A1A1A, #0a1a2e);
+  border: 2px solid #4FC3F7;
+  border-radius: 16px;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  margin: 2rem 0;
+}
+.submission-box h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #4FC3F7;
+  margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.submission-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.5rem;
+}
+.sub-item {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  gap: 0.3rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 0.4rem;
+  padding: 0.6rem 0.4rem;
+  font-size: 0.55rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.sub-item .sub-count {
+  margin-bottom: 0.1rem;
+}
+.sub-item .tag {
+  margin-bottom: 0.15rem;
+}
+.sub-count {
+  background: #4FC3F7;
+  color: white;
+  border-radius: 0.2rem;
+  min-width: 1.5rem; height: 1.5rem;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700;
+}
+
+/* ============ TAGS ============ */
+.tag {
+  display: inline-flex; align-items: center; gap: 0.2rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 100px;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.tag-note      { background: #0a1a2e; color: #4FC3F7; }
+.tag-standard  { background: #0a1a2e; color: #4FC3F7; }
+.tag-advanced  { background: #2e1a0a; color: #FFB800; }
+.tag-group     { background: #0a1a2e; color: #4FC3F7; }
+
+/* ============ EXAM ALERT TAG ============ */
+.exam-alert {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  background: rgba(255, 82, 82, 0.15);
+  border: 1px solid #FFB800;
+  color: #FFB800;
+  padding: 0.2rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  animation: exam-pulse 2s ease-in-out 3;
+}
+@keyframes exam-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ============ SECTION HEADERS ============ */
+.section-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.section-num {
+  width: 2.5rem; height: 2.5rem;
+  border-radius: 0.4rem;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 900; color: white;
+  flex-shrink: 0;
+}
+.section-header h2 {
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+/* ============ CARDS ============ */
+.card {
+  background: #141414;
+  border-radius: 16px;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  border: 1px solid #2a2a2a;
+}
+.card-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #222;
+}
+.card-header h3 { font-size: 1.1rem; font-weight: 700; }
+.card.standard  { border-left: 4px solid #4FC3F7; }
+.card.advanced  { border-left: 4px solid #FFB800; }
+.card.group     { border-left: 4px solid #81D4FA; }
+
+/* ============ NOTION CALLOUT ============ */
+.notion-submit {
+  background: #0a1a2e;
+  border: 1px solid #4FC3F7;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+  font-size: 0.88rem;
+  display: flex; align-items: flex-start; gap: 0.5rem;
+}
+.notion-submit::before { content: '\1F4DD'; font-size: 1rem; flex-shrink: 0; }
+.notion-submit strong { color: #FFB800; }
+
+/* ============ TABLES ============ */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #333;
+}
+th {
+  background: rgba(108, 99, 255, 0.15);
+  font-weight: 700;
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.82rem;
+  color: #4FC3F7;
+  letter-spacing: 0.02em;
+}
+td {
+  padding: 0.55rem 0.8rem;
+  border-top: 1px solid #222;
+}
+tr:nth-child(even) td { background: #111; }
+
+/* ============ CODE ============ */
+pre {
+  background: #0A0A0A;
+  color: #E0E0E0;
+  border-radius: 12px;
+  padding: clamp(0.8rem, 2vw, 1.4rem);
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-ligatures: none;
+  font-size: clamp(0.75rem, 1.3vw, 0.88rem);
+  line-height: 1.7;
+  margin: 1rem 0;
+  position: relative;
+}
+pre .kw { color: #4FC3F7; }
+pre .fn { color: #81D4FA; }
+pre .str { color: #FFB800; }
+pre .cmt { color: #616161; font-style: italic; }
+pre .num { color: #FFB800; }
+pre .op { color: #81D4FA; }
+.code-label {
+  position: absolute; top: 0; right: 0;
+  background: rgba(255,255,255,0.08);
+  color: #999999;
+  padding: 0.2rem 0.8rem;
+  border-radius: 0 12px 0 8px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* inline code */
+:not(pre) > code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(108,99,255,0.15);
+  padding: 0.15em 0.45em;
+  border-radius: 5px;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+:not(pre) > code:hover { background: rgba(108,99,255,0.3); }
+:not(pre) > code.copied { background: rgba(108,99,255,0.5); }
+
+/* ============ EXPLANATION BLOCKS ============ */
+.concept-box {
+  background: rgba(108, 99, 255, 0.15);
+  border-radius: 12px;
+  padding: 1.2rem 1.5rem;
+  margin: 1rem 0;
+  border: 1px solid #2a2a3a;
+}
+.concept-box h4 {
+  font-size: 0.95rem; font-weight: 700; color: #4FC3F7; margin-bottom: 0.5rem;
+}
+.analogy {
+  background: #1a1a0a;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 0.75rem 0;
+  border-left: 3px solid #FFB800;
+  font-size: 0.95rem;
+}
+.analogy::before {
+  content: '\1F4A1 具体例';
+  display: block;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #FFB800;
+  margin-bottom: 0.3rem;
+}
+.point-list {
+  list-style: none;
+  padding: 0;
+}
+.point-list li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+}
+.point-list li::before {
+  content: '\25B8';
+  position: absolute; left: 0;
+  color: #4FC3F7;
+  font-weight: 700;
+}
+
+/* ============ ANSWERS (COLLAPSIBLE) ============ */
+details {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+details summary {
+  padding: 0.8rem 1.2rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 0.5rem;
+  background: #1a1a1a;
+  user-select: none;
+}
+details summary::marker { content: ''; }
+details summary::before {
+  content: '\25B6';
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+  color: #666;
+}
+details[open] summary::before { transform: rotate(90deg); }
+details .answer-content { padding: 1rem 1.2rem; border-top: 1px solid #2a2a2a; }
+
+/* ============ WARNING / DANGER CALLOUT ============ */
+.callout-danger {
+  background: rgba(255, 82, 82, 0.08);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  border-left: 4px solid #FFB800;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.callout-danger h4 {
+  color: #FFB800; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;
+}
+.callout-warning {
+  background: rgba(255, 184, 0, 0.08);
+  border: 1px solid rgba(255, 184, 0, 0.3);
+  border-left: 4px solid #FFB800;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.callout-warning h4 {
+  color: #FFB800; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;
+}
+.callout-info {
+  background: rgba(108, 99, 255, 0.08);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  border-left: 4px solid #4FC3F7;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.callout-info h4 {
+  color: #4FC3F7; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;
+}
+.callout-tip {
+  background: rgba(155, 89, 182, 0.08);
+  border: 1px solid rgba(155, 89, 182, 0.3);
+  border-left: 4px solid #81D4FA;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.callout-tip h4 {
+  color: #81D4FA; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;
+}
+
+/* ============ FOOTER ============ */
+footer {
+  background: #0A0A0A;
+  color: #999999;
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 640px) {
+  .submission-items { grid-template-columns: 1fr; }
+  .section-num { width: 2rem; height: 2rem; font-size: 0.85rem; }
+}
+
+/* ============ GW3 カードの色分け（試行ごと） ============ */
+.gw3-group { border-left: 4px solid var(--gw3c); padding: 0.6rem 0 0.2rem 0.9rem; margin: 1.2rem 0; border-radius: 4px; background: linear-gradient(90deg, color-mix(in srgb, var(--gw3c) 10%, transparent), transparent 40%); }
+.gw3-group > h3 { color: var(--gw3c); font-size: 1rem; margin: 0 0 0.6rem; }
+.gw3-group details { border-left: 3px solid var(--gw3c); }
+.gw3-group details summary { color: var(--gw3c); }
+.gw3-t1 { --gw3c: #4FC3F7; }
+.gw3-t2 { --gw3c: #FFB800; }
+.gw3-t3 { --gw3c: #B388FF; }
+
+/* ============ COPY BUTTON ============ */
+pre { position: relative; }
+.copy-btn {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid #444;
+  color: #999;
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: all 0.2s;
+  z-index: 2;
+  user-select: none;          /* 手で範囲選択してもボタンの文字が入らないように */
+  -webkit-user-select: none;
+}
+.copy-btn:hover { background: #4FC3F7; color: white; border-color: #4FC3F7; }
+.copy-btn.copied { background: #4FC3F7; color: white; border-color: #4FC3F7; }
+
+/* ============ SUB-ITEM LINKS ============ */
+a.sub-item { transition: transform 0.15s, box-shadow 0.15s; }
+a.sub-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79,195,247,0.3);
+  border-color: #4FC3F7;
+}
+
+/* ============ SECTION NAV (sticky) ============ */
+.section-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(17,17,17,0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #222;
+  padding: 0.5rem 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+.section-nav a {
+  color: #999;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.section-nav a:hover { color: #4FC3F7; background: rgba(79,195,247,0.1); }
+.section-nav a.nav-assignment { color: #81D4FA; }
+.section-nav a.nav-exam { color: #FFB800; }
+
+/* ============ SCROLL TARGET OFFSET ============ */
+[id] { scroll-margin-top: 3rem; }
+
+/* ============ REDUCED MOTION ============ */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  details summary::before { transition: none; }
+}
+</style>
+
+<body>
+
+<!-- ============ SECTION NAV ============ -->
+<nav class="section-nav"><div style="display:flex;align-items:center;gap:0.1rem;margin-right:0.8rem;border-right:1px solid #333;padding-right:0.8rem"><span style="color:#666;font-size:0.5rem;white-space:nowrap">回:</span><a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_1.html">1</a> <a style="color:#4FC3F7;background:rgba(79,195,247,0.15);font-size:0.6rem;padding:0.2rem 0.5rem;border-radius:4px" href="aitd1_week_2.html">2</a> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">3</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">4</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">5</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">6</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">7</span> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="index.html">全体</a></div>
+  <a href="#sec-overview">今日やること</a>
+  <a href="#sec-flow">本日の流れ</a>
+  <a href="#sec-review" class="nav-assignment">復習プレゼン</a>
+  <a href="#sec-prep">0. 準備</a>
+  <a href="#sec-ex2" class="nav-assignment">演習2 3モデルを測る</a>
+  <a href="#sec-ex3" class="nav-assignment">演習3 用途でモデルを選ぶ</a>
+  <a href="#sec-lecture">読む：勾配と学習率</a>
+  <a href="#sec-rooms" class="nav-assignment">3つの部屋（選択）</a>
+  <a href="#sec-submit" class="nav-exam">提出</a>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="container">
+    <div class="hero-badge">人工知能(AI)テクノロジデザインⅠ（AI_TD1）─ 2026年度 3学期</div>
+    <p style="font-size:0.85rem;opacity:0.7;margin-bottom:0.3rem">武蔵野大学データサイエンス学部　中村 亮太</p>
+    <h1>第2回：学習の中身を見る ― 勾配と学習率</h1>
+    <p>前半は全員で、学習済み3モデルを4指標で測り、用途に合うモデルを選ぶ（第1回から移した演習2・3）。後半は3つの部屋から1つを選び、勾配・学習率・活性化関数のどれかを実験する。</p>
+  </div>
+</header>
+
+<!-- ============ OVERVIEW ============ -->
+<section id="sec-overview" style="padding-top:2.5rem;padding-bottom:0">
+  <div class="container">
+    <div class="card" style="border-left:4px solid #4FC3F7;background:linear-gradient(135deg,#141414,#111a24)">
+      <div class="card-header"><h3>📌 今日やること</h3></div>
+      <p style="font-size:1.05rem;margin-bottom:0.7rem">AI がどう学習しているか、その中身を<strong style="color:#4FC3F7">数字で見る</strong>。</p>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:7rem">パート</th><th>やること</th><th style="width:34%">分かること</th></tr>
+        <tr><td><strong>復習</strong></td><td>第1回 GW1-3 の「モデル学習サイクル」をグループで相談し、presenter と implementer の2人が<strong>別のグループ</strong>に説明する。聞いた人全員が評価する</td><td>流れを正しく説明し、正しく用語を使えるか</td></tr>
+        <tr><td><strong>演習2</strong></td><td>全結合・畳み込み・自己注意のしくみを図から読み解く（GW）。映画レビューの肯定・否定を判定する学習済み AI 3つを、正解率・損失・速さ・メモリで測る。<strong>実行前に1位を予想する</strong></td><td>全部で1位の AI はない</td></tr>
+        <tr><td><strong>演習3</strong></td><td>「誰が、どこで使うか」を決め、測定値を見てどのモデルを選ぶか決める</td><td>「良い AI」は使い道で決まる</td></tr>
+        <tr><td><strong>読む</strong></td><td><strong>勾配</strong>＝重みをどちらへどれだけ直すか。<strong>学習率</strong>＝1回に直す量</td><td>学習は「直す」のくり返し</td></tr>
+        <tr><td><strong>部屋 A</strong></td><td>学習中の勾配を層ごとに記録し、グラフにする</td><td>どの層がよく直されるか</td></tr>
+        <tr><td><strong>部屋 B</strong></td><td>学習率を9通りに変えて学習する（部屋で分担）</td><td>大きすぎると学習が壊れる境目</td></tr>
+        <tr><td><strong>部屋 C</strong></td><td>活性化関数（ReLU／シグモイド／tanh）と層の深さを変える（部屋で分担）</td><td>深くすると入力側の勾配が消えるか</td></tr>
+      </table>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.5rem">部屋 A〜C はグループで1つ選ぶ。題材は第1回 GW3 試行①（服の画像 10 分類 × MLP）。最後に各部屋が2分で報告する。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SUBMISSION GUIDE ============ -->
+<section style="padding-top:2rem;padding-bottom:0">
+  <div class="container">
+    <div class="submission-box">
+      <h3>📤 提出ガイド（<strong>全員が個人で提出</strong>・zip にしない）</h3>
+      <div class="submission-items">
+        <a href="#sec-ex2" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習2</span>ex2.ipynb ／ c1_d2_ex2_&lt;グループ&gt;.csv</a>
+        <a href="#sec-ex3" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習3</span>ex3.ipynb ／ c1_d2_ex3_&lt;グループ&gt;.csv</a>
+        <a href="#sec-rooms" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">部屋</span>選んだ部屋のノートブック（報告を記入）／ c1_d2_room_&lt;a|b|c&gt;_&lt;グループ&gt;.csv</a>
+      </div>
+      <div style="background:#0a1a2e;border:1px solid #2a6a9a;border-radius:8px;padding:0.8rem 1rem;margin-top:1rem;font-size:0.85rem;color:#81D4FA">
+        <strong>手順:</strong> ① グループ（部屋B・C は同じ部屋の仲間）で CSV を共有 → ② 自分の <code>results/</code> に集める → ③ Open-LMS の<a href="https://musashino-u.myopenlms.net/mod/assign/view.php?id=42573" target="_blank" rel="noopener" style="color:#4FC3F7">「第2回 課題提出」</a>へ<strong>自分で</strong>アップロード
+      </div>
+      <div style="background:#0a1a2e;border:1px solid #2a6a9a;border-radius:8px;padding:0.8rem 1rem;margin-top:0.5rem;font-size:0.85rem;color:#FFB800">
+        <strong>期限：</strong>次回（10/15）の授業開始まで
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TIME FLOW ============ -->
+<section id="sec-flow" style="padding-top:1rem;padding-bottom:0">
+  <div class="container">
+    <div class="card" style="border-left:4px solid #4FC3F7">
+      <div class="card-header"><h3>本日の流れ（150分）</h3></div>
+      <table style="font-size:0.82rem">
+        <tr><th style="width:6rem">時間</th><th>内容</th><th style="width:8rem">形式</th></tr>
+        <tr><td>0–20</td><td><a href="#sec-review" style="color:#4FC3F7"><strong>復習プレゼン</strong></a> 役割を決める → モデル学習サイクル（相談10分 → 他グループへ説明 → 評価）</td><td><span class="tag tag-group">発表</span></td></tr>
+        <tr><td>20–35</td><td><a href="#sec-prep" style="color:#4FC3F7">準備</a>：<code>git pull</code>・データ取得 → <a href="#sec-practice" style="color:#4FC3F7">役割の練習</a>（<code>ex2-0.ipynb</code>）</td><td>個人 → グループ</td></tr>
+        <tr><td>35–65</td><td><a href="#sec-ex2" style="color:#4FC3F7"><strong>演習2</strong></a> GW：3モデルの構成を読み解く → 4指標（予測 → 実行 → 討議）</td><td>個人 → グループ</td></tr>
+        <tr><td>65–85</td><td><a href="#sec-ex3" style="color:#4FC3F7"><strong>演習3</strong></a> 用途に合わせてモデルを選ぶ → グループ内プレゼン</td><td><span class="tag tag-group">討議</span></td></tr>
+        <tr><td>85–95</td><td><a href="#sec-lecture" style="color:#4FC3F7">読む</a> GW の答え合わせ・勾配と学習率（各自で読み、部屋の確認問題に答える）</td><td>個人</td></tr>
+        <tr><td>95–140</td><td><a href="#sec-rooms" style="color:#4FC3F7"><strong>3つの部屋から1つを選ぶ</strong></a>：A 勾配を記録する／B 学習率の実験／C 活性化関数の実験</td><td>部屋ごと</td></tr>
+        <tr><td>140–150</td><td>全体共有：各部屋が結果を2分で報告 → <a href="https://musashino-u.myopenlms.net/mod/questionnaire/view.php?id=42574" target="_blank" rel="noopener" style="color:#4FC3F7">グループメンバーの評価</a>（Open-LMS・3分）・次回予告</td><td>全体 → 個人</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section id="sec-review">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">復習</div>
+      <h2>復習プレゼン：教師あり学習の「モデル学習サイクル」（20分）</h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">第1回 GW1-3（順伝播と誤差逆伝播）の流れを、<strong>presenter と implementer の2人</strong>が<strong>別のグループのメンバーに</strong>説明する。その前にグループで相談し、2人が話せるように鍛える。<strong>シートや画面は見ない</strong>。口頭で話すか、ホワイトボードに図を描きながら説明する。</p>
+
+    <div class="card group">
+      <div class="card-header"><h3>役割を担当する</h3></div>
+      <ul class="point-list">
+        <li><strong style="color:#4FC3F7">implementer</strong>（インプリメンター）：コードを書く（1人だけ）。TODO の中身を考えてグループに見せる</li>
+        <li><strong style="color:#FFB800">verifier</strong>（ベリファイアー）：条件を変えて再実行し、結果を疑う</li>
+        <li><strong style="color:#81D4FA">recorder</strong>（レコーダー）：討議で出た意見と結論をまとめ、プレゼンで伝える</li>
+        <li><strong style="color:#B388FF">presenter</strong>（プレゼンター）：司会・時間管理をし、結論を一文で発表する</li>
+      </ul>
+      <p style="font-size:0.85rem;color:#ccc;margin-top:0.4rem">3人グループは verifier が presenter を兼ねる。5人グループは verifier を2人にする。最初に決める。復習プレゼンは presenter と implementer が行う。ノートブック (0) の <code>MEMBER_ROLE</code> は準備のときに自分の役割に書き換える。</p>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>進め方</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:6rem">時間</th><th>やること</th></tr>
+        <tr><td>10分</td><td><strong>相談・練習</strong>：GW1-3 の図を見ながら、流れを順番どおりに正しい用語で説明できるよう言葉を決め、2人の分担（誰がどこを話すか・誰が図を描くか）を決める。最後に<strong>何も見ずに</strong>一度グループに向けて話し、他のメンバーが順番の誤りと用語の誤りを直す</td></tr>
+        <tr><td>3分</td><td><strong>出張プレゼン</strong>：奇数グループと次の偶数グループで組む（1↔2、3↔4 …）。presenter と implementer が相手のグループへ移動し、何も見ずに説明する（両グループ同時）</td></tr>
+        <tr><td>2分</td><td><strong>評価</strong>：聞いた人<strong>全員</strong>が <a href="https://musashino-u.myopenlms.net/mod/questionnaire/view.php?id=42501" target="_blank" rel="noopener" style="color:#4FC3F7">Open-LMS の「第2回 復習プレゼンの評価」</a>に回答する</td></tr>
+        <tr><td>5分</td><td><strong>持ち帰り</strong>：2人が戻り、うまく言えなかった所をグループに報告する</td></tr>
+      </table>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>評価の観点</h3></div>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li><strong>流れ</strong>を正しく説明できたか（5点）</li>
+        <li>正しく<strong>用語</strong>を使えたか（5点）</li>
+      </ol>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">得点（10点満点）＝ 流れ（5点）＋ 用語（5点）。聞いた人全員の平均を、<strong>説明したグループのメンバー全員の得点</strong>とする。評価の基準は、評価の時間に <a href="https://musashino-u.myopenlms.net/mod/questionnaire/view.php?id=42501" target="_blank" rel="noopener" style="color:#4FC3F7">Open-LMS の評価フォーム</a>で示す（フォームは評価の時間に開く）。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PREP ============ -->
+<section id="sec-prep">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#4FC3F7">0</div>
+      <h2>準備と役割の練習（15分）</h2>
+    </div>
+    <div class="card standard">
+      <div class="card-header"><h3>最新に更新し、データを取得する</h3></div>
+<pre><span class="fn">cd</span> ~/AI_TD
+<span class="fn">git</span> pull                         <span class="cmt"># course1/day2/ と学習済み重みが届く</span>
+<span class="fn">source</span> .venv/bin/activate
+<span class="fn">python</span> setup/download_assets.py  <span class="cmt"># 映画レビュー（SST-2）を取得。最後に「完了」と出れば OK</span>
+<span class="fn">code</span> .                           <span class="cmt"># course1/day2/ のノートブックを開き、カーネルに .venv を選ぶ</span></pre>
+      <p style="font-size:0.82rem;color:#999;margin:0.2rem 0 0.3rem">※ <code>git pull</code> が「would be overwritten」で止まったら、自分の編集を控えに移してから取り直す（第1回の提出物は <code>results/</code> と Open-LMS にあるので消えない）：</p>
+<pre><span class="fn">cp</span> -R course1/day1 ~/AI_TD_day1_backup   <span class="cmt"># 自分が編集したノートブックの控え</span>
+<span class="fn">git</span> stash                                <span class="cmt"># 編集をよける（git stash pop で戻せる）</span>
+<span class="fn">git</span> pull</pre>
+    </div>
+
+    <div class="card group" id="sec-practice">
+      <div class="card-header"><h3>役割の練習：<code>ex2-0.ipynb</code>（5分）</h3></div>
+      <p style="font-size:0.9rem;color:#ccc;margin-bottom:0.5rem">演習2・3と同じ進め方を、小さな課題で1回練習する。全員が自分のノートパソコンで、そろって進む。</p>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:6rem">見出し</th><th>やること</th></tr>
+        <tr><td>(0)–(1)</td><td><code>GROUP_ID</code> と <code>MEMBER_ROLE</code> を書き換えて実行する。<strong>自分の役割と、やることが表示される</strong></td></tr>
+        <tr><td>(2)</td><td>練習 TODO：3つの文の「否定・肯定」の点数から、予測クラスを <code>torch.max</code> で選ぶ（演習2の TODO 2 の予習）。<strong>implementer が説明してから、全員が書く</strong></td></tr>
+        <tr><td>(3)</td><td>全員が実行して見せ合う。予測クラスは全員同じ、行列積の時間はマシンで違う。<strong>verifier が確かめる</strong></td></tr>
+        <tr><td><strong>✋ 0</strong></td><td>4つの役割の動き方を練習する。presenter が問いを読み、implementer が根拠のコードと出力を指し、verifier が数値を確かめ、recorder が答えをまとめる。全員が <code>CP0</code> に答えを書いて「止まる 0 OK」と出たら終わり</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EX2 ============ -->
+<section id="sec-ex2">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">2</div>
+      <h2>演習2 学習済み3モデルの4指標 ― <code>ex2.ipynb</code></h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem"><strong>MLP</strong>（埋め込み平均＋全結合）／<strong>CNN</strong>（1次元畳み込み）／<strong>Transformer</strong>（小型）。どれも約30万パラメータ、映画レビューの肯定・否定（SST-2）で学習済み。<strong>正解率・損失・速度・メモリ</strong>を同じ関数で測る（実行5分以内）。</p>
+
+    <div class="card standard">
+      <div class="card-header"><h3>データセット：SST-2（映画レビューの1文）</h3></div>
+      <ul class="point-list">
+        <li><strong>何のためのデータか</strong>：映画レビューの1文が<strong>肯定</strong>（ほめている）か<strong>否定</strong>（けなしている）かを当てる。文から書き手の気持ちを読み取る「感情分析」の問題</li>
+        <li><strong>出どころ</strong>：スタンフォード大学が2013年に公開した Stanford Sentiment Treebank の2択版（SST-2）。レビューサイト Rotten Tomatoes の英文レビューが元</li>
+        <li><strong>よく使われる場面</strong>：文を分類する AI の性能比較の定番。言語モデルの総合テスト GLUE の課題の1つで、BERT などの論文では必ずここでの正解率が報告される</li>
+      </ul>
+      <table style="font-size:0.85rem;margin-top:0.6rem">
+        <tr><th style="width:6rem">用途</th><th style="width:7rem">件数</th><th>中身</th></tr>
+        <tr><td>訓練</td><td>67,349</td><td>文の一部（短い句）も含む。平均10語</td></tr>
+        <tr><td>検証</td><td>872</td><td>1文ずつ</td></tr>
+        <tr><td>テスト</td><td>1,821</td><td>1文ずつ。平均20語。肯定と否定がほぼ半分ずつ（肯定 49.9%）。<strong>演習2はこれで測る</strong></td></tr>
+      </table>
+      <table style="font-size:0.85rem;margin-top:0.6rem">
+        <tr><th style="width:5rem">ラベル</th><th>テストデータの例</th></tr>
+        <tr><td>肯定</td><td><code>this is one of polanski 's best films .</code></td></tr>
+        <tr><td>肯定</td><td><code>jason x has cheesy effects and a &lt;unk&gt; plot , but its macabre , self - deprecating sense of humor makes up for a lot .</code></td></tr>
+        <tr><td>否定</td><td><code>even as lame horror flicks go , this is lame .</code></td></tr>
+        <tr><td>否定</td><td><code>no movement , no &lt;unk&gt; , not much of anything .</code></td></tr>
+      </table>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">前処理：小文字にして単語と記号に分け、よく出る 5,000 語を番号にする（それ以外は <code>&lt;unk&gt;</code>、テストの語の約12%）。40語で切る。<code>ex2.ipynb</code> の (3-2) で、ほかの文と長さの分布を眺める。2つ目の肯定の例のように「but」の前後で評価が逆になる文は、語順を見ないと難しい。</p>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>GW：3つのモデルの構成を読み解く（グループ・10分）</h3></div>
+      <p style="font-size:0.88rem;color:#ccc;margin-bottom:0.6rem">どれも、文を単語に分けて<strong>埋め込み</strong>（単語を数値のベクトルにする）から始まり、最後に肯定か否定かを出す。違うのは、その間の計算のしかた。下の図を読み、<strong>全結合・畳み込み・自己注意</strong>のしくみと特徴をグループで考える。</p>
+<svg viewBox="0 0 960 486" style="width:100%;height:auto;display:block" role="img" aria-label="MLP・CNN・Transformer の構成図" font-family="Noto Sans JP, Hiragino Sans, sans-serif">
+<text x="151" y="22" text-anchor="middle" fill="#999" font-size="11.5">単語</text><text x="227" y="22" text-anchor="middle" fill="#999" font-size="11.5">埋め込み</text>
+<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#888"/></marker></defs>
+<rect x="8" y="34" width="944" height="140" rx="10" fill="#161616" stroke="#2a2a2a"/><text x="22" y="94" fill="#4FC3F7" font-size="22" font-weight="900">MLP</text><text x="24" y="116" fill="#bbb" font-size="11.5">埋め込み平均</text><text x="24" y="131" fill="#bbb" font-size="11.5">＋ 全結合</text><rect x="120" y="48" width="62" height="24" rx="5" fill="#222" stroke="#555"/><text x="151" y="65" text-anchor="middle" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace">not</text><rect x="200" y="52" width="54" height="16" rx="3" fill="#4FC3F7" opacity="0.55"/><line x1="182" y1="60" x2="198" y2="60" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/><rect x="120" y="77" width="62" height="24" rx="5" fill="#222" stroke="#555"/><text x="151" y="94" text-anchor="middle" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace">a</text><rect x="200" y="81" width="54" height="16" rx="3" fill="#4FC3F7" opacity="0.55"/><line x1="182" y1="89" x2="198" y2="89" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/><rect x="120" y="106" width="62" height="24" rx="5" fill="#222" stroke="#555"/><text x="151" y="123" text-anchor="middle" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace">good</text><rect x="200" y="110" width="54" height="16" rx="3" fill="#4FC3F7" opacity="0.55"/><line x1="182" y1="118" x2="198" y2="118" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/><rect x="120" y="135" width="62" height="24" rx="5" fill="#222" stroke="#555"/><text x="151" y="152" text-anchor="middle" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace">movie</text><rect x="200" y="139" width="54" height="16" rx="3" fill="#4FC3F7" opacity="0.55"/><line x1="182" y1="147" x2="198" y2="147" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<line x1="256" y1="60" x2="300" y2="104" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<line x1="256" y1="89" x2="300" y2="104" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<line x1="256" y1="118" x2="300" y2="104" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<line x1="256" y1="147" x2="300" y2="104" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="302" y="78" width="150" height="52" rx="7" fill="#0a1a2e" stroke="#4FC3F7" stroke-width="1.6"/><text x="377.0" y="101.0" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">平均</text><text x="377.0" y="118.0" text-anchor="middle" fill="#aaa" font-size="11">4語を足して割る → 1本</text>
+<line x1="452" y1="104" x2="490" y2="104" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="492" y="78" width="200" height="52" rx="7" fill="#0a1a2e" stroke="#4FC3F7" stroke-width="1.6"/><text x="592.0" y="101.0" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">MLP（全結合 ×3）</text><text x="592.0" y="118.0" text-anchor="middle" fill="#aaa" font-size="11">？</text>
+<line x1="692" y1="104" x2="730" y2="104" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="732" y="82" width="200" height="44" rx="7" fill="#222" stroke="#666" stroke-width="1.6"/><text x="832.0" y="109.0" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">肯定 / 否定</text>
+<rect x="8" y="184" width="944" height="140" rx="10" fill="#161616" stroke="#2a2a2a"/><text x="22" y="244" fill="#FFB800" font-size="22" font-weight="900">CNN</text><text x="24" y="266" fill="#bbb" font-size="11.5">1次元</text><text x="24" y="281" fill="#bbb" font-size="11.5">畳み込み</text><rect x="120" y="198" width="62" height="24" rx="5" fill="#222" stroke="#555"/><text x="151" y="215" text-anchor="middle" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace">not</text><rect x="200" y="202" width="54" height="16" rx="3" fill="#FFB800" opacity="0.55"/><line x1="182" y1="210" x2="198" y2="210" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/><rect x="120" y="227" width="62" height="24" rx="5" fill="#222" stroke="#555"/><text x="151" y="244" text-anchor="middle" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace">a</text><rect x="200" y="231" width="54" height="16" rx="3" fill="#FFB800" opacity="0.55"/><line x1="182" y1="239" x2="198" y2="239" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/><rect x="120" y="256" width="62" height="24" rx="5" fill="#222" stroke="#555"/><text x="151" y="273" text-anchor="middle" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace">good</text><rect x="200" y="260" width="54" height="16" rx="3" fill="#FFB800" opacity="0.55"/><line x1="182" y1="268" x2="198" y2="268" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/><rect x="120" y="285" width="62" height="24" rx="5" fill="#222" stroke="#555"/><text x="151" y="302" text-anchor="middle" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace">movie</text><rect x="200" y="289" width="54" height="16" rx="3" fill="#FFB800" opacity="0.55"/><line x1="182" y1="297" x2="198" y2="297" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="194" y="196" width="66" height="86" rx="6" fill="none" stroke="#FFB800" stroke-width="2" stroke-dasharray="5 3"/>
+<text x="272" y="224" text-anchor="start" fill="#FFB800" font-size="11">窓</text><text x="264" y="296" text-anchor="start" fill="#FFB800" font-size="11">↓ ずらす</text>
+<line x1="258" y1="254" x2="300" y2="254" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="302" y="228" width="150" height="52" rx="7" fill="#1f1a0a" stroke="#FFB800" stroke-width="1.6"/><text x="377.0" y="251.0" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">畳み込み ×2</text><text x="377.0" y="268.0" text-anchor="middle" fill="#aaa" font-size="11">？</text>
+<line x1="452" y1="254" x2="490" y2="254" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="492" y="228" width="200" height="52" rx="7" fill="#1f1a0a" stroke="#FFB800" stroke-width="1.6"/><text x="592.0" y="251.0" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">最大値プーリング</text><text x="592.0" y="268.0" text-anchor="middle" fill="#aaa" font-size="11">一番強く反応した所を残す</text>
+<line x1="692" y1="254" x2="730" y2="254" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="732" y="232" width="200" height="44" rx="7" fill="#222" stroke="#666" stroke-width="1.6"/><text x="832.0" y="259.0" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">全結合 → 肯定 / 否定</text>
+<rect x="8" y="334" width="944" height="140" rx="10" fill="#161616" stroke="#2a2a2a"/><text x="22" y="394" fill="#B388FF" font-size="13.5" font-weight="900">Transformer</text><text x="24" y="416" fill="#bbb" font-size="11.5">小型</text><text x="24" y="431" fill="#bbb" font-size="11.5"></text><rect x="120" y="348" width="62" height="24" rx="5" fill="#222" stroke="#555"/><text x="151" y="365" text-anchor="middle" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace">not</text><rect x="200" y="352" width="54" height="16" rx="3" fill="#B388FF" opacity="0.55"/><line x1="182" y1="360" x2="198" y2="360" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/><rect x="120" y="377" width="62" height="24" rx="5" fill="#222" stroke="#555"/><text x="151" y="394" text-anchor="middle" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace">a</text><rect x="200" y="381" width="54" height="16" rx="3" fill="#B388FF" opacity="0.55"/><line x1="182" y1="389" x2="198" y2="389" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/><rect x="120" y="406" width="62" height="24" rx="5" fill="#222" stroke="#555"/><text x="151" y="423" text-anchor="middle" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace">good</text><rect x="200" y="410" width="54" height="16" rx="3" fill="#B388FF" opacity="0.55"/><line x1="182" y1="418" x2="198" y2="418" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/><rect x="120" y="435" width="62" height="24" rx="5" fill="#222" stroke="#555"/><text x="151" y="452" text-anchor="middle" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace">movie</text><rect x="200" y="439" width="54" height="16" rx="3" fill="#B388FF" opacity="0.55"/><line x1="182" y1="447" x2="198" y2="447" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 262 360 C 292 360, 292 389, 262 389" fill="none" stroke="#B388FF" stroke-width="1.2" opacity="0.7"/>
+<path d="M 262 360 C 292 360, 292 418, 262 418" fill="none" stroke="#B388FF" stroke-width="1.2" opacity="0.7"/>
+<path d="M 262 360 C 292 360, 292 447, 262 447" fill="none" stroke="#B388FF" stroke-width="1.2" opacity="0.7"/>
+<path d="M 262 389 C 292 389, 292 418, 262 418" fill="none" stroke="#B388FF" stroke-width="1.2" opacity="0.7"/>
+<path d="M 262 389 C 292 389, 292 447, 262 447" fill="none" stroke="#B388FF" stroke-width="1.2" opacity="0.7"/>
+<path d="M 262 418 C 292 418, 292 447, 262 447" fill="none" stroke="#B388FF" stroke-width="1.2" opacity="0.7"/>
+<line x1="296" y1="404" x2="320" y2="404" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="322" y="378" width="170" height="52" rx="7" fill="#160f24" stroke="#B388FF" stroke-width="1.6"/><text x="407.0" y="401.0" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">自己注意 ×2層</text><text x="407.0" y="418.0" text-anchor="middle" fill="#aaa" font-size="11">？</text>
+<line x1="492" y1="404" x2="520" y2="404" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="522" y="378" width="170" height="52" rx="7" fill="#160f24" stroke="#B388FF" stroke-width="1.6"/><text x="607.0" y="401.0" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">平均 → 全結合</text><text x="607.0" y="418.0" text-anchor="middle" fill="#aaa" font-size="11">位置の情報も足してある</text>
+<line x1="692" y1="404" x2="730" y2="404" stroke="#888" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="732" y="382" width="200" height="44" rx="7" fill="#222" stroke="#666" stroke-width="1.6"/><text x="832.0" y="409.0" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">肯定 / 否定</text>
+</svg>
+
+      <p style="font-size:0.88rem;color:#ccc;margin:0.8rem 0 0.3rem"><strong>問い</strong>：下の表の空欄に、語群から<strong>記号</strong>を1つずつ選んで入れる（各記号は1回だけ使う）。</p>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:8rem">仕組み</th><th style="width:8rem">使うモデル</th><th>しくみ</th><th>得意</th><th>不得意</th></tr>
+        <tr><td><strong style="color:#4FC3F7">全結合</strong></td><td>MLP（と CNN・Transformer の最後）</td><td>＿＿</td><td>＿＿</td><td>＿＿</td></tr>
+        <tr><td><strong style="color:#FFB800">畳み込み</strong></td><td>CNN</td><td>＿＿</td><td>＿＿</td><td>＿＿</td></tr>
+        <tr><td><strong style="color:#B388FF">自己注意</strong></td><td>Transformer</td><td>＿＿</td><td>＿＿</td><td>＿＿</td></tr>
+      </table>
+      <table style="font-size:0.85rem;margin-top:0.6rem">
+        <tr><th style="width:5rem">語群</th><th>選択肢</th></tr>
+        <tr><td>しくみ</td><td><strong>ア</strong> となり合う数語（例：3語）を1つの「窓」として、窓の中の語に重みを掛けて足す。窓を1語ずつずらしながら、文のはじめから終わりまで同じ重みで計算する<br><strong>イ</strong> 各単語が、ほかの全単語との関係を計算して情報を混ぜる<br><strong>ウ</strong> 入力のすべての値にそれぞれ重みを掛けて足し、出力の値を1つ作る（出力の数だけくり返す）。入力全体の情報をまとめて、新しい特徴や、最後の「肯定か否定か」の点数を作るため</td></tr>
+        <tr><td>得意</td><td><strong>エ</strong> 離れた語どうしの関係も見られる<br><strong>オ</strong> 計算が単純で速い<br><strong>カ</strong> 近くの並びのパターンを見つける</td></tr>
+        <tr><td>不得意</td><td><strong>キ</strong> 窓より遠い語どうしの関係が見えにくい<br><strong>ク</strong> 語順・位置を区別できない<br><strong>ケ</strong> 文が長いと、計算とメモリが大きく増える</td></tr>
+      </table>
+      <ul class="point-list" style="margin-top:0.6rem">
+        <li><strong>書く場所</strong>：<code>ex2.ipynb</code> の最初の「GW」セル。グループで決めた記号を<strong>全員が自分のノートブックに</strong>書く（ex2.ipynb と一緒に提出）</li>
+        <li><strong>手がかり</strong>：全結合は第1回 GW3 の MLP（<code>nn.Linear</code>）、畳み込みは CNN（<code>nn.Conv2d</code>）。図の「窓」と「線」が何を表すか</li>
+      </ul>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">答え合わせは「読む：勾配と学習率」の時間に各自で行う。書いた特徴から、このあとの「速さ・メモリの予測」を考える。</p>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>4つの評価軸</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:9rem">指標</th><th>何を測るか</th><th style="width:6rem">向き</th></tr>
+        <tr><td><strong>正解率</strong></td><td>正解した割合</td><td>高いほど良い</td></tr>
+        <tr><td><strong>損失</strong></td><td>正解に対する自信のなさ</td><td>低いほど良い</td></tr>
+        <tr><td><strong>推論時間</strong></td><td>まとめて流す時間（1000文あたり）と、1文だけの時間（別物）</td><td>短いほど良い</td></tr>
+        <tr><td><strong>メモリ</strong></td><td>重みの大きさと、推論中のピーク</td><td>少ないほど良い</td></tr>
+      </table>
+      <p style="font-size:0.85rem;color:#ccc;margin-top:0.5rem">時間は第1回の演習1と同じ型で測る：<strong>測りたい処理を <code>synchronize(device)</code> で挟み、2秒回した中央値</strong>を使う。</p>
+    </div>
+
+    <div class="callout-warning">
+      <h4>実行する前に予測を書く（各自）</h4>
+      <p style="font-size:0.88rem"><code>ex2.ipynb</code> の「予測」セルに、次の5つの問いの答え（MLP・CNN・Transformer のどれか）と理由を一言ずつ書く。実行後、同じセルの「実際」の列を埋める。</p>
+      <ol style="font-size:0.85rem;padding-left:1.4rem;line-height:1.8">
+        <li>正解率が最も高いのは</li>
+        <li>損失が最も低いのは</li>
+        <li>1000文あたり最も速いのは</li>
+        <li>1文あたり最も速いのは</li>
+        <li>推論中のメモリが最も少ないのは</li>
+      </ol>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>進め方：全員が自分のノートパソコンで、そろって進む</h3></div>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li><strong>「✋ 止まる」より先へは進まない</strong>。グループ全員がそろうまで待つ（ノートブックに4か所ある）</li>
+        <li>TODO は、<strong>implementer の説明を聞いてから</strong>自分のノートブックに書く（写すだけにしない）</li>
+        <li>「✋」の問いの答えは<strong>グループで決めて</strong>、全員が自分のノートブックに同じ答えを書く。書かないと次のセルが動かない</li>
+      </ol>
+      <table style="font-size:0.85rem;margin-top:0.6rem">
+        <tr><th style="width:9rem">役割</th><th>ex2.ipynb でやること</th></tr>
+        <tr><td><strong style="color:#4FC3F7">implementer</strong></td><td>TODO の答えを先に考え、「この行は何をするか」を口で説明する。「✋」では、答えの<strong>根拠をコードの行と出力を指して</strong>示し、次に書く TODO を予告する</td></tr>
+        <tr><td><strong style="color:#FFB800">verifier</strong></td><td>全員の出力を見比べ、数値が同じか・桁がおかしくないかを確かめる（正解率は同じはず。速さとメモリは機種で違う）。(9-2) でバッチサイズを変えて測る</td></tr>
+        <tr><td><strong style="color:#81D4FA">recorder</strong></td><td>「✋」の答えを、根拠を含めて1〜2文にまとめ、全員に伝える</td></tr>
+        <tr><td><strong style="color:#B388FF">presenter</strong></td><td>時間を見て、「✋」で問いを読み上げる。全員がそろったら「次へ」の合図を出す</td></tr>
+      </table>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>ex2.ipynb のセルと、やること</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:5rem">見出し</th><th>セルがすること</th><th>あなたがやること</th></tr>
+        <tr><td>(0)–(4)</td><td>グループ設定・読み込み・テストデータ（1,821文）の準備</td><td><code>GROUP_ID</code> と <code>MEMBER_ROLE</code> を書き換えて実行</td></tr>
+        <tr><td>(5)</td><td>3つの学習済みモデルを読み込む（下の図の「モデルロード」）</td><td><strong style="color:#FFB800">TODO 1</strong></td></tr>
+        <tr><td>(5-2)</td><td>層ごとの重みの形と数を表示する</td><td>下の「討議：hidden とは何か」を話す</td></tr>
+        <tr><td><strong>✋ 1</strong></td><td colspan="2">hidden について、グループの答えを書く</td></tr>
+        <tr><td>(6)</td><td>正解率と損失（GW3 の⑫と同じ形）</td><td><strong style="color:#FFB800">TODO 2</strong></td></tr>
+        <tr><td>(7)</td><td>推論時間（1000文あたり・1文）</td><td><strong style="color:#FFB800">TODO 3</strong>（2か所）</td></tr>
+        <tr><td>(8)–(9)</td><td>メモリ → 3モデルを同時に測る</td><td>実行するだけ</td></tr>
+        <tr><td>(9-2)</td><td>バッチサイズを 64・512・1821 に変えて、推論中のメモリを測る（下の図）</td><td>verifier が担当</td></tr>
+        <tr><td><strong>✋ 2</strong></td><td colspan="2">バッチサイズとメモリについて、グループの答えを書く</td></tr>
+        <tr><td>(10)</td><td>予測との照合</td><td>予測セルの「実際」の列を埋める</td></tr>
+        <tr><td><strong>✋ 3</strong></td><td colspan="2">外れた予測とその理由を書く</td></tr>
+        <tr><td>(11)</td><td>CSV に記録</td><td>実行するだけ</td></tr>
+        <tr><td>(11-2)</td><td>グループ全員の結果を1つの表に並べる</td><td>自分の CSV を全員に送り、受け取ったものを <code>results/ex2_shared/</code> に入れる</td></tr>
+        <tr><td><strong>✋ 4</strong></td><td colspan="2">全員の結果を比べて、同じだったもの・違ったものと原因を書く</td></tr>
+        <tr><td>(12)</td><td>4指標の順位表</td><td>画面に出して討議する</td></tr>
+      </table>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>モデルの学習・保存・ロード</h3></div>
+<svg viewBox="0 0 960 470" style="width:100%;height:auto;display:block" role="img" aria-label="モデルの学習・保存・ロードの手順" font-family="Noto Sans JP, Hiragino Sans, sans-serif">
+<defs><marker id="ah3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#888"/></marker></defs>
+<rect x="16" y="14" width="290" height="386" rx="10" fill="#161616" stroke="#4FC3F7" stroke-width="2"/><text x="36" y="44" fill="#4FC3F7" font-size="17" font-weight="900">モデル学習（第1回）</text><rect x="46" y="64" width="250" height="34" rx="6" fill="#0d0d0d" stroke="#4FC3F7" stroke-opacity="0.6"/><text x="40" y="86" text-anchor="end" fill="#4FC3F7" font-size="15" font-weight="900">①</text><text x="56" y="86" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">model&#160;=&#160;Net()</text><text x="50" y="115" fill="#aaa" font-size="11.5">ネットワークを用意（重みはランダムな初期値）</text><rect x="46" y="128" width="250" height="124" rx="6" fill="#0d0d0d" stroke="#4FC3F7" stroke-opacity="0.6"/><text x="40" y="150" text-anchor="end" fill="#4FC3F7" font-size="15" font-weight="900">②</text><text x="56" y="150" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">for&#160;epoch&#160;in&#160;range(EPOCHS):</text><text x="56" y="168" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">&#160;&#160;for&#160;x,&#160;y&#160;in&#160;train_loader:</text><text x="56" y="186" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">&#160;&#160;&#160;&#160;loss&#160;=&#160;criterion(model(x),&#160;y)</text><text x="56" y="204" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">&#160;&#160;&#160;&#160;optimizer.zero_grad()</text><text x="56" y="222" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">&#160;&#160;&#160;&#160;loss.backward()</text><text x="56" y="240" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">&#160;&#160;&#160;&#160;optimizer.step()</text><text x="50" y="269" fill="#aaa" font-size="11.5">くり返して重みを直していく</text>
+<rect x="342" y="14" width="250" height="386" rx="10" fill="#161616" stroke="#FFB800" stroke-width="2"/><text x="362" y="44" fill="#FFB800" font-size="17" font-weight="900">モデル保存</text><rect x="372" y="64" width="210" height="70" rx="6" fill="#0d0d0d" stroke="#FFB800" stroke-opacity="0.6"/><text x="366" y="86" text-anchor="end" fill="#FFB800" font-size="15" font-weight="900">①</text><text x="382" y="86" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">torch.save(</text><text x="382" y="104" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">&#160;&#160;model.state_dict(),</text><text x="382" y="122" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">&#160;&#160;"model.pt")</text><text x="376" y="151" fill="#aaa" font-size="11.5">重みの数値だけをファイルに書く</text>
+<rect x="412" y="206" width="130" height="166" rx="6" fill="#1f1a0a" stroke="#FFB800"/>
+<path d="M 512 206 L 542 236 L 512 236 Z" fill="#FFB800" opacity="0.6"/>
+<text x="477" y="232" text-anchor="middle" fill="#FFB800" font-size="14" font-weight="900">model.pt</text>
+<text x="422" y="262" fill="#ddd" font-size="10.5" font-family="JetBrains Mono, monospace">層1の重み: 0.12, -0.53, …</text>
+<text x="422" y="282" fill="#ddd" font-size="10.5" font-family="JetBrains Mono, monospace">層2の重み: 0.07, 0.91, …</text>
+<text x="422" y="302" fill="#ddd" font-size="10.5" font-family="JetBrains Mono, monospace">層3の重み: -0.33, …</text>
+<text x="477" y="344" text-anchor="middle" fill="#EF5350" font-size="11" font-weight="700">ネットワークの形は</text>
+<text x="477" y="360" text-anchor="middle" fill="#EF5350" font-size="11" font-weight="700">入っていない</text>
+<rect x="646" y="14" width="290" height="386" rx="10" fill="#161616" stroke="#66BB6A" stroke-width="2"/><text x="666" y="44" fill="#66BB6A" font-size="17" font-weight="900">モデルロード（第2回）</text><rect x="676" y="64" width="250" height="34" rx="6" fill="#0d0d0d" stroke="#66BB6A" stroke-opacity="0.6"/><text x="670" y="86" text-anchor="end" fill="#66BB6A" font-size="15" font-weight="900">①</text><text x="686" y="86" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">model&#160;=&#160;Net()</text><text x="680" y="115" fill="#aaa" font-size="11.5">同じ形のネットワークをまず用意する</text><rect x="676" y="128" width="250" height="52" rx="6" fill="#0d0d0d" stroke="#66BB6A" stroke-opacity="0.6"/><text x="670" y="150" text-anchor="end" fill="#66BB6A" font-size="15" font-weight="900">②</text><text x="686" y="150" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">model.load_state_dict(</text><text x="686" y="168" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">&#160;&#160;torch.load("model.pt"))</text><text x="680" y="197" fill="#aaa" font-size="11.5">用意した形に、重みの数値を当てはめる</text><rect x="676" y="210" width="250" height="34" rx="6" fill="#0d0d0d" stroke="#66BB6A" stroke-opacity="0.6"/><text x="670" y="232" text-anchor="end" fill="#66BB6A" font-size="15" font-weight="900">③</text><text x="686" y="232" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">model.eval()</text><text x="680" y="261" fill="#aaa" font-size="11.5">評価モードにする</text><rect x="676" y="274" width="250" height="52" rx="6" fill="#0d0d0d" stroke="#66BB6A" stroke-opacity="0.6"/><text x="670" y="296" text-anchor="end" fill="#66BB6A" font-size="15" font-weight="900">④</text><text x="686" y="296" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">with&#160;torch.no_grad():</text><text x="686" y="314" fill="#ddd" font-size="12" font-family="JetBrains Mono, monospace" xml:space="preserve">&#160;&#160;outputs&#160;=&#160;model(x)</text><text x="680" y="343" fill="#aaa" font-size="11.5">推論する（重みは変えない）</text>
+<line x1="300" y1="210" x2="338" y2="210" stroke="#888" stroke-width="2" marker-end="url(#ah3)"/>
+<line x1="546" y1="250" x2="640" y2="182" stroke="#888" stroke-width="2" marker-end="url(#ah3)"/>
+<rect x="16" y="414" width="928" height="44" rx="8" fill="#0f1f10" stroke="#66BB6A" stroke-dasharray="5 3"/>
+<text x="480" y="441" text-anchor="middle" fill="#66BB6A" font-size="13" font-weight="700">ロード①では、学習のときと同じ Net()（同じ層・同じ hidden）を用意する。形が違うと②でエラーになる</text>
+</svg>
+
+      <p style="font-size:0.82rem;color:#999;margin-top:0.5rem"><code>ex2.ipynb</code> の (5) では、.pt ファイルに形の情報（hidden など）も一緒に保存してある。そこで先に <code>torch.load</code> で読み、その情報を使って <code>build_model(...)</code> が <code>Net()</code> の代わりに同じ形を用意する。TODO 1 は <code>torch.load</code> と <code>load_state_dict</code> の2行。</p>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>討議：hidden とは何か（(5-2)・3分）</h3></div>
+      <p style="font-size:0.88rem;color:#ccc;margin-bottom:0.4rem">(5) の出力では、3つともパラメータ数は約30万なのに、<code>hidden</code> が 357・152・999 とばらばら。(5-2) で層ごとの重みの形と数を見て話す。</p>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li><code>hidden</code> は、それぞれのモデルで何の数か</li>
+        <li>同じ約30万にそろえたのに、なぜ <code>hidden</code> が3つで違うのか（<code>hidden</code> を1増やすと、重みはいくつ増えるか）</li>
+        <li>3つに共通する大きな重みはどれか。何のための重みか</li>
+        <li>パラメータ数が同じなら、計算の量やメモリも同じになりそうか（→ (9) で確かめる）</li>
+      </ol>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>バッチサイズ（ミニバッチサイズ）とは（(9-2) で使う）</h3></div>
+      <ul class="point-list" style="margin-bottom:0.6rem">
+        <li><strong>ミニバッチ</strong>：データ全体（ここではテストデータ 1,821文）を分けた、<strong>モデルに1回でまとめて流す文の束</strong></li>
+        <li><strong>ミニバッチサイズ</strong>：1つのミニバッチに入れる文の数。64 なら64文ずつ29回に分けて流す</li>
+        <li><strong>バッチサイズ</strong>：本来「バッチ」はデータ全体のことだが、PyTorch の <code>batch_size</code> をはじめ、<strong>ミニバッチサイズのことを単にバッチサイズと呼ぶ</strong>のが普通。この授業でも同じ意味で使う</li>
+        <li>バッチサイズを 1821 にすると、ミニバッチ＝データ全体になり、1回で全部を流す</li>
+        <li>どのバッチサイズでも、最後に出る正解率は同じ。違うのは<strong>1回の計算で同時に扱う量</strong>。モデルは流した文の数だけ途中の計算結果をメモリに置くので、バッチサイズが大きいほど推論中のメモリが増える</li>
+      </ul>
+<svg viewBox="0 0 960 330" style="width:100%;height:auto;display:block" role="img" aria-label="バッチサイズとは" font-family="Noto Sans JP, Hiragino Sans, sans-serif">
+<defs><marker id="ah4" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#888"/></marker></defs>
+<text x="16" y="26" fill="#4FC3F7" font-size="15" font-weight="900">バッチサイズ 64</text><text x="16" y="46" fill="#aaa" font-size="11.5">64文ずつのミニバッチに分け、29回に分けて流す</text><rect x="16" y="60" width="22" height="60" rx="4" fill="#4FC3F7" fill-opacity="0.25" stroke="#4FC3F7"/><rect x="42" y="60" width="22" height="60" rx="4" fill="#4FC3F7" fill-opacity="0.25" stroke="#4FC3F7"/><rect x="68" y="60" width="22" height="60" rx="4" fill="#4FC3F7" fill-opacity="0.25" stroke="#4FC3F7"/><rect x="94" y="60" width="22" height="60" rx="4" fill="#4FC3F7" fill-opacity="0.25" stroke="#4FC3F7"/><rect x="120" y="60" width="22" height="60" rx="4" fill="#4FC3F7" fill-opacity="0.25" stroke="#4FC3F7"/><rect x="146" y="60" width="22" height="60" rx="4" fill="#4FC3F7" fill-opacity="0.25" stroke="#4FC3F7"/><rect x="172" y="60" width="22" height="60" rx="4" fill="#4FC3F7" fill-opacity="0.25" stroke="#4FC3F7"/><rect x="198" y="60" width="22" height="60" rx="4" fill="#4FC3F7" fill-opacity="0.25" stroke="#4FC3F7"/><rect x="224" y="60" width="22" height="60" rx="4" fill="#4FC3F7" fill-opacity="0.25" stroke="#4FC3F7"/><rect x="250" y="60" width="22" height="60" rx="4" fill="#4FC3F7" fill-opacity="0.25" stroke="#4FC3F7"/><rect x="276" y="60" width="22" height="60" rx="4" fill="#4FC3F7" fill-opacity="0.25" stroke="#4FC3F7"/><rect x="302" y="60" width="22" height="60" rx="4" fill="#4FC3F7" fill-opacity="0.25" stroke="#4FC3F7"/><text x="172.0" y="140" text-anchor="middle" fill="#ddd" font-size="12">64文 × 29回（図は一部）</text><line x1="334" y1="90" x2="452" y2="90" stroke="#888" stroke-width="2" marker-end="url(#ah4)"/><rect x="456" y="62" width="150" height="56" rx="8" fill="#161616" stroke="#888"/><text x="531" y="87" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">モデル</text><text x="531" y="106" text-anchor="middle" fill="#aaa" font-size="11">1回に流す分だけ計算</text><line x1="608" y1="90" x2="660" y2="90" stroke="#888" stroke-width="2" marker-end="url(#ah4)"/><rect x="664" y="50" width="40" height="80" rx="4" fill="none" stroke="#666"/><rect x="664" y="120" width="40" height="10" rx="4" fill="#EF5350" fill-opacity="0.75"/><text x="716" y="80" fill="#ddd" font-size="12">途中の計算結果を</text><text x="716" y="98" fill="#ddd" font-size="12">メモリに置く量</text>
+<text x="16" y="186" fill="#FFB800" font-size="15" font-weight="900">バッチサイズ 1821</text><text x="16" y="206" fill="#aaa" font-size="11.5">ミニバッチ＝データ全体。1,821文を1回で流す</text><rect x="16" y="220" width="300" height="60" rx="4" fill="#FFB800" fill-opacity="0.25" stroke="#FFB800"/><text x="168.0" y="300" text-anchor="middle" fill="#ddd" font-size="12">1,821文 × 1回</text><line x1="326" y1="250" x2="452" y2="250" stroke="#888" stroke-width="2" marker-end="url(#ah4)"/><rect x="456" y="222" width="150" height="56" rx="8" fill="#161616" stroke="#888"/><text x="531" y="247" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">モデル</text><text x="531" y="266" text-anchor="middle" fill="#aaa" font-size="11">1回に流す分だけ計算</text><line x1="608" y1="250" x2="660" y2="250" stroke="#888" stroke-width="2" marker-end="url(#ah4)"/><rect x="664" y="210" width="40" height="80" rx="4" fill="none" stroke="#666"/><rect x="664" y="212" width="40" height="78" rx="4" fill="#EF5350" fill-opacity="0.75"/><text x="716" y="240" fill="#ddd" font-size="12">途中の計算結果を</text><text x="716" y="258" fill="#ddd" font-size="12">メモリに置く量</text>
+<text x="716" y="116" text-anchor="start" fill="#4FC3F7" font-size="12" font-weight="700">→ 少ない</text>
+<text x="716" y="276" text-anchor="start" fill="#FFB800" font-size="12" font-weight="700">→ 多い</text>
+</svg>
+
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">第1回 GW3 の <code>DataLoader(..., batch_size=64)</code> の <code>batch_size</code> と同じもの。(9-2) で、バッチサイズを変えたときにメモリが何倍になるか、どのモデルで一番増えるかを測る。</p>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>TODO のヒント</h3></div>
+      <details>
+        <summary>TODO 1：重みファイルを読み込み、ネットワークに当てはめる（2行）― クリックで開く</summary>
+        <div class="answer-content">
+<pre>ckpt <span class="op">=</span> torch.load(path, map_location<span class="op">=</span><span class="str">"cpu"</span>)      <span class="cmt"># ① TODO 1-1：.pt を読む</span>
+model.load_state_dict(ckpt[<span class="str">"state_dict"</span>])            <span class="cmt"># ③ TODO 1-2：重みを当てはめる</span></pre>
+        </div>
+      </details>
+      <details>
+        <summary>TODO 2：予測クラスと正解数（第1回 GW3 の⑫と同じ3行）― クリックで開く</summary>
+        <div class="answer-content">
+<pre>_, predicted <span class="op">=</span> torch.max(outputs.data, <span class="num">1</span>)
+total <span class="op">+=</span> labels.size(<span class="num">0</span>)
+correct <span class="op">+=</span> (predicted <span class="op">==</span> labels).sum().item()</pre>
+        </div>
+      </details>
+      <details>
+        <summary>TODO 3：測りたい処理を同期で挟む（2か所）― クリックで開く</summary>
+        <div class="answer-content">
+          <p style="font-size:0.85rem;color:#ccc;margin-bottom:0.3rem">測りたい処理（③）を、前（①）と後ろ（④）の <code>synchronize(device)</code> で挟む。①はすでに書いてあるので、④の場所に次の1行を書く。</p>
+<pre>synchronize(device)                <span class="cmt"># 忘れてもエラーは出ない。値が小さくなるだけ</span></pre>
+        </div>
+      </details>
+
+      <div class="callout-info">
+        <h4>参考値（M3 MacBook Air。正解率・損失は機種によらず同じ）</h4>
+        <table style="font-size:0.82rem">
+          <tr><th>model</th><th>正解率</th><th>損失</th><th>ms / 1000文</th><th>ms / 1文</th><th>peak MB</th></tr>
+          <tr><td>MLP</td><td>0.8056</td><td>0.4664</td><td>6.0</td><td>0.71</td><td>1.16</td></tr>
+          <tr><td>CNN</td><td>0.7897</td><td>0.6941</td><td>26.9</td><td>0.75</td><td>8.0</td></tr>
+          <tr><td>Transformer</td><td>0.8094</td><td>0.4348</td><td>81.3</td><td>1.68</td><td>11.47</td></tr>
+        </table>
+        <p style="font-size:0.82rem;color:#999;margin-top:0.3rem">時間とメモリは機種で変わる。予測を書いてから開くこと。</p>
+      </div>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>討議（5分）― 外れた予測から話す</h3></div>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li>正解率1位と損失1位は同じモデルか</li>
+        <li>1000文と1文で速いモデルは同じか。実運用に近いのはどちらか</li>
+        <li>パラメータ数が同じなのに、推論中のメモリのピークが違うのはなぜか</li>
+        <li>MLP と Transformer の正解率の差 0.4 ポイントは「差がある」と言えるか（→ 第4回）</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EX3 ============ -->
+<section id="sec-ex3">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">3</div>
+      <h2>演習3 用途に合わせてモデルを選ぶ ― <code>ex3.ipynb</code></h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">演習2で測った3モデルの数値を見て、<strong>用途に合わせてどのモデルを選ぶか</strong>をグループで決める。点数の計算はしない。数値を見て話し合い、選んだ理由を言葉にする。</p>
+    <p style="font-size:0.95rem;margin:-0.4rem 0 1rem"><strong>4指標：</strong>正解率／損失／推論時間（1000文あたり・1文）／推論中のメモリのピーク</p>
+
+    <div class="card group">
+      <div class="card-header"><h3>討議（10分）― 用途を決めて、モデルを選ぶ</h3></div>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li>各自1分：「このモデルを<strong>誰が、どこで</strong>使うか」を1つ挙げる</li>
+        <li>グループで用途を1つに絞る（割れたら「その用途で失敗するとどうなるか」で決める）</li>
+        <li>その用途で<strong>一番大事な指標</strong>と、<strong>我慢できる指標</strong>を決める</li>
+        <li>演習2の表を見て、どのモデルを選ぶか決める。理由を<strong>表の数値を使って</strong>言えるようにする</li>
+      </ol>
+      <p style="font-size:0.85rem;color:#ccc;margin-top:0.4rem">例：「学生のスマホで動く映画レビュー判定器」なら、1文の時間とメモリが大事。正解率は1ポイント程度なら我慢できる。</p>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>ex3.ipynb のセルと、やること</h3></div>
+      <p style="font-size:0.88rem;color:#ccc;margin-bottom:0.5rem">演習2と同じく、全員が自分のノートパソコンで「✋ 止まる」でそろって進む。役割も演習2と同じ。</p>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:5rem">見出し</th><th>セルがすること</th><th>あなたがやること</th></tr>
+        <tr><td>(0)–(2)</td><td>演習2の CSV から、自分が測った値を表にする</td><td>(0) を書き換えて実行</td></tr>
+        <tr><td><strong>✋ 1</strong></td><td colspan="2">各モデルが一番よい指標・一番悪い指標を書く</td></tr>
+        <tr><td>(3)</td><td>用途・大事な指標・選んだモデル・理由を書く</td><td><strong style="color:#FFB800">TODO</strong>（上の討議で決めたもの）</td></tr>
+        <tr><td>(4)</td><td>ほかの3つの用途（研究・大量処理・小型の機械）なら、どのモデルを選ぶか</td><td><strong style="color:#FFB800">TODO</strong></td></tr>
+        <tr><td><strong>✋ 2</strong></td><td colspan="2">用途で選ぶモデルが変わったか、どの数値の違いが選択を変えたかを書く</td></tr>
+        <tr><td>(5)–(6)</td><td>CSV に記録 → プレゼン用まとめ</td><td>画面に出して話す</td></tr>
+      </table>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>グループ内プレゼン（presenter 2分 → 他の役割が1分ずつ）― (6) の出力を画面に出す</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:9rem">役割</th><th>話すこと</th></tr>
+        <tr><td>presenter</td><td>用途と、選んだモデル</td></tr>
+        <tr><td>implementer</td><td>選んだ理由を、表の数値で示す</td></tr>
+        <tr><td>verifier</td><td>ほかの用途では、どのモデルを選んだか（(4) の表）</td></tr>
+        <tr><td>recorder</td><td>討議で割れた点と、その理由</td></tr>
+      </table>
+    </div>
+
+    <div class="callout-danger">
+      <h4>全体共有：同じ数値から、用途によって違うモデルが選ばれる</h4>
+      <p style="font-size:0.9rem">教員が各グループの用途と選んだモデルを並べて投影する。「良いAI」は、用途を決めて初めて決まる。</p>
+      <p style="font-size:0.9rem;margin-top:0.4rem"><strong>第4回に持ち越す問い</strong>：正解率の差 0.4 ポイント（MLP と Transformer）は、本当に「差がある」と言えるか。ばらつきの範囲内ではないか。第4回「再現性と分散」で確かめる。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LECTURE ============ -->
+<section id="sec-lecture">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#4FC3F7">読む</div>
+      <h2>GW の答え合わせ・勾配と学習率（各自で読む・10分）</h2>
+    </div>
+    <div class="card group">
+      <div class="card-header"><h3>① GW の答え合わせ（3分）</h3></div>
+      <p style="font-size:0.9rem;color:#ccc;margin-bottom:0.5rem">下を開いて、演習2の GW（全結合・畳み込み・自己注意）の答えを確かめ、<code>ex2.ipynb</code> の GW セルを直してから提出する。<strong>この時間になってから開く</strong>。</p>
+      <details>
+        <summary>GW の答え ― クリックで開く</summary>
+        <div class="answer-content">
+          <table style="font-size:0.85rem">
+            <tr><th style="width:8rem">仕組み</th><th>しくみ</th><th>得意</th><th>不得意</th></tr>
+            <tr><td><strong style="color:#4FC3F7">全結合</strong></td><td>ウ</td><td>オ</td><td>ク</td></tr>
+            <tr><td><strong style="color:#FFB800">畳み込み</strong></td><td>ア</td><td>カ</td><td>キ</td></tr>
+            <tr><td><strong style="color:#B388FF">自己注意</strong></td><td>イ</td><td>エ</td><td>ケ</td></tr>
+          </table>
+          <p style="font-size:0.85rem;color:#ccc;margin-top:0.4rem">演習2の結果とのつながり：パラメータ数は同じでも、Transformer は自己注意の途中の計算が多いので、推論中のメモリと時間が大きい（ケ）。MLP は平均して1本にするので軽い（オ）が、語順が消える（ク）。</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>② 勾配と学習率を読む（7分）</h3></div>
+      <p style="font-size:0.9rem;color:#ccc;margin-bottom:0.6rem">後半の部屋A〜Cで見る数字の意味をそろえる。読んだら、選んだ部屋のノートブックの「(確認)」に答える。<strong>全問正解すると実験に進める</strong>。</p>
+      <p style="font-size:0.9rem;margin:0.4rem 0 0"><strong>1. 勾配：学習ループのどこで出てくるか</strong></p>
+<svg viewBox="0 0 960 300" style="width:100%;height:auto;display:block;margin:0.4rem 0 0.8rem" role="img" aria-label="学習の1ステップと勾配" font-family="Noto Sans JP, Hiragino Sans, sans-serif">
+<defs><marker id="ga" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#888"/></marker><marker id="gr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#EF5350"/></marker></defs>
+<rect x="150" y="60" width="140" height="70" rx="8" fill="#161616" stroke="#4FC3F7"/>
+<text x="220" y="88" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">層1（入力側）</text>
+<text x="220" y="110" text-anchor="middle" fill="#4FC3F7" font-size="11.5" font-family="JetBrains Mono, monospace">weight</text>
+<rect x="150" y="170" width="140" height="44" rx="8" fill="#2a1414" stroke="#EF5350"/>
+<text x="220" y="197" text-anchor="middle" fill="#EF5350" font-size="11.5" font-family="JetBrains Mono, monospace">weight.grad</text>
+<rect x="330" y="60" width="140" height="70" rx="8" fill="#161616" stroke="#4FC3F7"/>
+<text x="400" y="88" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">層2</text>
+<text x="400" y="110" text-anchor="middle" fill="#4FC3F7" font-size="11.5" font-family="JetBrains Mono, monospace">weight</text>
+<rect x="330" y="170" width="140" height="44" rx="8" fill="#2a1414" stroke="#EF5350"/>
+<text x="400" y="197" text-anchor="middle" fill="#EF5350" font-size="11.5" font-family="JetBrains Mono, monospace">weight.grad</text>
+<rect x="510" y="60" width="140" height="70" rx="8" fill="#161616" stroke="#4FC3F7"/>
+<text x="580" y="88" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">層3（出力側）</text>
+<text x="580" y="110" text-anchor="middle" fill="#4FC3F7" font-size="11.5" font-family="JetBrains Mono, monospace">weight</text>
+<rect x="510" y="170" width="140" height="44" rx="8" fill="#2a1414" stroke="#EF5350"/>
+<text x="580" y="197" text-anchor="middle" fill="#EF5350" font-size="11.5" font-family="JetBrains Mono, monospace">weight.grad</text>
+<rect x="20" y="70" width="100" height="50" rx="8" fill="#222" stroke="#666"/><text x="70" y="100" text-anchor="middle" fill="#ddd" font-size="12">入力 x</text>
+<rect x="700" y="70" width="110" height="50" rx="8" fill="#222" stroke="#666"/><text x="755" y="92" text-anchor="middle" fill="#ddd" font-size="12">予測</text><text x="755" y="110" text-anchor="middle" fill="#aaa" font-size="11">→ 損失</text>
+<line x1="120" y1="95" x2="148" y2="95" stroke="#888" stroke-width="2" marker-end="url(#ga)"/>
+<line x1="290" y1="95" x2="328" y2="95" stroke="#888" stroke-width="2" marker-end="url(#ga)"/>
+<line x1="470" y1="95" x2="508" y2="95" stroke="#888" stroke-width="2" marker-end="url(#ga)"/>
+<line x1="650" y1="95" x2="698" y2="95" stroke="#888" stroke-width="2" marker-end="url(#ga)"/>
+<text x="420" y="40" text-anchor="middle" fill="#4FC3F7" font-size="13" font-weight="700">① 順伝播：outputs = model(x)　→　損失 loss</text>
+<path d="M 755 125 C 755 240, 700 240, 652 205" fill="none" stroke="#EF5350" stroke-width="2" marker-end="url(#gr)"/>
+<line x1="510" y1="192" x2="472" y2="192" stroke="#EF5350" stroke-width="2" marker-end="url(#gr)"/>
+<line x1="330" y1="192" x2="292" y2="192" stroke="#EF5350" stroke-width="2" marker-end="url(#gr)"/>
+<text x="420" y="240" text-anchor="middle" fill="#EF5350" font-size="13" font-weight="700">② loss.backward()：出力側から順に、各層の勾配（weight.grad）を計算</text>
+<rect x="840" y="40" width="108" height="210" rx="8" fill="#0f1f10" stroke="#66BB6A"/>
+<text x="894" y="68" text-anchor="middle" fill="#66BB6A" font-size="12" font-weight="700">③ ここで</text>
+<text x="894" y="90" text-anchor="middle" fill="#66BB6A" font-size="12" font-weight="400">勾配を記録</text>
+<text x="894" y="112" text-anchor="middle" fill="#66BB6A" font-size="12" font-weight="400">（部屋A〜C）</text>
+<text x="894" y="134" text-anchor="middle" fill="#ddd" font-size="12" font-weight="400"></text>
+<text x="894" y="156" text-anchor="middle" fill="#ddd" font-size="12" font-weight="700">④ optimizer</text>
+<text x="894" y="178" text-anchor="middle" fill="#ddd" font-size="12" font-weight="700">.step()</text>
+<text x="894" y="200" text-anchor="middle" fill="#ddd" font-size="12" font-weight="400">勾配を使って</text>
+<text x="894" y="222" text-anchor="middle" fill="#ddd" font-size="12" font-weight="400">weight を直す</text>
+<text x="480" y="285" text-anchor="middle" fill="#aaa" font-size="12">勾配 ＝「損失を小さくするには、この重みをどちらへ、どれだけ動かせばよいか」。大きさは .grad.norm() で1つの数にする</text>
+</svg>
+      <p style="font-size:0.9rem;margin:0.4rem 0 0"><strong>2. 学習率：重みを直す「一歩の大きさ」</strong>（<code>optim.Adam(..., lr=0.001)</code> の <code>lr</code>）</p>
+<svg viewBox="0 0 960 250" style="width:100%;height:auto;display:block;margin:0.4rem 0 0.8rem" role="img" aria-label="学習率の大きさと学習の進み方" font-family="Noto Sans JP, Hiragino Sans, sans-serif">
+<defs><marker id="ga" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#888"/></marker><marker id="gr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#EF5350"/></marker></defs>
+<rect x="10" y="10" width="300" height="234" rx="10" fill="#161616" stroke="#4FC3F7"/><text x="160" y="36" text-anchor="middle" fill="#4FC3F7" font-size="14" font-weight="900">小さすぎる</text><path d="M 40.0 84.8 L 42.4 89.4 L 44.8 93.8 L 47.2 98.2 L 49.6 102.5 L 52.0 106.7 L 54.4 110.8 L 56.8 114.8 L 59.2 118.7 L 61.6 122.5 L 64.0 126.3 L 66.4 129.9 L 68.8 133.5 L 71.2 136.9 L 73.6 140.3 L 76.0 143.6 L 78.4 146.7 L 80.8 149.8 L 83.2 152.8 L 85.6 155.7 L 88.0 158.5 L 90.4 161.2 L 92.8 163.9 L 95.2 166.4 L 97.6 168.8 L 100.0 171.2 L 102.4 173.5 L 104.8 175.6 L 107.2 177.7 L 109.6 179.7 L 112.0 181.6 L 114.4 183.4 L 116.8 185.1 L 119.2 186.7 L 121.6 188.2 L 124.0 189.6 L 126.4 191.0 L 128.8 192.2 L 131.2 193.4 L 133.6 194.4 L 136.0 195.4 L 138.4 196.3 L 140.8 197.1 L 143.2 197.7 L 145.6 198.3 L 148.0 198.8 L 150.4 199.3 L 152.8 199.6 L 155.2 199.8 L 157.6 200.0 L 160.0 200.0 L 162.4 200.0 L 164.8 199.8 L 167.2 199.6 L 169.6 199.3 L 172.0 198.8 L 174.4 198.3 L 176.8 197.7 L 179.2 197.1 L 181.6 196.3 L 184.0 195.4 L 186.4 194.4 L 188.8 193.4 L 191.2 192.2 L 193.6 191.0 L 196.0 189.6 L 198.4 188.2 L 200.8 186.7 L 203.2 185.1 L 205.6 183.4 L 208.0 181.6 L 210.4 179.7 L 212.8 177.7 L 215.2 175.6 L 217.6 173.5 L 220.0 171.2 L 222.4 168.8 L 224.8 166.4 L 227.2 163.9 L 229.6 161.2 L 232.0 158.5 L 234.4 155.7 L 236.8 152.8 L 239.2 149.8 L 241.6 146.7 L 244.0 143.6 L 246.4 140.3 L 248.8 136.9 L 251.2 133.5 L 253.6 129.9 L 256.0 126.3 L 258.4 122.5 L 260.8 118.7 L 263.2 114.8 L 265.6 110.8 L 268.0 106.7 L 270.4 102.5 L 272.8 98.2 L 275.2 93.8 L 277.6 89.4 L 280.0 84.8" fill="none" stroke="#888" stroke-width="2"/><text x="160" y="228" text-anchor="middle" fill="#aaa" font-size="11">横：重み　縦：損失（谷底が一番よい）</text><circle cx="50.0" cy="103.2" r="4" fill="#4FC3F7"/><line x1="50.0" y1="103.2" x2="58.0" y2="116.8" stroke="#4FC3F7" stroke-width="1.6" marker-end="url(#ga)"/><circle cx="58.0" cy="116.8" r="4" fill="#4FC3F7"/><line x1="58.0" y1="116.8" x2="66.0" y2="129.3" stroke="#4FC3F7" stroke-width="1.6" marker-end="url(#ga)"/><circle cx="66.0" cy="129.3" r="4" fill="#4FC3F7"/><line x1="66.0" y1="129.3" x2="73.0" y2="139.4" stroke="#4FC3F7" stroke-width="1.6" marker-end="url(#ga)"/><circle cx="73.0" cy="139.4" r="4" fill="#4FC3F7"/><line x1="73.0" y1="139.4" x2="80.0" y2="148.8" stroke="#4FC3F7" stroke-width="1.6" marker-end="url(#ga)"/><circle cx="80.0" cy="148.8" r="4" fill="#4FC3F7"/><text x="160" y="58" text-anchor="middle" fill="#ddd" font-size="12">一歩が小さく、なかなか谷底に着かない</text>
+<rect x="330" y="10" width="300" height="234" rx="10" fill="#161616" stroke="#66BB6A"/><text x="480" y="36" text-anchor="middle" fill="#66BB6A" font-size="14" font-weight="900">ちょうどよい</text><path d="M 360.0 84.8 L 362.4 89.4 L 364.8 93.8 L 367.2 98.2 L 369.6 102.5 L 372.0 106.7 L 374.4 110.8 L 376.8 114.8 L 379.2 118.7 L 381.6 122.5 L 384.0 126.3 L 386.4 129.9 L 388.8 133.5 L 391.2 136.9 L 393.6 140.3 L 396.0 143.6 L 398.4 146.7 L 400.8 149.8 L 403.2 152.8 L 405.6 155.7 L 408.0 158.5 L 410.4 161.2 L 412.8 163.9 L 415.2 166.4 L 417.6 168.8 L 420.0 171.2 L 422.4 173.5 L 424.8 175.6 L 427.2 177.7 L 429.6 179.7 L 432.0 181.6 L 434.4 183.4 L 436.8 185.1 L 439.2 186.7 L 441.6 188.2 L 444.0 189.6 L 446.4 191.0 L 448.8 192.2 L 451.2 193.4 L 453.6 194.4 L 456.0 195.4 L 458.4 196.3 L 460.8 197.1 L 463.2 197.7 L 465.6 198.3 L 468.0 198.8 L 470.4 199.3 L 472.8 199.6 L 475.2 199.8 L 477.6 200.0 L 480.0 200.0 L 482.4 200.0 L 484.8 199.8 L 487.2 199.6 L 489.6 199.3 L 492.0 198.8 L 494.4 198.3 L 496.8 197.7 L 499.2 197.1 L 501.6 196.3 L 504.0 195.4 L 506.4 194.4 L 508.8 193.4 L 511.2 192.2 L 513.6 191.0 L 516.0 189.6 L 518.4 188.2 L 520.8 186.7 L 523.2 185.1 L 525.6 183.4 L 528.0 181.6 L 530.4 179.7 L 532.8 177.7 L 535.2 175.6 L 537.6 173.5 L 540.0 171.2 L 542.4 168.8 L 544.8 166.4 L 547.2 163.9 L 549.6 161.2 L 552.0 158.5 L 554.4 155.7 L 556.8 152.8 L 559.2 149.8 L 561.6 146.7 L 564.0 143.6 L 566.4 140.3 L 568.8 136.9 L 571.2 133.5 L 573.6 129.9 L 576.0 126.3 L 578.4 122.5 L 580.8 118.7 L 583.2 114.8 L 585.6 110.8 L 588.0 106.7 L 590.4 102.5 L 592.8 98.2 L 595.2 93.8 L 597.6 89.4 L 600.0 84.8" fill="none" stroke="#888" stroke-width="2"/><text x="480" y="228" text-anchor="middle" fill="#aaa" font-size="11">横：重み　縦：損失（谷底が一番よい）</text><circle cx="370.0" cy="103.2" r="4" fill="#66BB6A"/><line x1="370.0" y1="103.2" x2="420.0" y2="171.2" stroke="#66BB6A" stroke-width="1.6" marker-end="url(#ga)"/><circle cx="420.0" cy="171.2" r="4" fill="#66BB6A"/><line x1="420.0" y1="171.2" x2="455.0" y2="195.0" stroke="#66BB6A" stroke-width="1.6" marker-end="url(#ga)"/><circle cx="455.0" cy="195.0" r="4" fill="#66BB6A"/><line x1="455.0" y1="195.0" x2="472.0" y2="199.5" stroke="#66BB6A" stroke-width="1.6" marker-end="url(#ga)"/><circle cx="472.0" cy="199.5" r="4" fill="#66BB6A"/><line x1="472.0" y1="199.5" x2="479.0" y2="200.0" stroke="#66BB6A" stroke-width="1.6" marker-end="url(#ga)"/><circle cx="479.0" cy="200.0" r="4" fill="#66BB6A"/><text x="480" y="58" text-anchor="middle" fill="#ddd" font-size="12">数歩で谷底（損失が小さい所）に着く</text>
+<rect x="650" y="10" width="300" height="234" rx="10" fill="#161616" stroke="#EF5350"/><text x="800" y="36" text-anchor="middle" fill="#EF5350" font-size="14" font-weight="900">大きすぎる</text><path d="M 680.0 84.8 L 682.4 89.4 L 684.8 93.8 L 687.2 98.2 L 689.6 102.5 L 692.0 106.7 L 694.4 110.8 L 696.8 114.8 L 699.2 118.7 L 701.6 122.5 L 704.0 126.3 L 706.4 129.9 L 708.8 133.5 L 711.2 136.9 L 713.6 140.3 L 716.0 143.6 L 718.4 146.7 L 720.8 149.8 L 723.2 152.8 L 725.6 155.7 L 728.0 158.5 L 730.4 161.2 L 732.8 163.9 L 735.2 166.4 L 737.6 168.8 L 740.0 171.2 L 742.4 173.5 L 744.8 175.6 L 747.2 177.7 L 749.6 179.7 L 752.0 181.6 L 754.4 183.4 L 756.8 185.1 L 759.2 186.7 L 761.6 188.2 L 764.0 189.6 L 766.4 191.0 L 768.8 192.2 L 771.2 193.4 L 773.6 194.4 L 776.0 195.4 L 778.4 196.3 L 780.8 197.1 L 783.2 197.7 L 785.6 198.3 L 788.0 198.8 L 790.4 199.3 L 792.8 199.6 L 795.2 199.8 L 797.6 200.0 L 800.0 200.0 L 802.4 200.0 L 804.8 199.8 L 807.2 199.6 L 809.6 199.3 L 812.0 198.8 L 814.4 198.3 L 816.8 197.7 L 819.2 197.1 L 821.6 196.3 L 824.0 195.4 L 826.4 194.4 L 828.8 193.4 L 831.2 192.2 L 833.6 191.0 L 836.0 189.6 L 838.4 188.2 L 840.8 186.7 L 843.2 185.1 L 845.6 183.4 L 848.0 181.6 L 850.4 179.7 L 852.8 177.7 L 855.2 175.6 L 857.6 173.5 L 860.0 171.2 L 862.4 168.8 L 864.8 166.4 L 867.2 163.9 L 869.6 161.2 L 872.0 158.5 L 874.4 155.7 L 876.8 152.8 L 879.2 149.8 L 881.6 146.7 L 884.0 143.6 L 886.4 140.3 L 888.8 136.9 L 891.2 133.5 L 893.6 129.9 L 896.0 126.3 L 898.4 122.5 L 900.8 118.7 L 903.2 114.8 L 905.6 110.8 L 908.0 106.7 L 910.4 102.5 L 912.8 98.2 L 915.2 93.8 L 917.6 89.4 L 920.0 84.8" fill="none" stroke="#888" stroke-width="2"/><text x="800" y="228" text-anchor="middle" fill="#aaa" font-size="11">横：重み　縦：損失（谷底が一番よい）</text><circle cx="740.0" cy="171.2" r="4" fill="#EF5350"/><line x1="740.0" y1="171.2" x2="865.0" y2="166.2" stroke="#EF5350" stroke-width="1.6" marker-end="url(#ga)"/><circle cx="865.0" cy="166.2" r="4" fill="#EF5350"/><line x1="865.0" y1="166.2" x2="720.0" y2="148.8" stroke="#EF5350" stroke-width="1.6" marker-end="url(#ga)"/><circle cx="720.0" cy="148.8" r="4" fill="#EF5350"/><line x1="720.0" y1="148.8" x2="895.0" y2="127.8" stroke="#EF5350" stroke-width="1.6" marker-end="url(#ga)"/><circle cx="895.0" cy="127.8" r="4" fill="#EF5350"/><line x1="895.0" y1="127.8" x2="695.0" y2="111.8" stroke="#EF5350" stroke-width="1.6" marker-end="url(#ga)"/><circle cx="695.0" cy="111.8" r="4" fill="#EF5350"/><text x="800" y="58" text-anchor="middle" fill="#ddd" font-size="12">行き過ぎて谷底を飛び越え、壊れる</text>
+</svg>
+      <p style="font-size:0.9rem;margin:0.4rem 0 0"><strong>3. 勾配消失：深くすると、入力側の勾配が小さくなる</strong></p>
+<svg viewBox="0 0 960 220" style="width:100%;height:auto;display:block;margin:0.4rem 0 0.8rem" role="img" aria-label="勾配消失" font-family="Noto Sans JP, Hiragino Sans, sans-serif">
+<defs><marker id="ga" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#888"/></marker><marker id="gr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#EF5350"/></marker></defs>
+<text x="480" y="28" text-anchor="middle" fill="#eee" font-size="13" font-weight="700">逆伝播では、出力側から入力側へ、各層の傾きが掛け算されていく（シグモイドの傾きは最大 0.25）</text>
+<rect x="825" y="60.0" width="70" height="110.0" rx="4" fill="#B388FF" fill-opacity="0.75"/>
+<text x="860" y="52.0" text-anchor="middle" fill="#ddd" font-size="12">1</text>
+<text x="860" y="190" text-anchor="middle" fill="#bbb" font-size="12">出力側</text>
+<line x1="820" y1="120" x2="710" y2="120" stroke="#888" stroke-width="2" marker-end="url(#ga)"/>
+<text x="765" y="112" text-anchor="middle" fill="#B388FF" font-size="12" font-weight="700">× 0.25</text>
+<rect x="635" y="142.5" width="70" height="27.5" rx="4" fill="#B388FF" fill-opacity="0.75"/>
+<text x="670" y="134.5" text-anchor="middle" fill="#ddd" font-size="12">0.25</text>
+<text x="670" y="190" text-anchor="middle" fill="#bbb" font-size="12">層4</text>
+<line x1="630" y1="120" x2="520" y2="120" stroke="#888" stroke-width="2" marker-end="url(#ga)"/>
+<text x="575" y="112" text-anchor="middle" fill="#B388FF" font-size="12" font-weight="700">× 0.25</text>
+<rect x="445" y="163.125" width="70" height="6.875" rx="4" fill="#B388FF" fill-opacity="0.75"/>
+<text x="480" y="155.125" text-anchor="middle" fill="#ddd" font-size="12">0.0625</text>
+<text x="480" y="190" text-anchor="middle" fill="#bbb" font-size="12">層3</text>
+<line x1="440" y1="120" x2="330" y2="120" stroke="#888" stroke-width="2" marker-end="url(#ga)"/>
+<text x="385" y="112" text-anchor="middle" fill="#B388FF" font-size="12" font-weight="700">× 0.25</text>
+<rect x="255" y="166" width="70" height="4" rx="4" fill="#B388FF" fill-opacity="0.75"/>
+<text x="290" y="158" text-anchor="middle" fill="#ddd" font-size="12">0.0156</text>
+<text x="290" y="190" text-anchor="middle" fill="#bbb" font-size="12">層2</text>
+<line x1="250" y1="120" x2="140" y2="120" stroke="#888" stroke-width="2" marker-end="url(#ga)"/>
+<text x="195" y="112" text-anchor="middle" fill="#B388FF" font-size="12" font-weight="700">× 0.25</text>
+<rect x="65" y="166" width="70" height="4" rx="4" fill="#B388FF" fill-opacity="0.75"/>
+<text x="100" y="158" text-anchor="middle" fill="#ddd" font-size="12">0.0039</text>
+<text x="100" y="190" text-anchor="middle" fill="#bbb" font-size="12">層1（入力側）</text>
+<text x="480" y="212" text-anchor="middle" fill="#aaa" font-size="12">入力側の層ほど勾配が小さくなり、重みがほとんど直されなくなる（＝勾配消失）。ReLU の傾きは 1 なので起きにくい</text>
+</svg>
+      <p style="font-size:0.82rem;color:#999">部屋A は 1 を、部屋B は 2 を、部屋C は 3 を数字で確かめる。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROOMS ============ -->
+<section id="sec-rooms">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">部屋</div>
+      <h2>3つの部屋から1つを選ぶ（45分）</h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">グループで1つの部屋を選ぶ。題材はどれも第1回 GW3 試行①（FashionMNIST × MLP、5エポック）。FashionMNIST は、通販会社 Zalando が2017年に公開した衣類の白黒画像（28×28、10種類、7万枚）で、手書き数字 MNIST の代わりとして画像分類の入門や手法の比較によく使われる。<strong>やってみるまで分からない</strong>問いに答え、ノートブック最後の「報告」を書き、全体共有で2分で話す。</p>
+
+    <div class="gw3-group gw3-t1">
+      <h3>部屋A　勾配を記録する ― <code>room_a_gradnorm.ipynb</code></h3>
+      <p style="font-size:0.9rem;color:#ccc;margin-bottom:0.3rem"><strong>目的：</strong>学習の中で、重みが<strong>どれだけ直されているか</strong>を数字で見る。第1回では <code>loss.backward()</code> を1行書いただけで、計算された勾配は見えなかった。その勾配を取り出して、層ごとに記録する。</p>
+      <p style="font-size:0.9rem;color:#ccc;margin-bottom:0.3rem"><strong>学べること：</strong></p>
+      <ul class="point-list" style="margin-bottom:0.5rem">
+        <li>勾配の大きさは層ごとに違う（入力側と出力側で何倍も違う）</li>
+        <li>学習が進んで損失が下がると、勾配（直す量）も変わっていく</li>
+        <li>勾配を見ると、学習がうまく進んでいるか・止まっているかを診断できる。部屋B（学習率が大きすぎると壊れる）と部屋C（深くすると入力側の勾配が消える）も、同じ記録の仕方で調べる</li>
+      </ul>
+      <p style="font-size:0.9rem;color:#ccc"><strong>問い：</strong>学習中、どの層の勾配が大きく、どう変わっていくか。</p>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li>(4) 勾配を記録する仕組み <code>GradNormRecorder</code> の <strong style="color:#FFB800">TODO 1</strong>：各層の勾配の大きさを1つの数にする</li>
+        <li>(5) 学習ループに記録の1行を足す（<strong style="color:#FFB800">TODO 2</strong>）→ 学習（1〜2分）</li>
+        <li>(6) 層ごとの勾配と訓練損失のグラフを見て、(8) の報告を書く</li>
+      </ol>
+      <details>
+        <summary>TODO のヒント ― クリックで開く</summary>
+        <div class="answer-content">
+          <p style="font-size:0.85rem;color:#ccc;margin-bottom:0.3rem"><strong>TODO 1</strong>：(4) のセル「勾配を記録する仕組み」の中。<code>record</code> の <code>append(...)</code> の「...」を書き換える</p>
+<pre>self.history[name].append(layer.weight.grad.norm().item())</pre>
+          <p style="font-size:0.85rem;color:#ccc;margin:0.6rem 0 0.3rem"><strong>TODO 2</strong>：<strong>別のセル</strong>の (5)「学習ループ」の中。<code>loss.backward()</code> の次の行、<code>optimizer.step()</code> の前の「...」を書き換える</p>
+<pre>recorder.record()</pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="gw3-group gw3-t2">
+      <h3>部屋B　学習率の実験 ― <code>room_b_lr.ipynb</code></h3>
+      <p style="font-size:0.9rem;color:#ccc"><strong>問い：</strong>学習率をどこまで大きくすると学習が壊れるか。一番よい学習率はどこか。</p>
+      <p style="font-size:0.85rem;color:#ccc">部屋Bを選んだグループどうしで、9つの学習率を分担する（1条件1〜2分。余裕があれば複数担当）。「壊れた」＝検証正解率 50% 未満、または損失が <code>nan</code>。</p>
+      <table style="font-size:0.85rem">
+        <tr><th>学習率</th><th>担当</th><th>壊れた？</th><th>検証正解率</th></tr>
+        <tr><td>0.00001</td><td></td><td></td><td></td></tr>
+        <tr><td>0.00003</td><td></td><td></td><td></td></tr>
+        <tr><td>0.0001</td><td></td><td></td><td></td></tr>
+        <tr><td>0.0003</td><td></td><td></td><td></td></tr>
+        <tr><td>0.001（第1回と同じ）</td><td></td><td></td><td></td></tr>
+        <tr><td>0.003</td><td></td><td></td><td></td></tr>
+        <tr><td>0.01</td><td></td><td></td><td></td></tr>
+        <tr><td>0.03</td><td></td><td></td><td></td></tr>
+        <tr><td>0.1</td><td></td><td></td><td></td></tr>
+      </table>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9;margin-top:0.6rem">
+        <li>ノートブック冒頭に予測を書き、(3) に担当の学習率を書く</li>
+        <li>(4) の <strong style="color:#FFB800">TODO 1</strong>：学習率 <code>LR</code> で Adam を作る → 学習</li>
+        <li>CSV を部屋の仲間と共有し、(8) で「学習率 × 検証損失」のグラフを作り、(9) の報告を書く</li>
+      </ol>
+      <details>
+        <summary>TODO のヒント ― クリックで開く</summary>
+        <div class="answer-content">
+<pre>optimizer <span class="op">=</span> optim.Adam(model.parameters(), lr<span class="op">=</span>LR)</pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="gw3-group gw3-t3">
+      <h3>部屋C　活性化関数の実験 ― <code>room_c_activation.ipynb</code></h3>
+      <p style="font-size:0.9rem;color:#ccc"><strong>問い：</strong>活性化関数を ReLU からシグモイドや tanh に替え、層を深くすると、勾配と正解率はどうなるか。</p>
+      <p style="font-size:0.85rem;color:#ccc">部屋Cを選んだグループどうしで、6つの条件を分担する（1条件1〜3分）。</p>
+      <table style="font-size:0.85rem">
+        <tr><th>活性化関数</th><th>隠れ層の数</th><th>担当</th><th>検証正解率</th><th>出力側÷層1</th></tr>
+        <tr><td>ReLU</td><td>2（浅い）</td><td></td><td></td><td></td></tr>
+        <tr><td>ReLU</td><td>6（深い）</td><td></td><td></td><td></td></tr>
+        <tr><td>シグモイド</td><td>2（浅い）</td><td></td><td></td><td></td></tr>
+        <tr><td>シグモイド</td><td>6（深い）</td><td></td><td></td><td></td></tr>
+        <tr><td>tanh</td><td>2（浅い）</td><td></td><td></td><td></td></tr>
+        <tr><td>tanh</td><td>6（深い）</td><td></td><td></td><td></td></tr>
+      </table>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9;margin-top:0.6rem">
+        <li>ノートブック冒頭に予測を書き、(3) に担当の <code>ACT</code> と <code>DEPTH</code> を書く</li>
+        <li>(4) の <strong style="color:#FFB800">TODO 1</strong>：隠れ層ごとに活性化関数を足す → 学習</li>
+        <li>CSV を部屋の仲間と共有し、(8) で6条件の表を作り、(9) の報告を書く</li>
+      </ol>
+      <details>
+        <summary>TODO のヒント ― クリックで開く</summary>
+        <div class="answer-content">
+<pre>layers.append(ACTS[act]())</pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout-tip">
+      <h4>部屋B・C の CSV の共有</h4>
+      <p style="font-size:0.9rem">自分の <code>results/c1_d2_room_b_&lt;グループ&gt;.csv</code>（部屋C は <code>room_c</code>）を同じ部屋の仲間に送り、受け取った CSV は <code>results/room_b_shared/</code>（部屋C は <code>results/room_c_shared/</code>）に入れる。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SUBMIT ============ -->
+<section id="sec-submit">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">✓</div>
+      <h2>提出前チェック</h2>
+    </div>
+    <div class="card standard">
+      <table style="font-size:0.82rem">
+        <tr><th style="width:5%"></th><th>確認項目</th></tr>
+        <tr><td><input type="checkbox"></td><td>演習2 の CSV に MLP・CNN・Transformer の3モデル分がある</td></tr>
+        <tr><td><input type="checkbox"></td><td>演習3 の用途・選んだモデル・理由を書いた</td></tr>
+        <tr><td><input type="checkbox"></td><td>選んだ部屋のノートブックのグラフが出ていて、「報告」を書いた</td></tr>
+        <tr><td><input type="checkbox"></td><td>部屋B・C は、仲間の CSV を集めて全員分のグラフ・表を作った</td></tr>
+        <tr><td><input type="checkbox"></td><td>zip にせず、ファイル名を変えていない</td></tr>
+        <tr><td><input type="checkbox"></td><td><a href="https://musashino-u.myopenlms.net/mod/questionnaire/view.php?id=42574" target="_blank" rel="noopener" style="color:#4FC3F7">グループメンバーの評価</a>（Open-LMS）に回答した（役割ごとに5段階。自分の役割の欄は自己評価）</td></tr>
+      </table>
+      <div class="notion-submit"><div><strong>提出:</strong> Open-LMS の<a href="https://musashino-u.myopenlms.net/mod/assign/view.php?id=42573" target="_blank" rel="noopener" style="color:#4FC3F7">「第2回 課題提出」</a>へ各自アップロード（期限：10/15（木）13:10）</div></div>
+    </div>
+    <div class="callout-tip">
+      <h4>次回：過学習と評価指標</h4>
+      <p style="font-size:0.9rem">わざと過学習を起こし、それを防ぐ3つの方法を比べる。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div>AIテクノロジデザインⅠ ─ 2026年度3学期 ─ 第2回</div>
+    <div style="margin-top:0.5rem;font-size:0.8rem;color:#666">&copy;2026 Ryota Nakamura.</div>
+  </div>
+</footer>
+
+<!-- ============ SCRIPTS ============ -->
+<script>
+// Copy button for pre blocks
+document.querySelectorAll('pre').forEach(function(pre) {
+  var btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'コピー';
+  btn.addEventListener('click', function() {
+    // ボタン自身の文字（「コピー」）を含めないよう，ボタンを除いた複製から本文を取る
+    var clone = pre.cloneNode(true);
+    clone.querySelectorAll('.copy-btn').forEach(function(b) { b.remove(); });
+    var code = clone.textContent.replace(/^(Python|JavaScript|HTML|Bash|JSON|Terminal|Directory Tree|\.zshrc|Notion テンプレート)( ── [^\n]+)?\n/, '');
+    navigator.clipboard.writeText(code).then(function() {
+      btn.textContent = 'コピーしました';
+      btn.classList.add('copied');
+      setTimeout(function() {
+        btn.textContent = 'コピー';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Click-to-copy on inline code elements
+document.querySelectorAll(':not(pre) > code').forEach(function(code) {
+  code.title = 'クリックでコピー';
+  code.addEventListener('click', function() {
+    navigator.clipboard.writeText(code.textContent).then(function() {
+      code.classList.add('copied');
+      setTimeout(function() {
+        code.classList.remove('copied');
+      }, 1500);
+    });
+  });
+});
+</script>
+
+</body>
+</html>
