@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>第1回：AIは何を学習し、モデルをどう組み立て、どう測るか | AI_TD1</title>
+<title>第1回：ディープラーニングの基本 ― モデルを組み立てて学習させ、正しく測る | AI_TD1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -475,7 +475,7 @@ a.sub-item:hover {
 <body>
 
 <!-- ============ SECTION NAV ============ -->
-<nav class="section-nav"><div style="display:flex;align-items:center;gap:0.1rem;margin-right:0.8rem;border-right:1px solid #333;padding-right:0.8rem"><span style="color:#666;font-size:0.5rem;white-space:nowrap">回:</span><a style="color:#4FC3F7;background:rgba(79,195,247,0.15);font-size:0.6rem;padding:0.2rem 0.5rem;border-radius:4px" href="aitd1_week_1.html">1</a> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">2</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">3</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">4</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">5</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">6</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">7</span> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="index.html">全体</a></div>
+<nav class="section-nav"><div style="display:flex;align-items:center;gap:0.1rem;margin-right:0.8rem;border-right:1px solid #333;padding-right:0.8rem"><span style="color:#666;font-size:0.5rem;white-space:nowrap">回:</span><a style="color:#4FC3F7;background:rgba(79,195,247,0.15);font-size:0.6rem;padding:0.2rem 0.5rem;border-radius:4px" href="aitd1_week_1.html">1</a> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_2.html">2</a> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">3</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">4</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">5</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">6</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">7</span> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="index.html">全体</a></div>
   <a href="#sec-purpose">授業の目的</a>
   <a href="#sec-flow">本日の流れ</a>
   <a href="#sec-prep">0. 環境構築</a>
@@ -531,12 +531,12 @@ a.sub-item:hover {
             <li><strong>正しく測る</strong>：同期・ウォームアップ・中央値で4指標を測れる</li>
             <li><strong>差を疑う</strong>：複数シードの平均と標準偏差で差を判定できる</li>
             <li><strong>公平に比べる</strong>：パラメータ数を揃えて構造を比べられる</li>
-            <li><strong>言葉にする</strong>：実測値を根拠に質問し、説明できる</li>
+            <li><strong>言葉にする</strong>：実測値を根拠に説明できる</li>
           </ul>
           <table style="font-size:0.85rem">
             <tr><th style="width:4rem">回</th><th>テーマ</th><th>やること</th></tr>
             <tr><td><strong style="color:#4FC3F7">1</strong></td><td>学習の流れ・組み立て・測定</td><td>コードの組み立て（MLP・CNN）／環境ベンチマーク</td></tr>
-            <tr><td>2</td><td>勾配の観測</td><td>3モデルの4指標／「良いAI」の順位／層別勾配ノルム</td></tr>
+            <tr><td><a href="aitd1_week_2.html" style="color:#4FC3F7">2</a></td><td>勾配の観測</td><td>3モデルの4指標／用途に合うモデルの選択／層別勾配ノルム</td></tr>
             <tr><td>3</td><td>過学習と評価指標</td><td>過学習を作る／正則化3手法</td></tr>
             <tr><td><strong style="color:#FFB800">4 ★</strong></td><td>再現性と分散</td><td>シード5回／差÷標準偏差</td></tr>
             <tr><td>5</td><td>アーキテクチャ比較</td><td>27セルの格子を分担</td></tr>
@@ -558,11 +558,10 @@ a.sub-item:hover {
         <a href="#sec-gw1" class="sub-item" style="text-decoration:none;color:inherit;border-color:#4FC3F7"><span class="sub-count" style="background:#4FC3F7">1</span><span class="tag" style="background:#0a1a2e;color:#4FC3F7">GW1・GW2</span>穴埋めシート（PDF）</a>
         <a href="#sec-gw3" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">GW3</span>ex0_1〜ex0_3 の3ファイル ／ c1_d1_ex0_&lt;グループ&gt;.csv</a>
         <a href="#sec-ex1" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">1</span><span class="tag tag-standard">演習1</span>c1_d1_ex1_&lt;グループ&gt;.csv</a>
-        <a href="#sec-roles" class="sub-item" style="text-decoration:none;color:inherit;border-color:#4FC3F7"><span class="sub-count" style="background:#4FC3F7">1</span><span class="tag" style="background:#0a1a2e;color:#4FC3F7">ノート</span>失敗記録・討議メモ</a>
         <a href="#sec-opt" class="sub-item" style="text-decoration:none;color:inherit;border-color:#66BB6A"><span class="sub-count" style="background:#66BB6A">任意</span><span class="tag" style="background:#0a1a2e;color:#66BB6A">オプション</span>opt_datasize.ipynb ／ c1_d1_opt1_&lt;グループ&gt;.csv</a>
       </div>
       <div style="background:#0a1a2e;border:1px solid #2a6a9a;border-radius:8px;padding:0.8rem 1rem;margin-top:1rem;font-size:0.85rem;color:#81D4FA">
-        <strong>手順:</strong> ① グループで共有（演習1 の各自の行・シート・メモ）→ ② 自分の <code>results/</code> に集める → ③ <a href="https://musashino-u.myopenlms.net/course/view.php?id=7914" target="_blank" rel="noopener" style="color:#4FC3F7">Open-LMS</a> の「第1回」へ<strong>自分で</strong>アップロード
+        <strong>手順:</strong> ① グループで共有（演習1 の各自の行・穴埋めシート）→ ② 自分の <code>results/</code> に集める → ③ <a href="https://musashino-u.myopenlms.net/course/view.php?id=7914" target="_blank" rel="noopener" style="color:#4FC3F7">Open-LMS</a> の「第1回」へ<strong>自分で</strong>アップロード
       </div>
       <div style="background:#0a1a2e;border:1px solid #2a6a9a;border-radius:8px;padding:0.8rem 1rem;margin-top:0.5rem;font-size:0.85rem;color:#FFB800">
         <strong>期限：</strong>次回の授業開始まで
@@ -756,7 +755,7 @@ a.sub-item:hover {
       <table style="font-size:0.85rem">
         <tr><th style="width:4rem">試行</th><th>ファイル（<code>course1/day1/</code>）</th><th>データ × モデル</th><th>カード</th></tr>
         <tr><td><strong style="color:#4FC3F7">①</strong></td><td><code>ex0_1_mlp_fashion.ipynb</code></td><td>FashionMNIST（衣類 10 クラス）× MLP</td><td>A〜L を①〜⑫に貼る</td></tr>
-        <tr><td><strong style="color:#FFB800">②</strong></td><td><code>ex0_2_mlp_original.ipynb</code></td><td><strong>オリジナル画像</strong>（2 クラス × 100 枚）× MLP</td><td>①と同じカードを貼り、5つだけ M〜Q（⑫はない）</td></tr>
+        <tr><td><strong style="color:#FFB800">②</strong></td><td><code>ex0_2_mlp_original.ipynb</code></td><td><strong>オリジナル画像</strong>（2 クラス × 100 枚）× MLP</td><td>①と同じカードを貼り、5つだけ M〜Q に差し替える</td></tr>
         <tr><td><strong style="color:#B388FF">③</strong></td><td><code>ex0_3_cnn_original.ipynb</code></td><td><strong>オリジナル画像</strong> × <strong>シンプルな CNN</strong></td><td>②と同じカードを貼り、1つだけ R</td></tr>
       </table>
       <p style="font-size:0.85rem;color:#ccc;margin-top:0.5rem">②と③はデータが同じでモデルだけが違う。</p>
@@ -966,7 +965,7 @@ model</pre>
     <summary>カード H（14 行）― クリックで開く</summary>
     <div class="answer-content">
 <pre>model.eval()   # 評価モード（学習のときだけ働く Dropout などを止める）
-# テストデータ（学習に使っていない 1 万枚）で正解率を求める
+# テストデータ（学習にも検証にも使っていないデータ）で正解率を求める
 correct = 0
 total = 0
 # 勾配を計算しない（評価だけなので速く，メモリも少なくて済む）
@@ -1014,9 +1013,9 @@ train_dataset, val_dataset = random_split(
     train_val_dataset, 
     [train_size, val_size]
 )
-print(f&quot;訓練データ数: {len(train_dataset)} 枚)&quot;)
-print(f&quot;検証データ数: {len(val_dataset)} 枚)&quot;)
-print(f&quot;テストデータ数: {len(test_dataset)} 枚)&quot;)</pre>
+print(f&quot;訓練データ数: {len(train_dataset)} 枚&quot;)
+print(f&quot;検証データ数: {len(val_dataset)} 枚&quot;)
+print(f&quot;テストデータ数: {len(test_dataset)} 枚&quot;)</pre>
     </div>
   </details>
   <details id="gw3-card-J">
@@ -1112,13 +1111,14 @@ model</pre>
     </div>
   </details>
   <details id="gw3-card-N">
-    <summary>カード N（5 行）― クリックで開く</summary>
+    <summary>カード N（6 行）― クリックで開く</summary>
     <div class="answer-content">
 <pre># 一度にまとめて流す枚数（ミニバッチの大きさ）
 BATCH_SIZE = 8
 # データをミニバッチに分けて順に取り出す仕組み（訓練用は毎回並びを混ぜる）
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)</pre>
+val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)</pre>
     </div>
   </details>
   <details id="gw3-card-O">
@@ -1147,7 +1147,7 @@ from torchvision.datasets import ImageFolder</pre>
     </div>
   </details>
   <details id="gw3-card-P">
-    <summary>カード P（44 行）― クリックで開く</summary>
+    <summary>カード P（47 行）― クリックで開く</summary>
     <div class="answer-content">
 <pre>IMAGE_DIR = str(ROOT / &#x27;assets&#x27; / &#x27;cable1&#x27;)   # オリジナル画像（2 クラス × 100 枚）
 
@@ -1162,12 +1162,13 @@ torch.cuda.manual_seed(0)
 if torch.backends.mps.is_available():
     torch.mps.manual_seed(0)
 
-# 全 200 枚を 7:3 に分け，訓練用と検証用にする
+# 全 200 枚を 70% 訓練用・15% 検証用・15% テスト用に分ける（テスト用は学習にも調整にも使わない）
 train_size = int(0.7 * len(full_dataset))
-val_size = len(full_dataset) - train_size
+val_size = int(0.15 * len(full_dataset))
+test_size = len(full_dataset) - train_size - val_size
 
-train_subset, val_subset = random_split(
-    full_dataset, [train_size, val_size]
+train_subset, val_subset, test_subset = random_split(
+    full_dataset, [train_size, val_size, test_size]
 )
 
 # 分けたデータに，訓練用・検証用それぞれの前処理をかけるための入れ物
@@ -1185,14 +1186,16 @@ class CustomDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.subset)
 
-# 訓練用と検証用に前処理を割り当てる
+# 訓練用・検証用・テスト用に前処理を割り当てる（テスト用は検証用と同じ前処理）
 train_dataset = CustomDataset(train_subset, transform=data_transforms[&#x27;train&#x27;])
 val_dataset = CustomDataset(val_subset, transform=data_transforms[&#x27;val&#x27;])
+test_dataset = CustomDataset(test_subset, transform=data_transforms[&#x27;val&#x27;])
 
 print(f&quot;===&gt; Dataset Loaded: {IMAGE_DIR}&quot;)
 print(f&quot;     Total samples: {len(full_dataset)}&quot;)
 print(f&quot;     Train samples: {len(train_dataset)}&quot;)
-print(f&quot;     Val samples  : {len(val_dataset)}&quot;)</pre>
+print(f&quot;     Val samples  : {len(val_dataset)}&quot;)
+print(f&quot;     Test samples : {len(test_dataset)}&quot;)</pre>
     </div>
   </details>
   <details id="gw3-card-Q">
@@ -1229,11 +1232,11 @@ data_transforms = {
 <rect x="10" y="194" width="300" height="50" rx="8" fill="rgba(255,184,0,0.14)" stroke="#FFB800" stroke-width="2.2"/>
 <text x="24" y="227.0" fill="#FFB800" font-size="22" font-weight="700">③</text>
 <text x="58" y="214" fill="#FFB800" font-size="13" font-weight="700">差し替え</text>
-<text x="58" y="232" fill="#ddd" font-size="12.5">自分のフォルダから読み、7:3 に分ける</text>
+<text x="58" y="232" fill="#ddd" font-size="12.5">自分のフォルダから読み、3つに分ける</text>
 <rect x="10" y="256" width="300" height="50" rx="8" fill="rgba(255,184,0,0.14)" stroke="#FFB800" stroke-width="2.2"/>
 <text x="24" y="289.0" fill="#FFB800" font-size="22" font-weight="700">④</text>
 <text x="58" y="276" fill="#FFB800" font-size="13" font-weight="700">差し替え</text>
-<text x="58" y="294" fill="#ddd" font-size="12.5">枚数が少ないのでバッチを小さく</text>
+<text x="58" y="294" fill="#ddd" font-size="12.5">バッチを小さく、テスト用も作る</text>
 <text x="480.0" y="58" text-anchor="middle" fill="#bbb" font-size="15" font-weight="700">学習設定フェーズ</text>
 <rect x="330" y="70" width="300" height="50" rx="8" fill="#1c1c1c" stroke="#555" stroke-width="1"/>
 <text x="344" y="103.0" fill="#888" font-size="22" font-weight="700">⑤</text>
@@ -1259,10 +1262,10 @@ data_transforms = {
 <rect x="650" y="132" width="300" height="50" rx="8" fill="#1c1c1c" stroke="#555" stroke-width="1"/>
 <text x="664" y="165.0" fill="#888" font-size="22" font-weight="700">⑪</text>
 <text x="698" y="162.0" fill="#888" font-size="13" font-weight="700">そのまま</text>
-<rect x="650" y="194" width="300" height="50" rx="8" fill="rgba(239,83,80,0.12)" stroke="#EF5350" stroke-width="2.2" stroke-dasharray="6 4"/>
-<text x="664" y="227.0" fill="#EF5350" font-size="22" font-weight="700">⑫</text>
-<text x="698" y="214" fill="#EF5350" font-size="13" font-weight="700">削除</text>
-<text x="698" y="232" fill="#ddd" font-size="12.5">テストデータがないので削除</text>
+<rect x="650" y="194" width="300" height="50" rx="8" fill="#1c1c1c" stroke="#555" stroke-width="1"/>
+<text x="664" y="227.0" fill="#888" font-size="22" font-weight="700">⑫</text>
+<text x="698" y="214" fill="#888" font-size="13" font-weight="700">そのまま</text>
+<text x="698" y="232" fill="#ddd" font-size="12.5">テストデータで評価する</text>
 <text x="480.0" y="418" text-anchor="middle" fill="#aaa" font-size="13.5">差し替えカードは M〜Q の5枚。どのカードがどの番号かは、コードとコメントを読んで決める</text>
 </svg>
       </div>
@@ -1336,25 +1339,25 @@ model</pre>
     <div class="card group">
       <div class="card-header"><h3>結果を記録する</h3></div>
       <table style="font-size:0.85rem">
-        <tr><th>試行</th><th>検証正解率（最高／最終）</th><th>学習時間</th><th>学習曲線の形</th></tr>
-        <tr><td>① FashionMNIST × MLP</td><td></td><td></td><td></td></tr>
-        <tr><td>② オリジナル画像 × MLP</td><td></td><td></td><td></td></tr>
-        <tr><td>③ オリジナル画像 × CNN</td><td></td><td></td><td></td></tr>
+        <tr><th>試行</th><th>検証正解率（最高／最終）</th><th>テスト正解率</th><th>学習時間</th><th>学習曲線の形</th></tr>
+        <tr><td>① FashionMNIST × MLP</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>② オリジナル画像 × MLP</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>③ オリジナル画像 × CNN</td><td></td><td></td><td></td><td></td></tr>
       </table>
     </div>
 
     <div class="card standard">
-      <div class="card-header"><h3>想定される時間と精度（教員機 M4 Max で実測・20エポック）</h3></div>
+      <div class="card-header"><h3>想定される時間と精度（MacBook Air M3 で実測・20エポック）</h3></div>
       <table style="font-size:0.82rem">
-        <tr><th>試行</th><th>学習時間</th><th>検証正解率（最高／最終）</th></tr>
-        <tr><td>① FashionMNIST × MLP</td><td>46 秒</td><td>90.0% ／ 90.0%（テスト 89.5%）</td></tr>
-        <tr><td>② オリジナル画像 × MLP</td><td>3 秒</td><td>78.3% ／ 78.3%</td></tr>
-        <tr><td>③ オリジナル画像 × CNN</td><td>3 秒</td><td>81.7% ／ 76.7%</td></tr>
+        <tr><th>試行</th><th>学習時間</th><th>検証正解率（最高／最終）</th><th>テスト正解率</th></tr>
+        <tr><td>① FashionMNIST × MLP</td><td>98 秒</td><td>89.8% ／ 89.5%</td><td>88.8%</td></tr>
+        <tr><td>② オリジナル画像 × MLP</td><td>7 秒</td><td>76.7% ／ 73.3%</td><td>83.3%</td></tr>
+        <tr><td>③ オリジナル画像 × CNN</td><td>6 秒</td><td>80.0% ／ 73.3%</td><td>80.0%</td></tr>
       </table>
-      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">時間は機種で変わる（MacBook Air は数倍の見込み）。正解率はほぼ同じになるはず。</p>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">時間は機種で変わる。正解率はほぼ同じになるはず（機種や版が違うと一致しないこともある）。</p>
       <figure style="margin:1rem 0 0">
         <img src="img/gw3_expected.png" alt="試行①②③の検証正解率の推移と、MLP と CNN の比較" style="width:100%;border-radius:10px;border:1px solid #333;display:block">
-        <figcaption style="font-size:0.78rem;color:#999;margin-top:0.4rem;text-align:center">▲ 右：乱数の種を変えた5回すべてで CNN が上回った（平均 81.3% → 84.7%）。1回だけでは逆転することもある（→ 第4回）</figcaption>
+        <figcaption style="font-size:0.78rem;color:#999;margin-top:0.4rem;text-align:center">▲ 右：乱数の種を変えた5回のテスト正解率。授業で出る1回（シード 0）では MLP が上回り、5回の平均では CNN が 3.3 ポイント（1枚分）上。この差で「CNN が良い」と言えるかは第4回で扱う</figcaption>
       </figure>
     </div>
 
@@ -1364,7 +1367,7 @@ model</pre>
       <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
         <li><strong>MLP とは何か</strong>。画像をどんな形にしてから入力するか</li>
         <li><strong>CNN とは何か</strong>。畳み込み層とプーリング層はそれぞれ何をするか</li>
-        <li>試行②と③の結果から、オリジナル画像で CNN が有利になりやすいのはなぜか</li>
+        <li>オリジナル画像で CNN が有利になると考えられるのはなぜか。試行②と③の結果はそれを支持したか</li>
       </ol>
       <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">手がかり：<code>nn.Linear</code>・<code>nn.Conv2d</code>・<code>nn.MaxPool2d</code> が書かれたカードのコメント。</p>
     </div>
@@ -1373,7 +1376,7 @@ model</pre>
       <div class="card-header"><h3>討議（5分）→ プレゼン1</h3></div>
       <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
         <li>データを替えたとき、モデルを替えたとき、差し替えたのはどのセルか</li>
-        <li>②→③で何ポイント変わったか。検証は60枚（1枚 ≒ 1.7ポイント）。「上がった」と言えるか</li>
+        <li>②→③でテスト正解率は何ポイント変わったか。テストは30枚（1枚 ≒ 3.3ポイント）。「上がった」と言えるか</li>
       </ol>
       <div class="notion-submit"><div><strong>プレゼン1:</strong> 代表が結論を2分 → 他のメンバーが1分ずつ</div></div>
     </div>
@@ -1431,17 +1434,17 @@ model</pre>
         <tr><th style="width:9rem">役割</th><th>やること</th><th style="width:10rem">残すもの</th></tr>
         <tr><td><strong style="color:#4FC3F7">implementer</strong></td><td>コードを書く（1人だけ）</td><td>ノートブック・CSV</td></tr>
         <tr><td><strong style="color:#FFB800">verifier</strong></td><td>条件を変えて再実行し、結果を疑う</td><td>比較表</td></tr>
-        <tr><td><strong style="color:#81D4FA">recorder</strong></td><td>エラーと討議を記録し、他グループへの質問を3問作る</td><td>失敗記録・質問カード</td></tr>
+        <tr><td><strong style="color:#81D4FA">recorder</strong></td><td>討議で出た意見と結論をまとめ、プレゼンで伝える</td><td>—</td></tr>
         <tr><td><strong style="color:#B388FF">presenter</strong></td><td>司会・時間管理・結論を一文で発表</td><td>結論（一文）</td></tr>
       </table>
-      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">3人：verifier が presenter を兼任。5人：collector（他グループの数値を集める）を追加。</p>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">3人：verifier が presenter を兼任。5人：verifier を2人にする。</p>
     </div>
 
     <div class="card group">
-      <div class="card-header"><h3>プレゼンと質問カード</h3></div>
+      <div class="card-header"><h3>グループ内プレゼン</h3></div>
       <ul class="point-list">
-        <li>プレゼン：presenter 2分 → 他の役割が1分ずつ → 質疑。<strong>外れた予測や行き詰まり</strong>を話す</li>
-        <li>質問カードの最高評価は、<strong>相手の実測値を要求する質問</strong>（検索や LLM では答えられない）</li>
+        <li>presenter 2分 → 他の役割が1分ずつ → 質疑。スライドは作らず、画面を見せて話す</li>
+        <li>うまくいった点より、<strong>外れた予測や行き詰まった点</strong>を話す</li>
       </ul>
     </div>
 
@@ -1489,6 +1492,7 @@ model</pre>
         <tr><td>他のメンバー</td><td>implementer の書いた行を、自分のノートブックの同じ TODO に写す</td></tr>
         <tr><td>verifier</td><td>実行後、条件を変えて再実行する（下の「verifier がやること」）</td></tr>
       </table>
+      <p style="font-size:0.85rem;color:#ccc;margin-bottom:0.8rem"><strong>なぜ写すのか：</strong>この演習で測る対象はコードではなく、各自のマシンである。全員が同じコードで測るので、グループ内の数字の違いがそのままマシンの違いとして比べられる。</p>
       <table style="font-size:0.85rem">
         <tr><th style="width:4rem">見出し</th><th>セルがすること</th><th>あなたがやること</th></tr>
         <tr><td>(0)</td><td>グループ番号の設定</td><td><code>GROUP_ID = 1</code> を自分のグループ番号に書き換えて実行</td></tr>
@@ -1742,6 +1746,7 @@ flops <span class="op">=</span> <span class="num">2</span> <span class="op">*</s
         <li>帯域は公称値の何%か（公称値は上の表）</li>
         <li>機種差が大きいのは B1 と B2 のどちらか</li>
       </ol>
+      <p style="font-size:0.85rem;color:#ccc;margin-top:0.6rem"><strong style="color:#FFB800">注意：</strong><code>ex1.ipynb</code> の (11) にある「待ち時間用課題に書いた予測と比べてどうか」と、「失敗記録」「討議メモ」は古い情報です。無視してください（今回はどちらも作らず、提出もしません）。</p>
     </div>
   </div>
 </section>
@@ -1760,7 +1765,7 @@ flops <span class="op">=</span> <span class="num">2</span> <span class="op">*</s
         <tr><td><input type="checkbox"></td><td>ex0_1〜ex0_3 の3ファイルを実行し、CSV に試行①②③の3回分がある</td></tr>
         <tr><td><input type="checkbox"></td><td>ex0_3 の課題（MLP と CNN の説明）を書いた</td></tr>
         <tr><td><input type="checkbox"></td><td>演習1 の CSV にグループ全員分の行がある</td></tr>
-        <tr><td><input type="checkbox"></td><td>穴埋めシートと失敗記録・討議メモが手元にある</td></tr>
+        <tr><td><input type="checkbox"></td><td>穴埋めシート（PDF）が手元にある</td></tr>
         <tr><td><input type="checkbox"></td><td>zip にせず、ファイル名を変えていない</td></tr>
       </table>
       <div class="notion-submit"><div><strong>提出:</strong> <a href="https://musashino-u.myopenlms.net/course/view.php?id=7914" target="_blank" rel="noopener" style="color:#4FC3F7">Open-LMS</a> の「第1回」へ各自アップロード</div></div>
