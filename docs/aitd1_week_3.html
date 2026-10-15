@@ -506,7 +506,7 @@ a.sub-item:hover {
       <p style="font-size:1.05rem;margin-bottom:0.7rem">「よく学習できた」を<strong style="color:#4FC3F7">訓練データ以外で</strong>確かめる。</p>
       <table style="font-size:0.85rem">
         <tr><th style="width:7rem">パート</th><th>やること</th><th style="width:34%">分かること</th></tr>
-        <tr><td><strong>復習</strong></td><td>第2回の「勾配と学習率」を、presenter と implementer が<strong>別のグループ</strong>に説明する</td><td>学習ループのどこで何が起きるか</td></tr>
+        <tr><td><strong>復習</strong></td><td>第2回の「勾配と学習率」を、presenter ともう1人が<strong>別のグループ</strong>に説明する</td><td>学習ループのどこで何が起きるか</td></tr>
         <tr><td><strong>演習1</strong></td><td>自分の制作物を AI 開発の5分類に当てはめ、必要な技術と計算環境を考える</td><td>何をつくるかで、必要な技術も計算環境も変わる</td></tr>
         <tr><td><strong>演習2</strong></td><td>訓練を 1,000 枚に減らし、50 エポック学習する</td><td>訓練の成績が上がり続けても、検証の成績は悪くなる</td></tr>
         <tr><td><strong>演習3</strong></td><td>Weight decay・Dropout・早期終了を1人1つ担当し、グループで比べる</td><td>正則化は「最高値を上げる」より「崩れを抑える」</td></tr>
@@ -542,7 +542,7 @@ a.sub-item:hover {
       <div class="card-header"><h3>本日の流れ（150分）</h3></div>
       <table style="font-size:0.82rem">
         <tr><th style="width:6rem">時間</th><th>内容</th><th style="width:8rem">形式</th></tr>
-        <tr><td>0–20</td><td><a href="#sec-review" style="color:#4FC3F7"><strong>復習プレゼン</strong></a> 役割を決める → 勾配と学習率（相談10分 → 他グループへ説明 → 評価）</td><td><span class="tag tag-group">発表</span></td></tr>
+        <tr><td>0–20</td><td><a href="#sec-review" style="color:#4FC3F7"><strong>復習プレゼン</strong></a> 番号を決める → 勾配と学習率（相談10分 → 他グループへ説明 → 評価）</td><td><span class="tag tag-group">発表</span></td></tr>
         <tr><td>20–30</td><td><a href="#sec-prep" style="color:#4FC3F7">準備</a>：<code>git pull</code></td><td>個人</td></tr>
         <tr><td>30–50</td><td><a href="#sec-ex1" style="color:#4FC3F7"><strong>演習1</strong></a> AIをつくるとは？（グループワーク）</td><td><span class="tag tag-group">討議</span></td></tr>
         <tr><td>50–80</td><td><a href="#sec-ex2" style="color:#4FC3F7"><strong>演習2</strong></a> 過学習を作る（予測 → 実行 → 討議）</td><td>個人 → グループ</td></tr>
@@ -561,7 +561,7 @@ a.sub-item:hover {
       <div class="section-num" style="background:#FFB800">復習</div>
       <h2>復習プレゼン：勾配と学習率（20分）</h2>
     </div>
-    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">第2回の「勾配と学習率」を、<strong>presenter と implementer の2人</strong>が<strong>別のグループに</strong>説明する。<strong>シートや画面は見ない</strong>。口頭かホワイトボードで話す。</p>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">第2回の「勾配と学習率」を、<strong>番号①（presenter）と②の2人</strong>が<strong>別のグループに</strong>説明する。<strong>シートや画面は見ない</strong>。口頭かホワイトボードで話す。</p>
 
     <div class="card group">
       <div class="card-header"><h3>説明すること</h3></div>
@@ -581,7 +581,19 @@ a.sub-item:hover {
         <tr><td>2分</td><td><strong>評価</strong>：聞いた人<strong>全員</strong>が Open-LMS の「第3回 復習プレゼンの評価」に回答する（流れ5点＋用語5点）</td></tr>
         <tr><td>5分</td><td><strong>持ち帰り</strong>：うまく言えなかった所をグループに報告する</td></tr>
       </table>
-      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">役割（implementer・verifier・recorder・presenter）は最初に決める。3人は verifier が presenter を兼ね、5人は verifier を2人にする。</p>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>第3回から：役割は presenter だけ（演習ごとに交代）</h3></div>
+      <p style="font-size:0.9rem;line-height:1.8">最初にグループ内で番号 ①②③④（5人なら⑤まで）を決める。<strong>presenter</strong> はその演習の話し合いを<strong>中心になって進める係</strong>で、番号の順に交代する。ほかの人に決まった役割はなく、<strong>全員が同じ作業</strong>（TODO を書く・実行する・根拠を言う）をする。</p>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:9rem">場面</th><th style="width:7rem">presenter</th><th>presenter がやること</th></tr>
+        <tr><td>復習プレゼン</td><td>①</td><td>相談を進め、②と2人で別のグループへ説明する</td></tr>
+        <tr><td>演習1</td><td>②</td><td rowspan="3">「✋」で問いを読み上げ、全員の考えを聞いて、根拠を含めた答えを1〜2文にまとめる。時間を見て「次へ」の合図を出す。演習3では最後のグループ内プレゼンで結論を話す</td></tr>
+        <tr><td>演習2</td><td>③</td></tr>
+        <tr><td>演習3</td><td>④</td></tr>
+      </table>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">3人グループは演習3で①に戻る。5人グループの⑤は最後の全体共有を担当する。欠席がいたら次の番号の人が代わる。ノートブック (0) の <code>MEMBER_NO</code> を自分の番号に書き換える。</p>
     </div>
   </div>
 </section>
@@ -761,12 +773,12 @@ a.sub-item:hover {
       <div class="card-header"><h3>ex2.ipynb のセルと、やること</h3></div>
       <table style="font-size:0.85rem">
         <tr><th style="width:5rem">見出し</th><th>セルがすること</th><th>あなたがやること</th></tr>
-        <tr><td>(0)・予測</td><td>グループ設定</td><td><code>GROUP_ID</code>・<code>MEMBER_ROLE</code> を書き換え、予測を書く</td></tr>
+        <tr><td>(0)・予測</td><td>グループ設定</td><td><code>GROUP_ID</code>・<code>MEMBER_NO</code> を書き換え、予測を書く</td></tr>
         <tr><td>(1)–(4)</td><td>データ・モデル・学習（エポックごとに訓練と検証を記録）</td><td>実行するだけ</td></tr>
         <tr><td>(5)</td><td>学習曲線（損失・正解率）</td><td>訓練と検証が離れる所を探す</td></tr>
         <tr><td>(6)</td><td>最良エポックと汎化ギャップ</td><td><strong style="color:#FFB800">TODO 1・2</strong></td></tr>
         <tr><td><strong>✋ 1</strong></td><td colspan="2">過学習はいつ始まったか、根拠と一緒に書く</td></tr>
-        <tr><td>(7)–(8)</td><td>CSV に記録 → verifier が 3,000 枚で再実行</td><td>verifier は <code>N_TRAIN = 3000</code></td></tr>
+        <tr><td>(7)–(8)</td><td>CSV に記録 → 3,000 枚で再実行</td><td>全員が <code>N_TRAIN = 3000</code> にしてもう一度実行（1分ほど）</td></tr>
         <tr><td><strong>✋ 2</strong></td><td colspan="2">訓練データを増やすと何が変わったか</td></tr>
         <tr><td>(9)</td><td colspan="2">考察を書く（提出）</td></tr>
       </table>
@@ -823,7 +835,7 @@ gap <span class="op">=</span> train_acc_list[<span class="op">-</span><span clas
         <tr><td>3人</td><td>誰か1人が2つ担当する（1回 20〜40 秒）</td></tr>
         <tr><td>5人</td><td>5人目は強さを変えた版（例：<code>WD = 0.001</code>、<code>P = 0.2</code>）</td></tr>
       </table>
-      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">TODO は3つとも全員が書く（implementer が先に説明する）。担当でない方法は強さが 0 なので何もしない。</p>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">TODO は3つとも全員が書く（分からない所はグループで教え合う）。担当でない方法は強さが 0 なので何もしない。</p>
     </div>
 
     <div class="card standard">
@@ -866,13 +878,11 @@ optimizer <span class="op">=</span> optim.Adam(model.parameters(), lr<span class
     </div>
 
     <div class="card group">
-      <div class="card-header"><h3>グループ内プレゼン（presenter 2分 → 他の役割が1分ずつ）― (8) の表とグラフを画面に出す</h3></div>
+      <div class="card-header"><h3>グループ内プレゼン（presenter 2分 → ほかの人が1分ずつ）― (8) の表とグラフを画面に出す</h3></div>
       <table style="font-size:0.85rem">
-        <tr><th style="width:9rem">役割</th><th>話すこと</th></tr>
-        <tr><td>presenter</td><td>一番効いた方法（一文）</td></tr>
-        <tr><td>implementer</td><td>その根拠を表の数値で示す</td></tr>
-        <tr><td>verifier</td><td>各方法が犠牲にしたもの（時間・訓練正解率）</td></tr>
-        <tr><td>recorder</td><td>外れた予測と、その理由</td></tr>
+        <tr><th style="width:9rem">誰が</th><th>話すこと</th></tr>
+        <tr><td>presenter（④）</td><td>一番効いた方法（一文）と、その根拠になる表の数値</td></tr>
+        <tr><td>ほかの人</td><td>自分が担当した方法が犠牲にしたもの（時間・訓練正解率）と、予測が外れた所。1人1つずつ足す</td></tr>
       </table>
     </div>
   </div>
