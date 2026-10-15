@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学習の流れパズル | AI_TD1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="play.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topbar">
+    <a href="../aitd1_week_3.html">← 第3回の授業ページ</a>
+    <span class="here">学習の流れ</span>
+    <a href="split.html">訓練・検証・テスト</a>
+    <a href="blocks.html">ブロック組み立て</a>
+  </nav>
+  <h1>学習の流れを組み立てる</h1>
+  <p class="lead">コードテンプレート⑩（学習ループ）の中で何が起きているかを図にした。チップを空欄へドラッグする（チップをクリック → 空欄をクリック でもよい）。</p>
+
+  <!-- ===================== レベル1 ===================== -->
+  <div class="level" id="lv1">
+    <h2><span class="badge">レベル1</span>言葉で組み立てる<span class="cleared">✔ クリア</span></h2>
+    <p class="howto">ミニバッチ 1 つごとに重みを 1 回更新する．それをデータ全体で繰り返すと 1 エポック．</p>
+    <div class="flow">
+      <div class="loopbox epoch">
+        <div class="label">エポックのループ（EPOCHS 回くり返す）</div>
+        <div class="step"><span class="num">1</span><span class="slot wide" data-a="訓練モードにする" data-hint="エポックの最初に，Dropout などを学習用の動きにする"></span></div>
+        <div class="arrow">↓</div>
+        <div class="loopbox batch">
+          <div class="label">ミニバッチのループ（訓練データ全体を少しずつ）</div>
+          <div class="step"><span class="num">2</span><span class="slot wide" data-a="ミニバッチを取り出す" data-hint="ループの最初は，訓練データから 64 枚を取り出すこと"></span></div>
+          <div class="arrow">↓</div>
+          <div class="step"><span class="num">3</span><span class="slot wide" data-a="前回の勾配を消す" data-hint="勾配は足し算でたまるので，計算する前に消しておく"></span></div>
+          <div class="arrow">↓</div>
+          <div class="step"><span class="num">4</span><span class="slot wide" data-a="順伝播で予測する" data-hint="損失を測るには，まず予測が要る"></span></div>
+          <div class="arrow">↓</div>
+          <div class="step"><span class="num">5</span><span class="slot wide" data-a="損失を計算する" data-hint="予測と正解のずれを 1 つの数にする"></span></div>
+          <div class="arrow">↓</div>
+          <div class="step"><span class="num">6</span><span class="slot wide" data-a="誤差逆伝播で勾配を求める" data-hint="損失から，重みごとの勾配を出す"></span></div>
+          <div class="arrow">↓</div>
+          <div class="step"><span class="num">7</span><span class="slot wide" data-a="重みを更新する" data-hint="勾配が求まってから，重みを動かす"></span></div>
+          <div class="loopback">↺ 次のミニバッチへ（2 に戻る）</div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step"><span class="num">8</span><span class="slot wide" data-a="評価モードにする" data-hint="検証の前に，Dropout などを止める"></span></div>
+        <div class="arrow">↓</div>
+        <div class="step"><span class="num">9</span><span class="slot wide" data-a="検証データで損失と正解率を測る" data-hint="重みは更新せず，検証データで成績だけを測る"></span></div>
+        <div class="arrow">↓</div>
+        <div class="step"><span class="num">10</span><span class="slot wide" data-a="リストに記録する" data-hint="エポックの最後に，学習曲線を描くための値を残す"></span></div>
+        <div class="loopback">↺ 次のエポックへ（1 に戻る）</div>
+      </div>
+    </div>
+    <div class="pool-here"></div>
+  </div>
+
+  <!-- ===================== レベル2 ===================== -->
+  <div class="level" id="lv2">
+    <h2><span class="badge">レベル2</span>コードで組み立てる<span class="cleared">✔ クリア</span></h2>
+    <p class="howto">同じ図に，コードテンプレート⑩の行を入れる．使わないチップ（よくある間違い）も混ざっている．</p>
+    <div class="flow">
+      <div class="loopbox epoch">
+        <div class="label"><code>for epoch in range(EPOCHS):</code></div>
+        <div class="step"><span class="num">1</span><span class="slot wide" data-a="model.train()" data-hint="1：訓練モードにする行"></span></div>
+        <div class="arrow">↓</div>
+        <div class="loopbox batch tall">
+          <div class="label"><span class="slot wide" data-a="for images, labels in train_loader:" data-hint="ミニバッチは訓練データのローダから取り出す"></span></div>
+          <div class="step"><span class="num">3</span><span class="slot wide" data-a="optimizer.zero_grad()" data-hint="3：勾配を消すのは最適化手法（optimizer）の仕事"></span></div>
+          <div class="arrow">↓</div>
+          <div class="step"><span class="num">4</span><span class="slot wide" data-a="outputs = model(images)" data-hint="4：モデルに画像を入れると予測が出る"></span></div>
+          <div class="arrow">↓</div>
+          <div class="step"><span class="num">5</span><span class="slot wide" data-a="loss = criterion(outputs, labels)" data-hint="5：損失関数には（予測, 正解）の順に渡す"></span></div>
+          <div class="arrow">↓</div>
+          <div class="step"><span class="num">6</span><span class="slot wide" data-a="loss.backward()" data-hint="6：誤差逆伝播は損失から始める"></span></div>
+          <div class="arrow">↓</div>
+          <div class="step"><span class="num">7</span><span class="slot wide" data-a="optimizer.step()" data-hint="7：重みを 1 歩動かす"></span></div>
+          <div class="loopback">↺ 次のミニバッチへ</div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step"><span class="num">8</span><span class="slot wide" data-a="model.eval()" data-hint="8：評価モードにする行"></span></div>
+        <div class="arrow">↓</div>
+        <div class="loopbox val tall">
+          <div class="label"><span class="slot wide" data-a="with torch.no_grad():" data-hint="検証では勾配を計算しない（速く，メモリも少ない）"></span></div>
+          <div class="step"><span class="num">9</span><span class="slot wide" data-a="for images, labels in val_loader:" data-hint="9：検証データのローダで測る．テストデータは最後に 1 回だけ"></span></div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step"><span class="num">10</span><span class="slot wide" data-a="val_loss_list.append(val_loss / val_total)" data-hint="10：エポックの検証損失をリストに足す"></span></div>
+        <div class="loopback">↺ 次のエポックへ</div>
+      </div>
+    </div>
+    <div class="pool-here"></div>
+  </div>
+
+  <!-- ===================== レベル3 ===================== -->
+  <div class="level" id="lv3">
+    <h2><span class="badge">レベル3</span>確認問題<span class="cleared">✔ クリア</span></h2>
+    <p class="howto">学習ループで <code>optimizer.zero_grad()</code> を書き忘れると，何が起きるか．</p>
+    <div class="choices">
+      <button>エラーで止まる</button>
+      <button data-ok>前のミニバッチの勾配が足し算でたまり，重みが大きく動きすぎる</button>
+      <button>重みがまったく更新されなくなる</button>
+      <button>検証の正解率だけが下がり，訓練には影響しない</button>
+    </div>
+    <p class="explain">正解．PyTorch の勾配は <code>backward()</code> のたびに足し算でたまる．だからミニバッチごとに先に消す．エラーにはならないので，気づきにくい．</p>
+  </div>
+</div>
+
+<script src="play.js"></script>
+<script>
+const T = (t) => ({ t });
+const C = (t) => ({ t, code: true });
+Play.slots(document.getElementById("lv1"), [
+  "訓練モードにする", "ミニバッチを取り出す", "前回の勾配を消す", "順伝播で予測する", "損失を計算する",
+  "誤差逆伝播で勾配を求める", "重みを更新する", "評価モードにする", "検証データで損失と正解率を測る", "リストに記録する",
+  "テストデータで正解率を測る",
+].map(T));
+Play.slots(document.getElementById("lv2"), [
+  "model.train()", "for images, labels in train_loader:", "optimizer.zero_grad()", "outputs = model(images)",
+  "loss = criterion(outputs, labels)", "loss.backward()", "optimizer.step()", "model.eval()", "with torch.no_grad():",
+  "for images, labels in val_loader:", "val_loss_list.append(val_loss / val_total)",
+  "for images, labels in test_loader:", "loss = criterion(labels, outputs)", "optimizer.backward()",
+].map(C));
+Play.choice(document.getElementById("lv3"));
+</script>
+</body>
+</html>

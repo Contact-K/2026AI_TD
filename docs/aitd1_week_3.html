@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第3回：過学習と評価指標 | AI_TD1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============ RESET & BASE ============ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: clamp(13px, 1.6vw, 28px); }
+html, body { overflow-x: hidden; max-width: 100%; }
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: #111111;
+  color: #e0e0e0;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+/* Media and embeds should never overflow their container */
+img, video, iframe, svg, canvas { max-width: 100%; height: auto; }
+
+/* ============ LAYOUT ============ */
+.container { max-width: 1600px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 3rem); }
+section { padding: clamp(2rem, 5vw, 4rem) 0; }
+section + section { border-top: 1px solid #222; }
+
+/* ============ HEADER ============ */
+.hero {
+  background: linear-gradient(135deg, #111111, #0a1a2e, #0a0f1a);
+  color: white;
+  padding: clamp(3rem, 8vw, 6rem) 0;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(108,99,255,0.3), transparent 50%),
+              radial-gradient(circle at 20% 80%, rgba(155,89,182,0.2), transparent 50%);
+}
+.hero .container { position: relative; z-index: 1; }
+.hero-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 100px;
+  padding: 0.35rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+}
+.hero h1 {
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+}
+.hero p { font-size: clamp(0.95rem, 1.8vw, 1.15rem); opacity: 0.85; max-width: 600px; }
+
+/* ============ SUBMISSION BOX ============ */
+.submission-box {
+  background: linear-gradient(135deg, #1A1A1A, #0a1a2e);
+  border: 2px solid #4FC3F7;
+  border-radius: 16px;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  margin: 2rem 0;
+}
+.submission-box h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #4FC3F7;
+  margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.submission-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.5rem;
+}
+.sub-item {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  gap: 0.3rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 0.4rem;
+  padding: 0.6rem 0.4rem;
+  font-size: 0.55rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.sub-item .sub-count {
+  margin-bottom: 0.1rem;
+}
+.sub-item .tag {
+  margin-bottom: 0.15rem;
+}
+.sub-count {
+  background: #4FC3F7;
+  color: white;
+  border-radius: 0.2rem;
+  min-width: 1.5rem; height: 1.5rem;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700;
+}
+
+/* ============ TAGS ============ */
+.tag {
+  display: inline-flex; align-items: center; gap: 0.2rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 100px;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.tag-note      { background: #0a1a2e; color: #4FC3F7; }
+.tag-standard  { background: #0a1a2e; color: #4FC3F7; }
+.tag-advanced  { background: #2e1a0a; color: #FFB800; }
+.tag-group     { background: #0a1a2e; color: #4FC3F7; }
+
+/* ============ EXAM ALERT TAG ============ */
+.exam-alert {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  background: rgba(255, 82, 82, 0.15);
+  border: 1px solid #FFB800;
+  color: #FFB800;
+  padding: 0.2rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  animation: exam-pulse 2s ease-in-out 3;
+}
+@keyframes exam-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ============ SECTION HEADERS ============ */
+.section-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.section-num {
+  width: 2.5rem; height: 2.5rem;
+  border-radius: 0.4rem;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 900; color: white;
+  flex-shrink: 0;
+}
+.section-header h2 {
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+/* ============ CARDS ============ */
+.card {
+  background: #141414;
+  border-radius: 16px;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  border: 1px solid #2a2a2a;
+}
+.card-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #222;
+}
+.card-header h3 { font-size: 1.1rem; font-weight: 700; }
+.card.standard  { border-left: 4px solid #4FC3F7; }
+.card.advanced  { border-left: 4px solid #FFB800; }
+.card.group     { border-left: 4px solid #81D4FA; }
+
+/* ============ NOTION CALLOUT ============ */
+.notion-submit {
+  background: #0a1a2e;
+  border: 1px solid #4FC3F7;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+  font-size: 0.88rem;
+  display: flex; align-items: flex-start; gap: 0.5rem;
+}
+.notion-submit::before { content: '\1F4DD'; font-size: 1rem; flex-shrink: 0; }
+.notion-submit strong { color: #FFB800; }
+
+/* ============ TABLES ============ */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #333;
+}
+th {
+  background: rgba(108, 99, 255, 0.15);
+  font-weight: 700;
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.82rem;
+  color: #4FC3F7;
+  letter-spacing: 0.02em;
+}
+td {
+  padding: 0.55rem 0.8rem;
+  border-top: 1px solid #222;
+}
+tr:nth-child(even) td { background: #111; }
+
+/* ============ CODE ============ */
+pre {
+  background: #0A0A0A;
+  color: #E0E0E0;
+  border-radius: 12px;
+  padding: clamp(0.8rem, 2vw, 1.4rem);
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-ligatures: none;
+  font-size: clamp(0.75rem, 1.3vw, 0.88rem);
+  line-height: 1.7;
+  margin: 1rem 0;
+  position: relative;
+}
+pre .kw { color: #4FC3F7; }
+pre .fn { color: #81D4FA; }
+pre .str { color: #FFB800; }
+pre .cmt { color: #616161; font-style: italic; }
+pre .num { color: #FFB800; }
+pre .op { color: #81D4FA; }
+.code-label {
+  position: absolute; top: 0; right: 0;
+  background: rgba(255,255,255,0.08);
+  color: #999999;
+  padding: 0.2rem 0.8rem;
+  border-radius: 0 12px 0 8px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* inline code */
+:not(pre) > code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(108,99,255,0.15);
+  padding: 0.15em 0.45em;
+  border-radius: 5px;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+:not(pre) > code:hover { background: rgba(108,99,255,0.3); }
+:not(pre) > code.copied { background: rgba(108,99,255,0.5); }
+
+/* ============ EXPLANATION BLOCKS ============ */
+.concept-box {
+  background: rgba(108, 99, 255, 0.15);
+  border-radius: 12px;
+  padding: 1.2rem 1.5rem;
+  margin: 1rem 0;
+  border: 1px solid #2a2a3a;
+}
+.concept-box h4 {
+  font-size: 0.95rem; font-weight: 700; color: #4FC3F7; margin-bottom: 0.5rem;
+}
+.analogy {
+  background: #1a1a0a;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 0.75rem 0;
+  border-left: 3px solid #FFB800;
+  font-size: 0.95rem;
+}
+.analogy::before {
+  content: '\1F4A1 具体例';
+  display: block;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #FFB800;
+  margin-bottom: 0.3rem;
+}
+.point-list {
+  list-style: none;
+  padding: 0;
+}
+.point-list li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+}
+.point-list li::before {
+  content: '\25B8';
+  position: absolute; left: 0;
+  color: #4FC3F7;
+  font-weight: 700;
+}
+
+/* ============ ANSWERS (COLLAPSIBLE) ============ */
+details {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+details summary {
+  padding: 0.8rem 1.2rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 0.5rem;
+  background: #1a1a1a;
+  user-select: none;
+}
+details summary::marker { content: ''; }
+details summary::before {
+  content: '\25B6';
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+  color: #666;
+}
+details[open] summary::before { transform: rotate(90deg); }
+details .answer-content { padding: 1rem 1.2rem; border-top: 1px solid #2a2a2a; }
+
+/* ============ WARNING / DANGER CALLOUT ============ */
+.callout-danger {
+  background: rgba(255, 82, 82, 0.08);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  border-left: 4px solid #FFB800;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.callout-danger h4 {
+  color: #FFB800; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;
+}
+.callout-warning {
+  background: rgba(255, 184, 0, 0.08);
+  border: 1px solid rgba(255, 184, 0, 0.3);
+  border-left: 4px solid #FFB800;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.callout-warning h4 {
+  color: #FFB800; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;
+}
+.callout-info {
+  background: rgba(108, 99, 255, 0.08);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  border-left: 4px solid #4FC3F7;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.callout-info h4 {
+  color: #4FC3F7; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;
+}
+.callout-tip {
+  background: rgba(155, 89, 182, 0.08);
+  border: 1px solid rgba(155, 89, 182, 0.3);
+  border-left: 4px solid #81D4FA;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.callout-tip h4 {
+  color: #81D4FA; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;
+}
+
+/* ============ FOOTER ============ */
+footer {
+  background: #0A0A0A;
+  color: #999999;
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 640px) {
+  .submission-items { grid-template-columns: 1fr; }
+  .section-num { width: 2rem; height: 2rem; font-size: 0.85rem; }
+}
+
+/* ============ GW3 カードの色分け（試行ごと） ============ */
+.gw3-group { border-left: 4px solid var(--gw3c); padding: 0.6rem 0 0.2rem 0.9rem; margin: 1.2rem 0; border-radius: 4px; background: linear-gradient(90deg, color-mix(in srgb, var(--gw3c) 10%, transparent), transparent 40%); }
+.gw3-group > h3 { color: var(--gw3c); font-size: 1rem; margin: 0 0 0.6rem; }
+.gw3-group details { border-left: 3px solid var(--gw3c); }
+.gw3-group details summary { color: var(--gw3c); }
+.gw3-t1 { --gw3c: #4FC3F7; }
+.gw3-t2 { --gw3c: #FFB800; }
+.gw3-t3 { --gw3c: #B388FF; }
+
+/* ============ COPY BUTTON ============ */
+pre { position: relative; }
+.copy-btn {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid #444;
+  color: #999;
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: all 0.2s;
+  z-index: 2;
+  user-select: none;          /* 手で範囲選択してもボタンの文字が入らないように */
+  -webkit-user-select: none;
+}
+.copy-btn:hover { background: #4FC3F7; color: white; border-color: #4FC3F7; }
+.copy-btn.copied { background: #4FC3F7; color: white; border-color: #4FC3F7; }
+
+/* ============ SUB-ITEM LINKS ============ */
+a.sub-item { transition: transform 0.15s, box-shadow 0.15s; }
+a.sub-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79,195,247,0.3);
+  border-color: #4FC3F7;
+}
+
+/* ============ SECTION NAV (sticky) ============ */
+.section-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(17,17,17,0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #222;
+  padding: 0.5rem 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+.section-nav a {
+  color: #999;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.section-nav a:hover { color: #4FC3F7; background: rgba(79,195,247,0.1); }
+.section-nav a.nav-assignment { color: #81D4FA; }
+.section-nav a.nav-exam { color: #FFB800; }
+
+/* ============ SCROLL TARGET OFFSET ============ */
+[id] { scroll-margin-top: 3rem; }
+
+/* ============ REDUCED MOTION ============ */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  details summary::before { transition: none; }
+}
+</style>
+
+<body>
+
+<!-- ============ SECTION NAV ============ -->
+<nav class="section-nav"><div style="display:flex;align-items:center;gap:0.1rem;margin-right:0.8rem;border-right:1px solid #333;padding-right:0.8rem"><span style="color:#666;font-size:0.5rem;white-space:nowrap">回:</span><a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_1.html">1</a> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_2.html">2</a> <a style="color:#4FC3F7;background:rgba(79,195,247,0.15);font-size:0.6rem;padding:0.2rem 0.5rem;border-radius:4px" href="aitd1_week_3.html">3</a> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">4</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">5</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">6</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">7</span> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="index.html">全体</a></div>
+  <a href="#sec-overview">今日やること</a>
+  <a href="#sec-flow">本日の流れ</a>
+  <a href="#sec-review" class="nav-assignment">復習プレゼン</a>
+  <a href="#sec-prep">0. 準備</a>
+  <a href="#sec-ex1" class="nav-assignment">演習1 AIをつくるとは？</a>
+  <a href="#sec-ex2" class="nav-assignment">演習2 過学習を作る</a>
+  <a href="#sec-ex3" class="nav-assignment">演習3 3つの方法を比べる</a>
+  <a href="#sec-lecture">予習：評価指標（任意）</a>
+  <a href="#sec-opt">オプション課題</a>
+  <a href="#sec-submit" class="nav-exam">提出</a>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="container">
+    <div class="hero-badge">人工知能(AI)テクノロジデザインⅠ（AI_TD1）─ 2026年度 3学期</div>
+    <p style="font-size:0.85rem;opacity:0.7;margin-bottom:0.3rem">武蔵野大学データサイエンス学部　中村 亮太</p>
+    <h1>第3回：過学習と評価指標</h1>
+    <p>はじめに、AIを「つくる」とは何かを5つの種類で整理する。次に、わざと過学習を起こし、それを防ぐ3つの方法をグループで分担して比べる。</p>
+  </div>
+</header>
+
+<!-- ============ OVERVIEW ============ -->
+<section id="sec-overview" style="padding-top:2.5rem;padding-bottom:0">
+  <div class="container">
+    <div class="card" style="border-left:4px solid #4FC3F7;background:linear-gradient(135deg,#141414,#111a24)">
+      <div class="card-header"><h3>📌 今日やること</h3></div>
+      <p style="font-size:1.05rem;margin-bottom:0.7rem">「よく学習できた」を<strong style="color:#4FC3F7">訓練データ以外で</strong>確かめる。</p>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:7rem">パート</th><th>やること</th><th style="width:34%">分かること</th></tr>
+        <tr><td><strong>復習</strong></td><td>第2回の「勾配と学習率」を、presenter ともう1人が<strong>別のグループ</strong>に説明する</td><td>学習ループのどこで何が起きるか</td></tr>
+        <tr><td><strong>演習1</strong></td><td>自分の制作物を AI 開発の5分類に当てはめ、必要な技術と計算環境を考える</td><td>何をつくるかで、必要な技術も計算環境も変わる</td></tr>
+        <tr><td><strong>演習2</strong></td><td>訓練を 1,000 枚に減らし、50 エポック学習する</td><td>訓練の成績が上がり続けても、検証の成績は悪くなる</td></tr>
+        <tr><td><strong>演習3</strong></td><td>Weight decay・Dropout・早期終了を1人1つ担当し、グループで比べる</td><td>正則化は「最高値を上げる」より「崩れを抑える」</td></tr>
+      </table>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.5rem">題材は第1回 GW3 の試行①（服の画像 × MLP）と試行③（ケーブル画像 × CNN）。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SUBMISSION GUIDE ============ -->
+<section style="padding-top:2rem;padding-bottom:0">
+  <div class="container">
+    <div class="submission-box">
+      <h3>📤 提出ガイド（<strong>全員が個人で提出</strong>・zip にしない）</h3>
+      <div class="submission-items">
+        <a href="#sec-ex1" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">1</span><span class="tag tag-standard">演習1</span>ex1.ipynb（ワークシートの記録と振り返り）</a>
+        <a href="#sec-ex2" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習2</span>ex2.ipynb ／ c1_d3_ex2_&lt;グループ&gt;.csv</a>
+        <a href="#sec-ex3" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習3</span>ex3.ipynb ／ c1_d3_ex3_&lt;グループ&gt;.csv</a>
+        <a href="#sec-opt" class="sub-item" style="text-decoration:none;color:inherit;border-color:#66BB6A"><span class="sub-count" style="background:#66BB6A">任意</span><span class="tag" style="background:#0a1a2e;color:#66BB6A">オプション</span>opt_augment.ipynb ／ c1_d3_opt3_&lt;グループ&gt;.csv</a>
+      </div>
+      <div style="background:#0a1a2e;border:1px solid #2a6a9a;border-radius:8px;padding:0.8rem 1rem;margin-top:1rem;font-size:0.85rem;color:#81D4FA">
+        <strong>手順:</strong> ① 演習3 はグループで CSV を共有 → ② 自分の <code>results/</code> に集める → ③ Open-LMS の<a href="https://musashino-u.myopenlms.net/mod/assign/view.php?id=45840" target="_blank" rel="noopener" style="color:#4FC3F7">「第3回 課題提出」</a>へ<strong>自分で</strong>アップロード
+      </div>
+      <div style="background:#0a1a2e;border:1px solid #2a6a9a;border-radius:8px;padding:0.8rem 1rem;margin-top:0.5rem;font-size:0.85rem;color:#FFB800">
+        <strong>期限：</strong>次回（10/22）の授業開始まで
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TIME FLOW ============ -->
+<section id="sec-flow" style="padding-top:1rem;padding-bottom:0">
+  <div class="container">
+    <div class="card" style="border-left:4px solid #4FC3F7">
+      <div class="card-header"><h3>本日の流れ（150分）</h3></div>
+      <table style="font-size:0.82rem">
+        <tr><th style="width:6rem">時間</th><th>内容</th><th style="width:8rem">形式</th></tr>
+        <tr><td>0–20</td><td><a href="#sec-review" style="color:#4FC3F7"><strong>復習プレゼン</strong></a> 番号を決める → 勾配と学習率（相談10分 → 他グループへ説明 → 評価）</td><td><span class="tag tag-group">発表</span></td></tr>
+        <tr><td>20–30</td><td><a href="#sec-prep" style="color:#4FC3F7">準備</a>：第3回の資料を取り込む</td><td>個人</td></tr>
+        <tr><td>30–50</td><td><a href="#sec-ex1" style="color:#4FC3F7"><strong>演習1</strong></a> AIをつくるとは？（グループワーク）</td><td><span class="tag tag-group">討議</span></td></tr>
+        <tr><td>50–80</td><td><a href="#sec-ex2" style="color:#4FC3F7"><strong>演習2</strong></a> 過学習を作る（予測 → 実行 → 討議）</td><td>個人 → グループ</td></tr>
+        <tr><td>80–135</td><td><a href="#sec-ex3" style="color:#4FC3F7"><strong>演習3</strong></a> 3つの方法を分担 → CSV を共有 → グループ内プレゼン</td><td>グループ</td></tr>
+        <tr><td>135–150</td><td>全体共有：演習3 でどの方法が崩れを抑えたか → <a href="https://musashino-u.myopenlms.net/mod/questionnaire/view.php?id=45842" target="_blank" rel="noopener" style="color:#4FC3F7">グループメンバーの評価</a>（Open-LMS・3分）・次回予告</td><td>全体 → 個人</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section id="sec-review">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">復習</div>
+      <h2>復習プレゼン：勾配と学習率（20分）</h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">第2回の「勾配と学習率」を、<strong>番号①（presenter）と②の2人</strong>が<strong>別のグループに</strong>説明する。<strong>シートや画面は見ない</strong>。口頭かホワイトボードで話す。</p>
+
+    <div class="card group">
+      <div class="card-header"><h3>説明すること</h3></div>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li>学習ループの <code>loss.backward()</code> と <code>optimizer.step()</code> は、それぞれ何をするか</li>
+        <li>勾配とは何か。学習率とは何か</li>
+        <li>学習率が大きすぎると何が起きたか（第2回の実験の結果）</li>
+      </ol>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>進め方（第2回と同じ）</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:6rem">時間</th><th>やること</th></tr>
+        <tr><td>10分</td><td><strong>相談・練習</strong>：言葉と分担を決め、最後に何も見ずにグループへ話す。他のメンバーが誤りを直す</td></tr>
+        <tr><td>3分</td><td><strong>出張プレゼン</strong>：1↔2、3↔4 … で組み、2人が相手のグループへ移動して説明する</td></tr>
+        <tr><td>2分</td><td><strong>評価</strong>：聞いた人<strong>全員</strong>が <a href="https://musashino-u.myopenlms.net/mod/questionnaire/view.php?id=45841" target="_blank" rel="noopener" style="color:#4FC3F7">Open-LMS の「第3回 復習プレゼンの評価」</a>に回答する（流れ5点＋用語5点）</td></tr>
+        <tr><td>5分</td><td><strong>持ち帰り</strong>：うまく言えなかった所をグループに報告する</td></tr>
+      </table>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>評価の観点</h3></div>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li><strong>流れ</strong>を正しく説明できたか（5点）</li>
+        <li>正しく<strong>用語</strong>を使えたか（5点）</li>
+      </ol>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">得点（10点満点）＝ 流れ（5点）＋ 用語（5点）。聞いた人全員の平均を、<strong>説明したグループのメンバー全員の得点</strong>とする。評価の基準は、評価の時間に <a href="https://musashino-u.myopenlms.net/mod/questionnaire/view.php?id=45841" target="_blank" rel="noopener" style="color:#4FC3F7">Open-LMS の評価フォーム</a>で示す（フォームは評価の時間に開く）。</p>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>第3回から：役割は presenter だけ（演習ごとに交代）</h3></div>
+      <p style="font-size:0.9rem;line-height:1.8">最初にグループ内で番号 ①②③④（5人なら⑤まで）を決める。<strong>presenter</strong> はその演習の話し合いを<strong>中心になって進める係</strong>で、番号の順に交代する。ほかの人に決まった役割はなく、<strong>全員が同じ作業</strong>（TODO を書く・実行する・根拠を言う）をする。</p>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:9rem">場面</th><th style="width:7rem">presenter</th><th>presenter がやること</th></tr>
+        <tr><td>復習プレゼン</td><td>①</td><td>相談を進め、②と2人で別のグループへ説明する</td></tr>
+        <tr><td>演習1</td><td>②</td><td rowspan="3">問い（演習2・3はノートブックの「✋」）を読み上げ、全員の考えを聞いて、根拠を含めた答えを1〜2文にまとめる。時間を見て「次へ」の合図を出す。演習3では最後のグループ内プレゼンで結論を話す</td></tr>
+        <tr><td>演習2</td><td>③</td></tr>
+        <tr><td>演習3</td><td>④</td></tr>
+      </table>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">3人グループは演習3で①に戻る。5人グループの⑤は最後の全体共有を担当する。欠席がいたら次の番号の人が代わる。ノートブック (0) の <code>MEMBER_NO</code> を自分の番号に書き換える。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PREP ============ -->
+<section id="sec-prep">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#4FC3F7">0</div>
+      <h2>準備（10分）</h2>
+    </div>
+    <div class="card standard">
+<pre><span class="fn">cd</span> ~/AI_TD
+<span class="fn">git</span> fetch origin                                   <span class="cmt"># 最新の資料を取ってくる（自分のファイルはまだ変わらない）</span>
+<span class="fn">git</span> checkout origin/main -- course1/day3 common   <span class="cmt"># 第3回のノートブックと共通コードだけを取り込む</span>
+<span class="fn">source</span> .venv/bin/activate
+<span class="fn">code</span> .                                             <span class="cmt"># course1/day3/ のノートブックを開き、カーネルに .venv を選ぶ</span></pre>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.3rem"><code>git pull</code> は使わない。上の方法なら、第1回・第2回で書き換えたノートブックはそのまま残り、「would be overwritten」で止まることもない（<code>course1/day3/</code> と <code>common/</code> だけが最新になる）。<code>ls course1/day3</code> で <code>ex2.ipynb</code>・<code>ex3.ipynb</code>・<code>opt_augment.ipynb</code> が見えればよい。データは第1回のもの（FashionMNIST・ケーブル画像）を使う。</p>
+      <p style="font-size:0.85rem;color:#ccc;margin-top:0.3rem"><strong>教科書：</strong>第5章（過学習対策と混同行列）。ノートブックのセル見出しの「コードテンプレート⑦」などは教科書の番号で、コードも教科書と同じ形で書いてある。</p>
+    </div>
+    <div class="card standard">
+      <div class="card-header"><h3>プレイ：マウスで組み立てて確かめる（空き時間・復習に）</h3></div>
+      <ul class="point-list">
+        <li><a href="play/flow.html" target="_blank" rel="noopener" style="color:#4FC3F7">学習の流れ</a>：エポックとミニバッチのループの中の 10 の手順を、言葉とコードで埋める</li>
+        <li><a href="play/split.html" target="_blank" rel="noopener" style="color:#4FC3F7">訓練・検証・テスト</a>：データの分け方と、どの操作をどのデータで行うかを仕分ける</li>
+        <li><a href="play/blocks.html" target="_blank" rel="noopener" style="color:#4FC3F7">ブロック組み立て</a>：コードテンプレート①〜⑫の順、⑩の学習ループ、過学習対策の差し込み場所</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EX1 ============ -->
+<section id="sec-ex1">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">1</div>
+      <h2>演習1 AIをつくるとは？ ― グループワーク（20分）</h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">コードは実行しない。下のワークシートをグループで埋め、答えと振り返りを各自 <code>ex1.ipynb</code> に書いて提出する。</p>
+
+    <div class="card standard">
+      <div class="card-header"><h3>到達目標</h3></div>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li>自分の開発経験を、AI 開発の5分類に当てはめられる</li>
+        <li>分類によって、必要な技術と計算資源が違うと分かる</li>
+        <li>既存の AI を使う開発と、AI モデルそのものの開発の違いを説明できる</li>
+      </ol>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>流れ</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:5rem">時間</th><th style="width:11rem">活動</th><th>やること</th></tr>
+        <tr><td>0–2</td><td>導入</td><td>AI 開発の5分類を確認する</td></tr>
+        <tr><td>2–8</td><td>① 開発経験の共有</td><td>自分の制作物を紹介し、分類する</td></tr>
+        <tr><td>8–16</td><td>② 技術・ハードウェア</td><td>5分類それぞれに必要なものを穴埋めする</td></tr>
+        <tr><td>16–19</td><td>③ 答え合わせ</td><td>分類ごとの違いを比べ、理由を考える</td></tr>
+        <tr><td>19–20</td><td>まとめ</td><td>下の問いをグループで話す。振り返りは <code>ex1.ipynb</code> に各自で書く（授業後でもよい）</td></tr>
+      </table>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>AI 開発の5分類</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:3.5rem">分類</th><th style="width:30%">名称</th><th>何をつくるか</th></tr>
+        <tr><td><strong>1</strong></td><td>AI アプリケーション開発</td><td>既存の AI を使うアプリ</td></tr>
+        <tr><td><strong>2</strong></td><td>AI 制御システム開発</td><td>プロンプトや AI ハーネスで AI の振る舞いを制御する仕組み</td></tr>
+        <tr><td><strong>3-A</strong></td><td>特化型 AI モデル開発</td><td>特定の用途・領域向けの AI モデル</td></tr>
+        <tr><td><strong>3-B</strong></td><td>汎用 AI モデルの改良</td><td>既存の汎用モデルを追加学習・統合などで改善したもの</td></tr>
+        <tr><td><strong>3-C</strong></td><td>汎用基盤モデルの新規開発</td><td>幅広い用途に使える基盤モデル（事前学習から）</td></tr>
+      </table>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>① 開発経験の共有（6分）</h3></div>
+      <p style="font-size:0.9rem;color:#ccc;margin-bottom:0.4rem">これまでに自分が開発したアプリやシステムを1つ選び、グループに紹介する。</p>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li>何を開発したか</li>
+        <li>その中で AI をどう使ったか</li>
+        <li>5分類のどれに当たるか（<strong>根拠</strong>も言う）</li>
+      </ol>
+      <ul class="point-list" style="margin-top:0.4rem">
+        <li>AI を使っていないアプリは「該当なし」</li>
+        <li>ChatGPT などでコードを書いただけなら、分類1とは限らない</li>
+        <li>複数に当たるときは、その理由も言う</li>
+      </ul>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>② 必要な技術・ハードウェアを考える（8分）</h3></div>
+      <p style="font-size:0.9rem;color:#ccc;margin-bottom:0.4rem">①〜⑩に下の選択肢から選んで書く（複数可）。ハードウェアは<strong>自前で用意するか、外部サービスを使えるか</strong>も考える。右端に◎○△（下の表）を書く。</p>
+      <table style="font-size:0.82rem">
+        <tr><th style="width:4rem;white-space:nowrap">分類</th><th>技術・仕組み</th><th>ハードウェア・計算環境</th><th style="white-space:nowrap">自前/外部</th><th style="width:4.5rem;white-space:nowrap">◎○△</th></tr>
+        <tr><td><strong>1</strong></td><td style="white-space:nowrap">①（　）</td><td style="white-space:nowrap">②（　）</td><td></td><td></td></tr>
+        <tr><td><strong>2</strong></td><td style="white-space:nowrap">③（　）</td><td style="white-space:nowrap">④（　）</td><td></td><td></td></tr>
+        <tr><td><strong>3-A</strong></td><td style="white-space:nowrap">⑤（　）</td><td style="white-space:nowrap">⑥（　）</td><td></td><td></td></tr>
+        <tr><td><strong>3-B</strong></td><td style="white-space:nowrap">⑦（　）</td><td style="white-space:nowrap">⑧（　）</td><td></td><td></td></tr>
+        <tr><td><strong>3-C</strong></td><td style="white-space:nowrap">⑨（　）</td><td style="white-space:nowrap">⑩（　）</td><td></td><td></td></tr>
+      </table>
+      <p style="font-size:0.88rem;margin:0.6rem 0 0"><strong>選択肢</strong></p>
+      <table style="font-size:0.82rem">
+        <tr><th>技術・仕組み</th><th>ハードウェア・計算環境</th></tr>
+        <tr><td>API・SDK</td><td>一般的な PC</td></tr>
+        <tr><td>プロンプトエンジニアリング</td><td>クラウドサーバー</td></tr>
+        <tr><td>RAG・AI ハーネス</td><td>GPU 搭載 PC</td></tr>
+        <tr><td>Python・機械学習ライブラリ</td><td>GPU サーバー</td></tr>
+        <tr><td>データ収集・前処理・モデル学習</td><td>複数 GPU による計算環境</td></tr>
+        <tr><td>ファインチューニング・LoRA</td><td>大規模 GPU クラスタ</td></tr>
+        <tr><td>モデルマージ・蒸留</td><td>高速ネットワーク・大容量ストレージ</td></tr>
+        <tr><td>大規模データセット・分散学習</td><td>AI モデルの API サービス</td></tr>
+      </table>
+      <p style="font-size:0.88rem;margin:0.6rem 0 0"><strong>自分たちの PC だけで、どこまで開発できるか</strong></p>
+      <table style="font-size:0.82rem">
+        <tr><th style="width:4rem">記号</th><th>意味</th></tr>
+        <tr><td><strong>◎</strong></td><td>一般的な PC でも比較的容易にできる</td></tr>
+        <tr><td><strong>○</strong></td><td>GPU やクラウドサービスを使えばできる</td></tr>
+        <tr><td><strong>△</strong></td><td>大規模な計算資源が必要なことが多い</td></tr>
+      </table>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">◎○△は目安。同じ分類でも、モデルの規模や使い方で必要な計算資源は変わる（例：単純な回帰モデルと大規模な画像生成モデル）。</p>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>③ 答え合わせ（3分）</h3></div>
+      <p style="font-size:0.9rem;color:#ccc;margin-bottom:0.5rem">分類ごとの違いを比べ、なぜ違うかを言う。<strong>授業で開く</strong>。</p>
+      <details>
+        <summary>答え合わせ（授業で開く）</summary>
+        <div class="answer-content locked-answer" data-enc="1E9fLztQZVxNdjzYXYDDR/KqSmU2PYLrA1whezXcv+9EF0TsZOHQaBhW8tDQgDZB9fT0lN676t2lSo/3CDnA1vFL92wBFrKm2S5p3AFoww4tAo18T6uRU58/YDMystjZnPRVz2pxNFG54+kIShmSHACJBqy6G4T7uwGUGjhT6cMumoP4ix6KR/IThigsaR66K+6Yx7M6hftGZo/YYp7iBi9zBxDe+KYoGIDawGfTiGee8j7zNXKavKWyH0NwQC0uCxa9xPvOl/8NNVsfiJnBeDem+gLcNG0Mdjgw4Wo1jyxNfI3Z1ZfcryfiJdjZhvqzOWbSxaEWNsW3PXJw0MT7pHSohL9XJ9ofTtR2dvqYWobLUNQygQd7ff9E+3+Kz+XPBtXurGtZHjPEp3ZshJv+oZdVeh8pl887A23e7vs8SbECyRayCsd7aKJMIQR8lSd01uh0SoaD/y4XZyamDQPlBlRzl8Xa8mBKYYQnpje2Lz84Jjd65FV5hZJEWL7AaaE7rw6UCkoLalYT4gBxKQBzEuHB6l6kxAA0ZRchRalEpA5lSI+XADmMWQt0uS0U/7nLxsXij1uOC8OQ9ZWnT9UYcq3Q9yj/DJaBoytPXae/pu0ANi6kdMKSFMurqygqCkhxBXe/OFP3/eyT3NL5BtB9sHIrI/WWWNKcGtOSEy71HiLLKtySy9B1gqfvVnxY8ylF62UUGvQbifuSn4HYZ1lUTqneVj9Bl977uc/2cIecwRIZfbae6ZvJRdxlSj1MreTSZoFV+1o1xxnyRggP6mVyMA1mGQd8Lna5PWi8ZtrbvkVOuuqXHWAyrl8L0RxUQnPawHFcxDnECWAsknW7LdQrngLgSs6bY9BPfZSk5imcSMyl6QcnCohE84kqBC9RbV1G9QYsrEkdIG3RJfz+on41l2shUauufdL5mZktgs6unS1h6eVuj3T8Y/0qtJz28RYISusMJOE/FU88NxoAzvhJG2fGpczWENamE66W1pjOaIF8UXxY9qC3vwuwJWVOnofLeHdEr1QBeznxC0gUb4VfiAGwOqcwkx1hussf4KJrylL7N/S9b71sPTB4WFPu2LqjiSf7ey1xWOK3DYbQFjo3tRZRfrQX9qaRuMnRLs45wXSyxFFiC/gi0X6su6vR05Zp0vw3/SUTPEyIS96S/uaZQgOxTTo3URvwy1cNc2EzFmQexH41JN7Ioa9esXqHg959lGPpsWwtbjAaKwWDb30RYaAKTkS+o4RxtOmL/Tttmrspf2dwnOclQDEU60rsiLyUDeWiFbV9aWVOzJuPGaMDByT2UrERg7UnsbwCPzftHCi2SJq/yQhNZT0a26QAwKwfjhosIWYhw2XYWc5aASaDy0XazzguMM4mcC9kmA9gIAK6/jCtqTPh72ZLDlLDyWNihV/2UU2fGrhbpWH2jGZieJxTnNZ2XHwdtH/hti4Gu6Tgx2oiUQVWxomp8bHGDpMRNrZ2TwWy9AuJlPJQ06fH5aO91sJjn1vyyqRsB9sDudTh7QAKUg2FmHsrEC7QME8OreHX9je2m+N/hBTKICyhbV9aLWBKuZ66379IN5E1ufuDH6xfSzDA9oxKvjg4h6uu46Ux6Yd77aIo7hEa20cLx0WRS1PPvXZjc0FBrtpx8jFvy9ixvxPU1IAVJSfgcDgg3t4BqON8byE8rhqNYqZ9QQ6h6iIbP8LxCSKBF4mnz4fds2vFAeHYAkcy2myVTrjx8/c8XQ3EGSkomlzvLPhPoraKifMOkiT6g3wGt+o5jjMo6QWMYlTm0vnYkcdtdkqt2deVGTbXcaQlIojZoJLjKcCB0fLISyfklH1IVjXvnb9ewEK8pfI9yTRQhhy8UWup67NePWon/ompBEYQkHqhs+nyh5PknN7xwYY2ZVZA/AsI2odMP0OexG+BuA+iHPgrwO27lU8Io+5oPQaza3AmituarYqZHCbhzXP/COGORKPz2T141UdLuFXpYD8a3FY6dzRJh31ebKfSMR1vCk183s61B6YUbQ7IwGGnk5gAQR7oAcu8Htgwuvv/iLb8T4ZPcLqGWS9abEJMsuH8LSe0NAtI6YeKawjGJL9H9nG2qmaOds2Dp56L7q+KCPAw8q0MAi76eT85ztUECVqE9ad1k6s70YXXFSgV8Htddnxcw5+NFJX/CySafdH6kSyHn2AGQNk+SUs9FEGckMo55a5A+ygDv2gAEL/JTb+UozmFsJYcCYWEWvtlVXPrp9d2bl/g9hIZeYw5ITK21P+jEo6pITzYUy0NlVO6SKKTKFjviG2RSsncatuNWCRMhzR/r5sbqSme+dV/NxNBN6CkzBCOvAwsqGmAIaab6IC8CxEzPsbom9nn9WwrZawsiU/9UKSHyRNAtCHx/TQo7Ve+1wWoQgrUjSqz1Q3gu3Wg9NzkW5eqEHKU8KRyci0L9k0JF38BJxP0sG1AoeivDql6TeeFj6hvR9LNXMZIMyRFKA7I0Q/pYKMvMe5DBV9ftitVYJa7w4QoInF3ZPo0qWNraY7XWr+LMLOOJjMXfdc0sg8+6nQK1JCGpX/rPQp/WYmEqq+xKH1m5Ft625jVRe2Me9YC6nJqjLnV9/Rruh3DjNfGEM6WyC5kIOQJphmtgYH9te/sn9Bqvs3XTmCj2AEm3dHZgIvCkUD6D9bzXrmaOPdwo6xHZkM42Yn82nd6+6CQV23lr1vcVKN5of7QaIjaIzfUJldZnoPavtKkgxXGPdamxxD+AcKxFaPGwg39oEjwYrzKz1U5q00Uk/6MCXSTuPG+1jL2wiT2YpzW6jiZeptGQ0rpZl2vXs2zfo+3Iwn9hXNtINUizFBu1jvPvbIDZ+KA6CmOhQ2wBAHGSkUe2cMx/ZinPRtgNIa8Pcj1OU5F4XXM35na29aM8CHMrl1HouKanRsgzRZG3fw28Uh6eO8BuBdKqT/QotbcQEQ4MxczjYfUdOaOxprCEz9X8rMjmtb9/Mr+jDiIMqitqVd74sVyJoC6kiZE9jXrUvMVJHCiOwqGla6FCBOKnAKJ">
+          <form class="unlock-form" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+            <label style="font-size:0.85rem;color:#ccc">パスワード（授業で伝える）</label>
+            <input type="password" autocomplete="off" style="padding:0.3rem 0.5rem;border-radius:4px;border:1px solid #555;background:#111;color:#eee">
+            <button type="submit" style="padding:0.3rem 0.8rem;border-radius:4px;border:none;background:#4FC3F7;color:#000;cursor:pointer">開く</button>
+            <span class="unlock-msg" style="font-size:0.82rem;color:#FF8A80"></span>
+          </form>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout-danger">
+      <h4>まとめ（1分）</h4>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li>これまで自分たちは、AI 開発のどの種類に取り組んできたか</li>
+        <li>それぞれの AI をつくるには、どんな技術・ハードウェアが必要か</li>
+        <li>今の自分たちの技術と開発環境で、どこまでの AI をつくれるか</li>
+      </ol>
+      <p style="font-size:0.88rem;margin-top:0.6rem"><strong>提出：</strong><code>ex1.ipynb</code> の (1) に②の表を写し、(2) の振り返り4問に答える（制作物の分類と根拠／答え合わせで違った所／演習1全体を通して学んだこと／次につくってみたい AI の分類・技術・計算環境）。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EX2 ============ -->
+<section id="sec-ex2">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">2</div>
+      <h2>演習2 過学習を作る ― <code>ex2.ipynb</code></h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">GW3 試行①から <strong>2つだけ</strong>変える：訓練 48,000 枚 → <strong>1,000 枚</strong>、20 エポック → <strong>50 エポック</strong>。検証は 12,000 枚のまま。実行は 20〜40 秒。</p>
+
+    <div class="card standard">
+      <div class="card-header"><h3>用語</h3></div>
+      <ul class="point-list">
+        <li><strong>過学習</strong>：訓練データに合わせすぎて、初めて見るデータで成績が落ちること</li>
+        <li><strong>汎化</strong>：初めて見るデータでも正しく答えられること</li>
+        <li><strong>最良エポック</strong>：検証損失が一番小さいエポック</li>
+        <li><strong>汎化ギャップ</strong>：訓練正解率 − 検証正解率</li>
+      </ul>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>ex2.ipynb のセルと、やること</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:5rem">見出し</th><th>セルがすること</th><th>あなたがやること</th></tr>
+        <tr><td>(0)・予測</td><td>グループ設定</td><td><code>GROUP_ID</code>・<code>MEMBER_NO</code> を書き換え、予測を書く</td></tr>
+        <tr><td>(1)–(4)</td><td>データ・モデル・学習（エポックごとに訓練と検証を記録）</td><td>実行するだけ</td></tr>
+        <tr><td>(5)</td><td>学習曲線（損失・正解率）</td><td>訓練と検証が離れる所を探す</td></tr>
+        <tr><td>(6)</td><td>最良エポックと汎化ギャップ</td><td><strong style="color:#FFB800">TODO 1・2</strong></td></tr>
+        <tr><td><strong>✋ 1</strong></td><td colspan="2">過学習はいつ始まったか、根拠と一緒に書く</td></tr>
+        <tr><td>(7)–(8)</td><td>CSV に記録 → 3,000 枚で再実行</td><td>(6) の2行（最良エポック・汎化ギャップ）をメモしてから、全員が <code>N_TRAIN = 3000</code> にしてもう一度実行（1分ほど）。CSV には両方残る</td></tr>
+        <tr><td><strong>✋ 2</strong></td><td colspan="2">訓練データを増やすと何が変わったか</td></tr>
+        <tr><td>(9)</td><td colspan="2">考察を書く（提出）</td></tr>
+      </table>
+      <details>
+        <summary>TODO のヒント ― クリックで開く</summary>
+        <div class="answer-content">
+<pre>best_epoch <span class="op">=</span> val_loss_list.index(min(val_loss_list)) <span class="op">+</span> <span class="num">1</span>
+gap <span class="op">=</span> train_acc_list[<span class="op">-</span><span class="num">1</span>] <span class="op">-</span> val_acc_list[<span class="op">-</span><span class="num">1</span>]</pre>
+        </div>
+      </details>
+      <details>
+        <summary>参考：教員機（Mac Studio M4 Max）の学習曲線 ― 予測を書いてから開く</summary>
+        <div class="answer-content">
+          <img src="img/w3_ex1_curve.png" alt="演習2の学習曲線" style="max-width:100%;border-radius:6px">
+          <p style="font-size:0.82rem;color:#ccc;margin-top:0.3rem">最良エポック 16（検証損失 0.566）→ 50 エポック後 0.972。訓練正解率 99.9%・検証正解率 80.7%、汎化ギャップ 19.2 ポイント。値は機種で少し変わる。</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>討議（5分）</h3></div>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li>検証損失は上がったのに、検証正解率はほとんど下がらないのはなぜか</li>
+        <li>50 エポック後と最良エポックのモデル、どちらを使うか</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EX3 ============ -->
+<section id="sec-ex3">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">3</div>
+      <h2>演習3 過学習を防ぐ3つの方法を比べる ― <code>ex3.ipynb</code></h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">演習2の過学習を、3つの方法でどれだけ防げるか。条件は演習2と同じ（1,000 枚・50 エポック）。<strong>グループの中だけで完結</strong>する（他グループとの共有はない）。</p>
+
+    <div class="card standard">
+      <div class="card-header"><h3>3つの方法（正則化）</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:8rem">方法</th><th>しくみ</th><th style="width:30%">ノートブックで変える所</th></tr>
+        <tr><td><strong style="color:#4FC3F7">Weight decay</strong></td><td>重みが大きいほど損失に罰を足し、重みを小さく保つ</td><td><code>optim.Adam(..., weight_decay=0.01)</code></td></tr>
+        <tr><td><strong style="color:#FFB800">Dropout</strong></td><td>学習中だけ、ニューロンの一部（50%）をランダムに休ませる</td><td><code>nn.Dropout(0.5)</code> を層の間に入れる</td></tr>
+        <tr><td><strong style="color:#B388FF">早期終了</strong></td><td>検証損失が5エポック続けて下がらなければ止め、一番よかった重みに戻す</td><td>学習ループに止める条件を足す</td></tr>
+      </table>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>分担（1人1つ）</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:7rem">人数</th><th>分担</th></tr>
+        <tr><td>4人</td><td><code>none</code>（何もしない・基準）・<code>weight_decay</code>・<code>dropout</code>・<code>early_stop</code> を1人ずつ</td></tr>
+        <tr><td>3人</td><td>誰か1人が2つ担当する（1回 20〜40 秒）</td></tr>
+        <tr><td>5人</td><td>5人目は強さを変えた版（例：<code>WD = 0.001</code>、<code>P = 0.2</code>）</td></tr>
+      </table>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">TODO は3つとも全員が書く（分からない所はグループで教え合う）。担当でない方法は強さが 0 なので何もしない。</p>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>ex3.ipynb のセルと、やること</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:5rem">見出し</th><th>セルがすること</th><th>あなたがやること</th></tr>
+        <tr><td>(0)・予測</td><td>グループ設定</td><td><code>GROUP_ID</code>・<code>MEMBER_NO</code> を書き換え、予測を書く</td></tr>
+        <tr><td>(確認)</td><td>3つの方法の確認問題</td><td>上の表を読んで答える（全問正解で先へ）</td></tr>
+        <tr><td>(3)</td><td>担当の方法</td><td><code>METHOD</code> を書き換える</td></tr>
+        <tr><td>(4)–(5)</td><td>モデル・最適化手法・学習（早期終了つき）</td><td><strong style="color:#FFB800">TODO 1・2・3</strong></td></tr>
+        <tr><td>(6)</td><td>自分の学習曲線</td><td>—</td></tr>
+        <tr><td><strong>✋ 1</strong></td><td colspan="2">演習2と比べて曲線のどこが変わったか</td></tr>
+        <tr><td>(7)・(共有)</td><td>CSV に記録 → グループで共有</td><td>受け取った CSV を <code>results/ex3_shared/</code> に入れる</td></tr>
+        <tr><td>(8)</td><td>全員分の表と検証損失のグラフ</td><td>画面に出して討議する</td></tr>
+        <tr><td><strong>✋ 2</strong></td><td colspan="2">どの方法が一番効いたか、何を犠牲にしたか</td></tr>
+        <tr><td>(9)</td><td colspan="2">考察を書く（提出）</td></tr>
+      </table>
+      <details>
+        <summary>TODO のヒント ― クリックで開く</summary>
+        <div class="answer-content">
+<pre>nn.Dropout(use_p),                                                <span class="cmt"># TODO 1</span>
+optimizer <span class="op">=</span> optim.Adam(model.parameters(), lr<span class="op">=</span><span class="num">0.001</span>, weight_decay<span class="op">=</span>use_wd)   <span class="cmt"># TODO 2</span>
+<span class="kw">if</span> use_patience <span class="kw">is not</span> <span class="kw">None</span> <span class="kw">and</span> waited <span class="op">&gt;=</span> use_patience:          <span class="cmt"># TODO 3</span></pre>
+        </div>
+      </details>
+      <details>
+        <summary>参考：教員機の結果 ― 予測を書いてから開く</summary>
+        <div class="answer-content">
+          <img src="img/w3_ex2_curves.png" alt="演習3の検証損失" style="max-width:100%;border-radius:6px">
+          <table style="font-size:0.82rem;margin-top:0.4rem">
+            <tr><th>方法</th><th>検証損失</th><th>検証正解率</th><th>汎化ギャップ</th><th>正解率の最高値</th><th>エポック数</th><th>時間</th></tr>
+            <tr><td>none</td><td>0.97</td><td>80.7%</td><td>19.2</td><td>81.3%</td><td>50</td><td>20 秒</td></tr>
+            <tr><td>weight_decay 0.01</td><td>0.62</td><td>78.9%</td><td>12.2</td><td>80.0%</td><td>50</td><td>20 秒</td></tr>
+            <tr><td>dropout 0.5</td><td>0.67</td><td>80.7%</td><td>12.0</td><td>81.7%</td><td>50</td><td>19 秒</td></tr>
+            <tr><td>early_stop 5</td><td>0.57</td><td>79.4%</td><td>5.5</td><td>79.8%</td><td>13</td><td>5 秒</td></tr>
+          </table>
+          <p style="font-size:0.82rem;color:#999;margin-top:0.3rem">どの方法も検証損失と汎化ギャップは下がったが、正解率の最高値はほぼ変わらない（この程度の差が本当の差かは第4回で確かめる）。</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="card group">
+      <div class="card-header"><h3>グループ内プレゼン（presenter 2分 → ほかの人が1分ずつ）― (8) の表とグラフを画面に出す</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:9rem">誰が</th><th>話すこと</th></tr>
+        <tr><td>presenter（④）</td><td>一番効いた方法（一文）と、その根拠になる表の数値</td></tr>
+        <tr><td>ほかの人</td><td>自分が担当した方法が犠牲にしたもの（時間・訓練正解率）と、予測が外れた所。1人1つずつ足す</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LECTURE ============ -->
+<section id="sec-lecture">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#4FC3F7">予習</div>
+      <h2>評価指標：混同行列・適合率・再現率（任意・次回以降の予習）</h2>
+    </div>
+    <div class="card standard">
+      <p style="font-size:0.82rem;color:#999;margin-bottom:0.5rem">授業では扱わない。時間がある人は読んでおく（今日の演習・提出には使わない）。</p>
+      <p style="font-size:0.9rem;color:#ccc;margin-bottom:0.5rem">「見つけたい側」を<strong>陽性</strong>、それ以外を<strong>陰性</strong>と呼ぶ。ケーブル画像では、<strong>ピンが抜けている写真（class1・不良）を陽性</strong>、刺さっている写真（class0・正常）を陰性とする。</p>
+      <table style="font-size:0.85rem">
+        <tr><th></th><th>判定：陽性</th><th>判定：陰性</th></tr>
+        <tr><td><strong>正解：陽性</strong></td><td><strong style="color:#4FC3F7">TP</strong>（正しく見つけた）</td><td><strong style="color:#FF6B6B">FN</strong>（見逃し）</td></tr>
+        <tr><td><strong>正解：陰性</strong></td><td><strong style="color:#FFB800">FP</strong>（誤検出）</td><td><strong>TN</strong>（正しく陰性）</td></tr>
+      </table>
+      <table style="font-size:0.85rem;margin-top:0.6rem">
+        <tr><th style="width:8rem">指標</th><th>式</th><th>意味</th></tr>
+        <tr><td><strong>正解率</strong></td><td>(TP＋TN) ÷ 全部</td><td>当たった割合</td></tr>
+        <tr><td><strong>適合率</strong></td><td>TP ÷ (TP＋FP)</td><td>「陽性」と言ったもののうち、本当に陽性の割合</td></tr>
+        <tr><td><strong>再現率</strong></td><td>TP ÷ (TP＋FN)</td><td>本当の陽性のうち、見つけた割合</td></tr>
+        <tr><td><strong>F1</strong></td><td>2×適合率×再現率 ÷ (適合率＋再現率)</td><td>適合率と再現率の両方を見る</td></tr>
+      </table>
+      <ul class="point-list" style="margin-top:0.6rem">
+        <li><strong>閾値</strong>：陽性の確率がいくつ以上なら「陽性」と言うか（ふつうは 0.5）</li>
+        <li>閾値を下げると、見逃し（FN）は減り、誤検出（FP）は増える</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ OPTION ============ -->
+<section id="sec-opt">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#4FC3F7">任意</div>
+      <h2>オプション課題：画像を水増しすると過学習は減るか ― <code>opt_augment.ipynb</code></h2>
+    </div>
+    <div class="card standard">
+      <p style="font-size:0.9rem;color:#ccc;margin-bottom:0.5rem">データ拡張＝訓練画像を毎回少し変えて（左右反転・回転・明るさ）学習する。演習3がモデルと学習を変えたのに対し、<strong>データの側</strong>を変える4つ目の方法。題材は GW3 試行③（ケーブル画像 × CNN）。教科書には「ケーブル画像では回転などを控えめにした方がよい」とある。本当か確かめる。</p>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:6rem">AUG</th><th>変え方</th></tr>
+        <tr><td><code>none</code></td><td>なし（基準）</td></tr>
+        <tr><td><code>flip</code></td><td>左右反転</td></tr>
+        <tr><td><code>rotate</code></td><td>±10 度回転</td></tr>
+        <tr><td><code>all</code></td><td>反転＋回転＋明るさ</td></tr>
+      </table>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9;margin-top:0.5rem">
+        <li>3〜4 グループで組み、4条件 × <code>SEED</code>（0〜4）を分担する（1回 10 秒）</li>
+        <li>(1) に予測 → (2) に担当 → (3) を実行 → CSV を <code>results/opt3_shared/</code> に集める → (5) の表 → (6) の考察</li>
+      </ol>
+      <p style="font-size:0.85rem;color:#ccc;margin-top:0.3rem"><strong>提出（任意）：</strong><code>opt_augment.ipynb</code> と自分の <code>c1_d3_opt3_&lt;グループ&gt;.csv</code> を「第3回 課題提出」へ。期限は次回の授業開始まで。</p>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.3rem">検証は 30 枚なので、1回の差は乱数のぶれと区別しにくい。同じ条件を複数の SEED で実行する。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SUBMIT ============ -->
+<section id="sec-submit">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">✓</div>
+      <h2>提出前チェック</h2>
+    </div>
+    <div class="card standard">
+      <table style="font-size:0.82rem">
+        <tr><th style="width:5%"></th><th>確認項目</th></tr>
+        <tr><td><input type="checkbox"></td><td>演習1 の <code>ex1.ipynb</code> に②の表と振り返り4問を書いた</td></tr>
+        <tr><td><input type="checkbox"></td><td>演習2 の学習曲線が出ていて、考察を書いた</td></tr>
+        <tr><td><input type="checkbox"></td><td>演習3 の (8) の表に、グループで分担した方法がそろっていて、考察を書いた</td></tr>
+        <tr><td><input type="checkbox"></td><td>ノートブックを3つ（ex1・ex2・ex3）と CSV を2つ（ex2・ex3）提出する</td></tr>
+        <tr><td><input type="checkbox"></td><td>zip にせず、ファイル名を変えていない</td></tr>
+        <tr><td><input type="checkbox"></td><td><a href="https://musashino-u.myopenlms.net/mod/questionnaire/view.php?id=45842" target="_blank" rel="noopener" style="color:#4FC3F7">グループメンバーの評価</a>（Open-LMS）に回答した</td></tr>
+      </table>
+      <div class="notion-submit"><div><strong>提出:</strong> Open-LMS の<a href="https://musashino-u.myopenlms.net/mod/assign/view.php?id=45840" target="_blank" rel="noopener" style="color:#4FC3F7">「第3回 課題提出」</a>へ各自アップロード（期限：10/22（木）13:10）</div></div>
+    </div>
+    <div class="callout-tip">
+      <h4>次回：再現性と分散</h4>
+      <p style="font-size:0.9rem">同じ条件でも乱数の種を変えると結果は動く。シード5回の平均と標準偏差で「差がある」と言えるかを判定する。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div>AIテクノロジデザインⅠ ─ 2026年度3学期 ─ 第3回</div>
+    <div style="margin-top:0.5rem;font-size:0.8rem;color:#666">&copy;2026 Ryota Nakamura.</div>
+  </div>
+</footer>
+
+<!-- ============ SCRIPTS ============ -->
+<script>
+// Copy button for pre blocks
+document.querySelectorAll('pre').forEach(function(pre) {
+  var btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'コピー';
+  btn.addEventListener('click', function() {
+    // ボタン自身の文字（「コピー」）を含めないよう，ボタンを除いた複製から本文を取る
+    var clone = pre.cloneNode(true);
+    clone.querySelectorAll('.copy-btn').forEach(function(b) { b.remove(); });
+    var code = clone.textContent.replace(/^(Python|JavaScript|HTML|Bash|JSON|Terminal|Directory Tree|\.zshrc|Notion テンプレート)( ── [^\n]+)?\n/, '');
+    navigator.clipboard.writeText(code).then(function() {
+      btn.textContent = 'コピーしました';
+      btn.classList.add('copied');
+      setTimeout(function() {
+        btn.textContent = 'コピー';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Click-to-copy on inline code elements
+document.querySelectorAll(':not(pre) > code').forEach(function(code) {
+  code.title = 'クリックでコピー';
+  code.addEventListener('click', function() {
+    navigator.clipboard.writeText(code.textContent).then(function() {
+      code.classList.add('copied');
+      setTimeout(function() {
+        code.classList.remove('copied');
+      }, 1500);
+    });
+  });
+});
+// パスワードつきの答え合わせ：入力したパスワードで復号して表示する（本文は暗号化してページに埋め込んである）
+document.querySelectorAll('.locked-answer').forEach(function(box) {
+  var form = box.querySelector('.unlock-form');
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var msg = form.querySelector('.unlock-msg');
+    try {
+      var raw = Uint8Array.from(atob(box.dataset.enc), function(c) { return c.charCodeAt(0); });
+      var base = await crypto.subtle.importKey('raw', new TextEncoder().encode(form.querySelector('input').value.trim()), 'PBKDF2', false, ['deriveKey']);
+      var key = await crypto.subtle.deriveKey({name: 'PBKDF2', salt: raw.slice(0, 16), iterations: 200000, hash: 'SHA-256'},
+                                              base, {name: 'AES-GCM', length: 256}, false, ['decrypt']);
+      var plain = await crypto.subtle.decrypt({name: 'AES-GCM', iv: raw.slice(16, 28)}, key, raw.slice(28));
+      box.innerHTML = new TextDecoder().decode(plain);
+    } catch (err) {
+      msg.textContent = 'パスワードが違います';
+    }
+  });
+});
+</script>
+
+</body>
+</html>
