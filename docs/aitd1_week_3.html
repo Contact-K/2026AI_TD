@@ -522,8 +522,10 @@ a.sub-item:hover {
     <div class="submission-box">
       <h3>📤 提出ガイド（<strong>全員が個人で提出</strong>・zip にしない）</h3>
       <div class="submission-items">
+        <a href="#sec-ex1" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">1</span><span class="tag tag-standard">演習1</span>ex1.ipynb（ワークシートの記録と振り返り）</a>
         <a href="#sec-ex2" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習2</span>ex2.ipynb ／ c1_d3_ex2_&lt;グループ&gt;.csv</a>
         <a href="#sec-ex3" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習3</span>ex3.ipynb ／ c1_d3_ex3_&lt;グループ&gt;.csv</a>
+        <a href="#sec-opt" class="sub-item" style="text-decoration:none;color:inherit;border-color:#66BB6A"><span class="sub-count" style="background:#66BB6A">任意</span><span class="tag" style="background:#0a1a2e;color:#66BB6A">オプション</span>opt_augment.ipynb ／ c1_d3_opt3_&lt;グループ&gt;.csv</a>
       </div>
       <div style="background:#0a1a2e;border:1px solid #2a6a9a;border-radius:8px;padding:0.8rem 1rem;margin-top:1rem;font-size:0.85rem;color:#81D4FA">
         <strong>手順:</strong> ① 演習3 はグループで CSV を共有 → ② 自分の <code>results/</code> に集める → ③ Open-LMS の<a href="https://musashino-u.myopenlms.net/mod/assign/view.php?id=45840" target="_blank" rel="noopener" style="color:#4FC3F7">「第3回 課題提出」</a>へ<strong>自分で</strong>アップロード
@@ -543,7 +545,7 @@ a.sub-item:hover {
       <table style="font-size:0.82rem">
         <tr><th style="width:6rem">時間</th><th>内容</th><th style="width:8rem">形式</th></tr>
         <tr><td>0–20</td><td><a href="#sec-review" style="color:#4FC3F7"><strong>復習プレゼン</strong></a> 番号を決める → 勾配と学習率（相談10分 → 他グループへ説明 → 評価）</td><td><span class="tag tag-group">発表</span></td></tr>
-        <tr><td>20–30</td><td><a href="#sec-prep" style="color:#4FC3F7">準備</a>：<code>git pull</code></td><td>個人</td></tr>
+        <tr><td>20–30</td><td><a href="#sec-prep" style="color:#4FC3F7">準備</a>：第3回の資料を取り込む</td><td>個人</td></tr>
         <tr><td>30–50</td><td><a href="#sec-ex1" style="color:#4FC3F7"><strong>演習1</strong></a> AIをつくるとは？（グループワーク）</td><td><span class="tag tag-group">討議</span></td></tr>
         <tr><td>50–80</td><td><a href="#sec-ex2" style="color:#4FC3F7"><strong>演習2</strong></a> 過学習を作る（予測 → 実行 → 討議）</td><td>個人 → グループ</td></tr>
         <tr><td>80–135</td><td><a href="#sec-ex3" style="color:#4FC3F7"><strong>演習3</strong></a> 3つの方法を分担 → CSV を共有 → グループ内プレゼン</td><td>グループ</td></tr>
@@ -597,7 +599,7 @@ a.sub-item:hover {
       <table style="font-size:0.85rem">
         <tr><th style="width:9rem">場面</th><th style="width:7rem">presenter</th><th>presenter がやること</th></tr>
         <tr><td>復習プレゼン</td><td>①</td><td>相談を進め、②と2人で別のグループへ説明する</td></tr>
-        <tr><td>演習1</td><td>②</td><td rowspan="3">「✋」で問いを読み上げ、全員の考えを聞いて、根拠を含めた答えを1〜2文にまとめる。時間を見て「次へ」の合図を出す。演習3では最後のグループ内プレゼンで結論を話す</td></tr>
+        <tr><td>演習1</td><td>②</td><td rowspan="3">問い（演習2・3はノートブックの「✋」）を読み上げ、全員の考えを聞いて、根拠を含めた答えを1〜2文にまとめる。時間を見て「次へ」の合図を出す。演習3では最後のグループ内プレゼンで結論を話す</td></tr>
         <tr><td>演習2</td><td>③</td></tr>
         <tr><td>演習3</td><td>④</td></tr>
       </table>
@@ -615,10 +617,11 @@ a.sub-item:hover {
     </div>
     <div class="card standard">
 <pre><span class="fn">cd</span> ~/AI_TD
-<span class="fn">git</span> pull                         <span class="cmt"># course1/day3/ が届く</span>
+<span class="fn">git</span> fetch origin                                   <span class="cmt"># 最新の資料を取ってくる（自分のファイルはまだ変わらない）</span>
+<span class="fn">git</span> checkout origin/main -- course1/day3 common   <span class="cmt"># 第3回のノートブックと共通コードだけを取り込む</span>
 <span class="fn">source</span> .venv/bin/activate
-<span class="fn">code</span> .                           <span class="cmt"># course1/day3/ のノートブックを開き、カーネルに .venv を選ぶ</span></pre>
-      <p style="font-size:0.82rem;color:#999;margin-top:0.3rem">データは第1回のもの（FashionMNIST・ケーブル画像）を使う。<code>git pull</code> が「would be overwritten」で止まったら、第2回ページの準備の手順（<code>git stash</code>）で取り直す。</p>
+<span class="fn">code</span> .                                             <span class="cmt"># course1/day3/ のノートブックを開き、カーネルに .venv を選ぶ</span></pre>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.3rem"><code>git pull</code> は使わない。上の方法なら、第1回・第2回で書き換えたノートブックはそのまま残り、「would be overwritten」で止まることもない（<code>course1/day3/</code> と <code>common/</code> だけが最新になる）。<code>ls course1/day3</code> で <code>ex2.ipynb</code>・<code>ex3.ipynb</code>・<code>opt_augment.ipynb</code> が見えればよい。データは第1回のもの（FashionMNIST・ケーブル画像）を使う。</p>
       <p style="font-size:0.85rem;color:#ccc;margin-top:0.3rem"><strong>教科書：</strong>第5章（過学習対策と混同行列）。ノートブックのセル見出しの「コードテンプレート⑦」などは教科書の番号で、コードも教科書と同じ形で書いてある。</p>
     </div>
     <div class="card standard">
@@ -639,7 +642,7 @@ a.sub-item:hover {
       <div class="section-num" style="background:#FFB800">1</div>
       <h2>演習1 AIをつくるとは？ ― グループワーク（20分）</h2>
     </div>
-    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">ノートブックは使わない。下のワークシートをグループで埋める。</p>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">コードは実行しない。下のワークシートをグループで埋め、答えと振り返りを各自 <code>ex1.ipynb</code> に書いて提出する。</p>
 
     <div class="card standard">
       <div class="card-header"><h3>到達目標</h3></div>
@@ -658,7 +661,7 @@ a.sub-item:hover {
         <tr><td>2–8</td><td>① 開発経験の共有</td><td>自分の制作物を紹介し、分類する</td></tr>
         <tr><td>8–16</td><td>② 技術・ハードウェア</td><td>5分類それぞれに必要なものを穴埋めする</td></tr>
         <tr><td>16–19</td><td>③ 答え合わせ</td><td>分類ごとの違いを比べ、理由を考える</td></tr>
-        <tr><td>19–20</td><td>まとめ</td><td>下の問いに答える</td></tr>
+        <tr><td>19–20</td><td>まとめ</td><td>下の問いをグループで話す。振り返りは <code>ex1.ipynb</code> に各自で書く（授業後でもよい）</td></tr>
       </table>
     </div>
 
@@ -727,22 +730,13 @@ a.sub-item:hover {
       <p style="font-size:0.9rem;color:#ccc;margin-bottom:0.5rem">分類ごとの違いを比べ、なぜ違うかを言う。<strong>授業で開く</strong>。</p>
       <details>
         <summary>答え合わせ（授業で開く）</summary>
-        <div class="answer-content">
-          <table style="font-size:0.82rem">
-            <tr><th style="width:26%">分類</th><th>主な技術</th><th>代表的なハードウェア・計算環境</th></tr>
-            <tr><td>1 AI アプリケーション開発</td><td>API、SDK、Python、Web 開発</td><td>一般的な PC ＋クラウド AI サービス</td></tr>
-            <tr><td>2 AI 制御システム開発</td><td>プロンプト、RAG、AI ハーネス、ツール連携</td><td>一般的な PC・サーバー＋クラウド AI サービス</td></tr>
-            <tr><td>3-A 特化型 AI モデル開発</td><td>データ収集、機械学習、モデル学習、ファインチューニング</td><td>PC の CPU、必要に応じて GPU 搭載 PC・GPU サーバー</td></tr>
-            <tr><td>3-B 汎用 AI モデルの改良</td><td>LoRA、継続事前学習、強化学習、モデルマージ、蒸留</td><td>GPU 搭載 PC〜複数 GPU・GPU クラスタ</td></tr>
-            <tr><td>3-C 汎用基盤モデルの新規開発</td><td>大規模データセット、モデル設計、事前学習、分散学習</td><td>大規模 GPU クラスタ、高速ネットワーク、大容量ストレージ</td></tr>
-          </table>
-          <p style="font-size:0.82rem;color:#999;margin-top:0.3rem">計算環境は代表例。モデルの規模や手法で大きく変わる。</p>
-          <ul class="point-list" style="margin-top:0.5rem">
-            <li>AI アプリの開発に、高性能 GPU が要るとは限らない（既存の LLM や YOLO をクラウド API で使えば一般的な PC でよい）</li>
-            <li>AI モデルの開発でも、大規模な計算資源が要るとは限らない（数千件のデータの Random Forest は一般的な PC で学習できる）</li>
-            <li>汎用基盤モデルの事前学習は、大学の演習環境とは桁違いの計算資源が要る。LoRA などの改良なら規模によっては小さな環境でもできる</li>
-            <li>AI をつくるといっても、AI を使うアプリ、AI を制御する仕組み、AI モデルそのものまである。何をつくるかで必要な技術も計算環境も変わる</li>
-          </ul>
+        <div class="answer-content locked-answer" data-enc="1E9fLztQZVxNdjzYXYDDR/KqSmU2PYLrA1whezXcv+9EF0TsZOHQaBhW8tDQgDZB9fT0lN676t2lSo/3CDnA1vFL92wBFrKm2S5p3AFoww4tAo18T6uRU58/YDMystjZnPRVz2pxNFG54+kIShmSHACJBqy6G4T7uwGUGjhT6cMumoP4ix6KR/IThigsaR66K+6Yx7M6hftGZo/YYp7iBi9zBxDe+KYoGIDawGfTiGee8j7zNXKavKWyH0NwQC0uCxa9xPvOl/8NNVsfiJnBeDem+gLcNG0Mdjgw4Wo1jyxNfI3Z1ZfcryfiJdjZhvqzOWbSxaEWNsW3PXJw0MT7pHSohL9XJ9ofTtR2dvqYWobLUNQygQd7ff9E+3+Kz+XPBtXurGtZHjPEp3ZshJv+oZdVeh8pl887A23e7vs8SbECyRayCsd7aKJMIQR8lSd01uh0SoaD/y4XZyamDQPlBlRzl8Xa8mBKYYQnpje2Lz84Jjd65FV5hZJEWL7AaaE7rw6UCkoLalYT4gBxKQBzEuHB6l6kxAA0ZRchRalEpA5lSI+XADmMWQt0uS0U/7nLxsXij1uOC8OQ9ZWnT9UYcq3Q9yj/DJaBoytPXae/pu0ANi6kdMKSFMurqygqCkhxBXe/OFP3/eyT3NL5BtB9sHIrI/WWWNKcGtOSEy71HiLLKtySy9B1gqfvVnxY8ylF62UUGvQbifuSn4HYZ1lUTqneVj9Bl977uc/2cIecwRIZfbae6ZvJRdxlSj1MreTSZoFV+1o1xxnyRggP6mVyMA1mGQd8Lna5PWi8ZtrbvkVOuuqXHWAyrl8L0RxUQnPawHFcxDnECWAsknW7LdQrngLgSs6bY9BPfZSk5imcSMyl6QcnCohE84kqBC9RbV1G9QYsrEkdIG3RJfz+on41l2shUauufdL5mZktgs6unS1h6eVuj3T8Y/0qtJz28RYISusMJOE/FU88NxoAzvhJG2fGpczWENamE66W1pjOaIF8UXxY9qC3vwuwJWVOnofLeHdEr1QBeznxC0gUb4VfiAGwOqcwkx1hussf4KJrylL7N/S9b71sPTB4WFPu2LqjiSf7ey1xWOK3DYbQFjo3tRZRfrQX9qaRuMnRLs45wXSyxFFiC/gi0X6su6vR05Zp0vw3/SUTPEyIS96S/uaZQgOxTTo3URvwy1cNc2EzFmQexH41JN7Ioa9esXqHg959lGPpsWwtbjAaKwWDb30RYaAKTkS+o4RxtOmL/Tttmrspf2dwnOclQDEU60rsiLyUDeWiFbV9aWVOzJuPGaMDByT2UrERg7UnsbwCPzftHCi2SJq/yQhNZT0a26QAwKwfjhosIWYhw2XYWc5aASaDy0XazzguMM4mcC9kmA9gIAK6/jCtqTPh72ZLDlLDyWNihV/2UU2fGrhbpWH2jGZieJxTnNZ2XHwdtH/hti4Gu6Tgx2oiUQVWxomp8bHGDpMRNrZ2TwWy9AuJlPJQ06fH5aO91sJjn1vyyqRsB9sDudTh7QAKUg2FmHsrEC7QME8OreHX9je2m+N/hBTKICyhbV9aLWBKuZ66379IN5E1ufuDH6xfSzDA9oxKvjg4h6uu46Ux6Yd77aIo7hEa20cLx0WRS1PPvXZjc0FBrtpx8jFvy9ixvxPU1IAVJSfgcDgg3t4BqON8byE8rhqNYqZ9QQ6h6iIbP8LxCSKBF4mnz4fds2vFAeHYAkcy2myVTrjx8/c8XQ3EGSkomlzvLPhPoraKifMOkiT6g3wGt+o5jjMo6QWMYlTm0vnYkcdtdkqt2deVGTbXcaQlIojZoJLjKcCB0fLISyfklH1IVjXvnb9ewEK8pfI9yTRQhhy8UWup67NePWon/ompBEYQkHqhs+nyh5PknN7xwYY2ZVZA/AsI2odMP0OexG+BuA+iHPgrwO27lU8Io+5oPQaza3AmituarYqZHCbhzXP/COGORKPz2T141UdLuFXpYD8a3FY6dzRJh31ebKfSMR1vCk183s61B6YUbQ7IwGGnk5gAQR7oAcu8Htgwuvv/iLb8T4ZPcLqGWS9abEJMsuH8LSe0NAtI6YeKawjGJL9H9nG2qmaOds2Dp56L7q+KCPAw8q0MAi76eT85ztUECVqE9ad1k6s70YXXFSgV8Htddnxcw5+NFJX/CySafdH6kSyHn2AGQNk+SUs9FEGckMo55a5A+ygDv2gAEL/JTb+UozmFsJYcCYWEWvtlVXPrp9d2bl/g9hIZeYw5ITK21P+jEo6pITzYUy0NlVO6SKKTKFjviG2RSsncatuNWCRMhzR/r5sbqSme+dV/NxNBN6CkzBCOvAwsqGmAIaab6IC8CxEzPsbom9nn9WwrZawsiU/9UKSHyRNAtCHx/TQo7Ve+1wWoQgrUjSqz1Q3gu3Wg9NzkW5eqEHKU8KRyci0L9k0JF38BJxP0sG1AoeivDql6TeeFj6hvR9LNXMZIMyRFKA7I0Q/pYKMvMe5DBV9ftitVYJa7w4QoInF3ZPo0qWNraY7XWr+LMLOOJjMXfdc0sg8+6nQK1JCGpX/rPQp/WYmEqq+xKH1m5Ft625jVRe2Me9YC6nJqjLnV9/Rruh3DjNfGEM6WyC5kIOQJphmtgYH9te/sn9Bqvs3XTmCj2AEm3dHZgIvCkUD6D9bzXrmaOPdwo6xHZkM42Yn82nd6+6CQV23lr1vcVKN5of7QaIjaIzfUJldZnoPavtKkgxXGPdamxxD+AcKxFaPGwg39oEjwYrzKz1U5q00Uk/6MCXSTuPG+1jL2wiT2YpzW6jiZeptGQ0rpZl2vXs2zfo+3Iwn9hXNtINUizFBu1jvPvbIDZ+KA6CmOhQ2wBAHGSkUe2cMx/ZinPRtgNIa8Pcj1OU5F4XXM35na29aM8CHMrl1HouKanRsgzRZG3fw28Uh6eO8BuBdKqT/QotbcQEQ4MxczjYfUdOaOxprCEz9X8rMjmtb9/Mr+jDiIMqitqVd74sVyJoC6kiZE9jXrUvMVJHCiOwqGla6FCBOKnAKJ">
+          <form class="unlock-form" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+            <label style="font-size:0.85rem;color:#ccc">パスワード（授業で伝える）</label>
+            <input type="password" autocomplete="off" style="padding:0.3rem 0.5rem;border-radius:4px;border:1px solid #555;background:#111;color:#eee">
+            <button type="submit" style="padding:0.3rem 0.8rem;border-radius:4px;border:none;background:#4FC3F7;color:#000;cursor:pointer">開く</button>
+            <span class="unlock-msg" style="font-size:0.82rem;color:#FF8A80"></span>
+          </form>
         </div>
       </details>
     </div>
@@ -754,6 +748,7 @@ a.sub-item:hover {
         <li>それぞれの AI をつくるには、どんな技術・ハードウェアが必要か</li>
         <li>今の自分たちの技術と開発環境で、どこまでの AI をつくれるか</li>
       </ol>
+      <p style="font-size:0.88rem;margin-top:0.6rem"><strong>提出：</strong><code>ex1.ipynb</code> の (1) に②の表を写し、(2) の振り返り4問に答える（制作物の分類と根拠／答え合わせで違った所／演習1全体を通して学んだこと／次につくってみたい AI の分類・技術・計算環境）。</p>
     </div>
   </div>
 </section>
@@ -786,7 +781,7 @@ a.sub-item:hover {
         <tr><td>(5)</td><td>学習曲線（損失・正解率）</td><td>訓練と検証が離れる所を探す</td></tr>
         <tr><td>(6)</td><td>最良エポックと汎化ギャップ</td><td><strong style="color:#FFB800">TODO 1・2</strong></td></tr>
         <tr><td><strong>✋ 1</strong></td><td colspan="2">過学習はいつ始まったか、根拠と一緒に書く</td></tr>
-        <tr><td>(7)–(8)</td><td>CSV に記録 → 3,000 枚で再実行</td><td>全員が <code>N_TRAIN = 3000</code> にしてもう一度実行（1分ほど）</td></tr>
+        <tr><td>(7)–(8)</td><td>CSV に記録 → 3,000 枚で再実行</td><td>(6) の2行（最良エポック・汎化ギャップ）をメモしてから、全員が <code>N_TRAIN = 3000</code> にしてもう一度実行（1分ほど）。CSV には両方残る</td></tr>
         <tr><td><strong>✋ 2</strong></td><td colspan="2">訓練データを増やすと何が変わったか</td></tr>
         <tr><td>(9)</td><td colspan="2">考察を書く（提出）</td></tr>
       </table>
@@ -850,7 +845,7 @@ gap <span class="op">=</span> train_acc_list[<span class="op">-</span><span clas
       <div class="card-header"><h3>ex3.ipynb のセルと、やること</h3></div>
       <table style="font-size:0.85rem">
         <tr><th style="width:5rem">見出し</th><th>セルがすること</th><th>あなたがやること</th></tr>
-        <tr><td>(0)・予測</td><td>グループ設定</td><td>予測を書く</td></tr>
+        <tr><td>(0)・予測</td><td>グループ設定</td><td><code>GROUP_ID</code>・<code>MEMBER_NO</code> を書き換え、予測を書く</td></tr>
         <tr><td>(確認)</td><td>3つの方法の確認問題</td><td>上の表を読んで答える（全問正解で先へ）</td></tr>
         <tr><td>(3)</td><td>担当の方法</td><td><code>METHOD</code> を書き換える</td></tr>
         <tr><td>(4)–(5)</td><td>モデル・最適化手法・学習（早期終了つき）</td><td><strong style="color:#FFB800">TODO 1・2・3</strong></td></tr>
@@ -962,9 +957,10 @@ optimizer <span class="op">=</span> optim.Adam(model.parameters(), lr<span class
     <div class="card standard">
       <table style="font-size:0.82rem">
         <tr><th style="width:5%"></th><th>確認項目</th></tr>
+        <tr><td><input type="checkbox"></td><td>演習1 の <code>ex1.ipynb</code> に②の表と振り返り4問を書いた</td></tr>
         <tr><td><input type="checkbox"></td><td>演習2 の学習曲線が出ていて、考察を書いた</td></tr>
-        <tr><td><input type="checkbox"></td><td>演習3 の (8) の表に、グループで分担した方法がそろっている</td></tr>
-        <tr><td><input type="checkbox"></td><td>CSV を2つ（ex2・ex3）提出する</td></tr>
+        <tr><td><input type="checkbox"></td><td>演習3 の (8) の表に、グループで分担した方法がそろっていて、考察を書いた</td></tr>
+        <tr><td><input type="checkbox"></td><td>ノートブックを3つ（ex1・ex2・ex3）と CSV を2つ（ex2・ex3）提出する</td></tr>
         <tr><td><input type="checkbox"></td><td>zip にせず、ファイル名を変えていない</td></tr>
         <tr><td><input type="checkbox"></td><td><a href="https://musashino-u.myopenlms.net/mod/questionnaire/view.php?id=45842" target="_blank" rel="noopener" style="color:#4FC3F7">グループメンバーの評価</a>（Open-LMS）に回答した</td></tr>
       </table>
@@ -1018,6 +1014,24 @@ document.querySelectorAll(':not(pre) > code').forEach(function(code) {
         code.classList.remove('copied');
       }, 1500);
     });
+  });
+});
+// パスワードつきの答え合わせ：入力したパスワードで復号して表示する（本文は暗号化してページに埋め込んである）
+document.querySelectorAll('.locked-answer').forEach(function(box) {
+  var form = box.querySelector('.unlock-form');
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var msg = form.querySelector('.unlock-msg');
+    try {
+      var raw = Uint8Array.from(atob(box.dataset.enc), function(c) { return c.charCodeAt(0); });
+      var base = await crypto.subtle.importKey('raw', new TextEncoder().encode(form.querySelector('input').value.trim()), 'PBKDF2', false, ['deriveKey']);
+      var key = await crypto.subtle.deriveKey({name: 'PBKDF2', salt: raw.slice(0, 16), iterations: 200000, hash: 'SHA-256'},
+                                              base, {name: 'AES-GCM', length: 256}, false, ['decrypt']);
+      var plain = await crypto.subtle.decrypt({name: 'AES-GCM', iv: raw.slice(16, 28)}, key, raw.slice(28));
+      box.innerHTML = new TextDecoder().decode(plain);
+    } catch (err) {
+      msg.textContent = 'パスワードが違います';
+    }
   });
 });
 </script>
