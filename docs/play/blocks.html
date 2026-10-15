@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コードブロック組み立て | AI_TD1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="play.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topbar">
+    <a href="../aitd1_week_3.html">← 第3回の授業ページ</a>
+    <a href="flow.html">学習の流れ</a>
+    <a href="split.html">訓練・検証・テスト</a>
+    <span class="here">ブロック組み立て</span>
+  </nav>
+  <h1>コードのブロックを組み立てる</h1>
+  <p class="lead">教科書のコードテンプレート①〜⑫は，どの題材でも同じ順で並ぶ．ブロックを並べて，その型を手に覚えさせる．</p>
+
+  <!-- ===================== レベル1 ===================== -->
+  <div class="level" id="lv1">
+    <h2><span class="badge">レベル1</span>テンプレート①〜⑫を並べる<span class="cleared">✔ クリア</span></h2>
+    <p class="howto">12 枚のブロックを番号の空欄に入れる（第1回 GW2-1 と同じ）．ドラッグするか，ブロックをクリック → 空欄をクリック．並べ終えたら，各項目の「なぜ必要？」を開いて，その項目がないと何が困るかを確かめよう．</p>
+    <div class="phases">
+      <div class="phase">
+        <h3 style="color:#4FC3F7">データ準備フェーズ</h3>
+        <div class="step"><span class="tpl">①</span><span class="slot" data-a="ライブラリのインポート" data-hint="①：最初に道具（ライブラリ）を読み込む"></span></div>
+        <details class="why"><summary>なぜ必要？</summary><div>torch や torchvision の道具は，読み込まないと使えない．忘れると <code>NameError</code> で止まる．</div></details>
+        <div class="step"><span class="tpl">②</span><span class="slot" data-a="データの前処理" data-hint="②：データを読む前に，どう変換するかを決めておく"></span></div>
+        <details class="why"><summary>なぜ必要？</summary><div>画像のままではモデルに入らない．<code>ToTensor()</code> で 0〜1 の数のテンソルにする．データ拡張（回転など）もここに足す．決めた変換は③で指定する．</div></details>
+        <div class="step"><span class="tpl">③</span><span class="slot" data-a="データセットの準備" data-hint="③：変換を指定してデータを読み込み，訓練と検証に分ける"></span></div>
+        <details class="why"><summary>なぜ必要？</summary><div>画像と正解ラベルの組を 1 枚ずつ取り出せる形にする．ここで訓練と検証に分けておかないと，過学習に気づけない．</div></details>
+        <div class="step"><span class="tpl">④</span><span class="slot" data-a="データローダの作成" data-hint="④：分けたデータをミニバッチで取り出せるようにする"></span></div>
+        <details class="why"><summary>なぜ必要？</summary><div>訓練データ 48,000 枚を一度にモデルへ入れると，メモリに乗らないうえ，重みの更新も 1 エポックに 1 回だけになる．64 枚ずつ（ミニバッチ）取り出せば，1 エポックで 750 回更新できる．
+<div class="dl-bar"><span>48,000 枚</span></div><div class="dl-bar mini"><span>64 枚 × 750 個のミニバッチ</span></div>
+<code>shuffle=True</code> で毎エポック並びを混ぜ，同じ順番を覚えてしまうのを防ぐ．</div></details>
+      </div>
+      <div class="phase">
+        <h3 style="color:#FFB800">学習設定フェーズ</h3>
+        <div class="step"><span class="tpl">⑤</span><span class="slot" data-a="デバイスの設定" data-hint="⑤：学習設定の最初は，計算する装置（GPU か CPU か）"></span></div>
+        <details class="why"><summary>なぜ必要？</summary><div>GPU（Mac では mps）で計算すると何倍も速い．モデルとデータは同じ装置に置かないとエラーになる．</div></details>
+        <div class="step"><span class="tpl">⑥</span><span class="slot" data-a="入力データの形状確認" data-hint="⑥：モデルを作る前に，入力の形（チャネル・高さ・幅）を確かめる"></span></div>
+        <details class="why"><summary>なぜ必要？</summary><div>入力の形 <code>[64, 1, 28, 28]</code> がわからないと，⑦の最初の Linear の「入る数」（784）が決められない（レベル3）．</div></details>
+        <div class="step"><span class="tpl">⑦</span><span class="slot" data-a="ネットワークの定義" data-hint="⑦：形がわかってからモデルを組む"></span></div>
+        <details class="why"><summary>なぜ必要？</summary><div>入力から予測を出す本体．どの層をどの大きさで重ねるかを決める（レベル4）．</div></details>
+        <div class="step"><span class="tpl">⑧</span><span class="slot" data-a="損失関数の定義" data-hint="⑧：予測と正解のずれの測り方"></span></div>
+        <details class="why"><summary>なぜ必要？</summary><div>予測が正解からどれだけずれているかを 1 つの数（損失）にする．この数がないと，重みをどちらへ動かせばよいか決まらない．</div></details>
+        <div class="step"><span class="tpl">⑨</span><span class="slot" data-a="最適化関数の定義" data-hint="⑨：model.parameters() を渡すので，モデルを作った後"></span></div>
+        <details class="why"><summary>なぜ必要？</summary><div>勾配を使って重みを実際に動かす係．学習率 <code>lr</code> で 1 回に動かす大きさを決める．<code>model.parameters()</code> を渡すので，モデルを作った後．</div></details>
+      </div>
+      <div class="phase">
+        <h3 style="color:#B388FF">学習・評価フェーズ</h3>
+        <div class="step"><span class="tpl">⑩</span><span class="slot" data-a="モデル学習＆検証" data-hint="⑩：学習ループ"></span></div>
+        <details class="why"><summary>なぜ必要？</summary><div>⑧と⑨をミニバッチごとにくり返し，重みを少しずつ直す．エポックごとに検証データでも測り，過学習を見張る（レベル2）．</div></details>
+        <div class="step"><span class="tpl">⑪</span><span class="slot" data-a="学習結果の可視化" data-hint="⑪：学習が終わってから，記録したリストをグラフにする"></span></div>
+        <details class="why"><summary>なぜ必要？</summary><div>数字の表だけでは，いつ過学習が始まったかわかりにくい．学習曲線にすると，訓練と検証の差がひと目でわかる．</div></details>
+        <div class="step"><span class="tpl">⑫</span><span class="slot" data-a="モデル性能評価" data-hint="⑫：最後にテストデータで評価する"></span></div>
+        <details class="why"><summary>なぜ必要？</summary><div>検証データは最良エポックや設定を選ぶのに使ったので，その成績は甘めになる．最後に，一度も使っていないテストデータで本当の実力を測る．</div></details>
+      </div>
+    </div>
+    <div class="pool-here"></div>
+  </div>
+
+  <!-- ===================== レベル2 ===================== -->
+  <div class="level" id="lv2">
+    <h2><span class="badge">レベル2</span>⑩の学習ループの骨組みを組み立てる<span class="cleared">✔ クリア</span></h2>
+    <p class="howto">エポックのループの中には，<strong>訓練</strong>の塊と，その下に<strong>検証</strong>の塊がある．正しい 2 つの塊を選んで，順に空欄へ入れる．使わない塊が 2 つ混ざっている．</p>
+<div class="codebox">for epoch in range(EPOCHS):
+    <span class="slot block" data-a="train" data-hint="1 つ目：訓練モードにして，訓練データで重みを更新する塊"></span>
+
+    <span class="slot block" data-a="val" data-hint="2 つ目：評価モードにして，勾配を計算せず検証データで測る塊（重みは動かさない）"></span></div>
+    <div class="pool-here"></div>
+  </div>
+
+  <!-- ===================== レベル3 ===================== -->
+  <div class="level" id="lv3">
+    <h2><span class="badge">レベル3</span>画像をテンソルにして MLP へ入れる<span class="cleared">✔ クリア</span></h2>
+    <p class="howto">モデルが計算できるのはテンソル（数の並び）だけ．画像をテンソルにし，MLP の最初の層が受け取れる形にそろえるまでを追う．</p>
+    <div class="img28">
+      <div class="img28-fig">
+        <div class="ax-w">← 幅 28 画素 →</div>
+        <div class="img28-body"><div class="ax-h">↑高さ<span class="tcy">28</span>画素↓</div><svg class="img28-svg" viewBox="0 0 28 28" shape-rendering="crispEdges" role="img" aria-label="28×28 画素の T シャツの画像"></svg></div>
+      </div>
+      <div class="img28-txt">
+        <p>FashionMNIST の画像（例：T シャツ）は，縦 28 × 横 28 ＝ <strong>784 個の画素</strong>（小さな四角）でできた白黒画像．</p>
+        <p>画素は 1 つずつ明るさを表す数を持つ．<strong>0 が黒，255 が白</strong>，その間が灰色．</p>
+        <p>白黒なので色の層（<strong>チャネル</strong>）は 1 枚．カラーなら R・G・B の 3 枚になる（レベル3+）．</p>
+        <p>つまり 1 枚の画像は「チャネル 1 × 高さ 28 × 幅 28」の数の集まり．以下，この画像がどんな形のテンソルになってモデルに入るかを追う．</p>
+      </div>
+    </div>
+    <div class="tt-demo">
+      <div class="tt-px"><span style="background:#000;color:#ddd">0</span><span style="background:#808080">128</span><span style="background:#fff">255</span></div>
+      <div class="fd-mid"><code>ToTensor()</code><br>→</div>
+      <div class="tt-px"><span style="background:#000;color:#ddd">0.0</span><span style="background:#808080">0.5</span><span style="background:#fff">1.0</span></div>
+    </div>
+    <p class="note" style="margin-bottom:0.4rem">① 画素の明るさ 0〜255 を 0〜1 の数にし，<code>[チャネル, 高さ, 幅]</code> のテンソルにする（白黒なのでチャネル 1）．</p>
+    <div class="why01">
+      <p><strong>なぜ 0〜1 にするのか</strong>：1 層目の Linear は「784 個の画素 × 重み」を全部足す．重みの初期値は 0〜1 くらいの入力を想定した小さな値なので，画素が 0〜255 のままだと出力も約 255 倍に膨らむ．数が大きすぎると，1 回の更新で重みが動きすぎて学習が壊れる．</p>
+      <table>
+        <tr><th>同じ MLP・同じ初期の重みで比べた結果</th><th>0〜1</th><th>0〜255 のまま</th></tr>
+        <tr><td>1 層目の出力の大きさ（平均）</td><td>0.19</td><td class="bad">48.8</td></tr>
+        <tr><td>学習前の損失</td><td>2.3</td><td class="bad">22.1</td></tr>
+        <tr><td>SGD（学習率 0.01）で 5 エポック学習</td><td>正解率 61%</td><td class="bad">損失が nan（計算が壊れる）．正解率 10%＝当てずっぽう</td></tr>
+      </table>
+      <p class="note">FashionMNIST 5,000 枚で実際に学習させた値．授業で使う Adam は壊れにくいが，それでも正解率の上下が大きくなった．</p>
+    </div>
+    <p class="chfirst">チャネルの位置に注意：PyTorch は<strong>チャネルが先</strong>の <code>[チャネル, 高さ, 幅]</code>．画像ファイル・NumPy・matplotlib は<strong>チャネルが後</strong>の <code>[高さ, 幅, チャネル]</code>．<code>ToTensor()</code> は並びの入れ替えもしてくれるので，<code>[28, 28, 1]</code> ではなく <code>[1, 28, 28]</code> になる．</p>
+    <div class="flat-demo">
+      <div class="fd-img"></div>
+      <div class="fd-mid"><code>nn.Flatten()</code><br>→</div>
+      <div class="fd-row"></div>
+    </div>
+    <p class="note" style="margin-bottom:1rem">② 全結合層 <code>nn.Linear(入る数, 出る数)</code> は <code>[バッチ, 入る数]</code> の 2 次元しか受け取れない．そこで 1 枚の画像を上の行から順に 1 列へ並べ直す．数は同じで形だけが変わる（4×4 なら 16 個，28×28 なら 784 個）．</p>
+    <p class="howto">各段階の形を空欄に入れる．データローダ（レベル1の④）は画像を 64 枚ずつまとめて渡す（<code>BATCH_SIZE = 64</code>）．</p>
+    <div class="shape-flow">
+      <div class="srow"><span class="layer jp">FashionMNIST の画像 1 枚（28×28 の白黒）</span><span class="sarrow">→</span><span class="note">まだテンソルではない</span></div>
+      <div class="srow"><code class="layer">transforms.ToTensor()</code><span class="sarrow">→</span><span class="slot" data-a="[1, 28, 28]" data-hint="ToTensor：PyTorch はチャネルが先の [チャネル, 高さ, 幅]．[28, 28, 1] はチャネルが後の並び（画像ファイルや NumPy の並び）"></span></div>
+      <div class="srow"><span class="layer jp">データローダが 64 枚まとめる</span><span class="sarrow">→</span><span class="slot" data-a="[64, 1, 28, 28]" data-hint="データローダ：先頭にバッチ（64 枚）の次元が付く"></span></div>
+      <div class="srow"><code class="layer">nn.Flatten()</code><span class="sarrow">→</span><span class="slot" data-a="[64, 784]" data-hint="Flatten：バッチの次元は残し，1×28×28 を 784 の 1 列にする"></span></div>
+      <div class="srow"><span class="layer jp">MLP の最初の層 <code>nn.Linear(INPUT_SIZE, HIDDEN_SIZE1)</code></span><span class="sarrow">→</span><span class="note"><code>INPUT_SIZE =</code><span class="slot" data-a="784" data-hint="最初の Linear の「入る数」は，Flatten した 1 列の長さと同じ"></span></span></div>
+    </div>
+    <div class="pool-here"></div>
+    <div class="noflat">
+      <button class="noflat-btn">Flatten を抜いて流してみる</button>
+<div class="codebox noflat-err"><span class="cmt"># imgs [64, 1, 28, 28] をそのまま nn.Linear(784, 512) に入れると…</span>
+<span class="err">RuntimeError: mat1 and mat2 shapes cannot be multiplied (1792x28 and 784x512)</span>
+<span class="cmt"># Linear は最後の次元（幅 28）を「入る数」とみなす．784 と合わないので止まる</span>
+<span class="cmt"># （1792 = 64 × 1 × 28：残りの次元がまとめて数えられている）</span></div>
+    </div>
+  </div>
+
+  <!-- ===================== レベル3+ ===================== -->
+  <div class="level" id="lv3p">
+    <h2><span class="badge">レベル3+</span>次元を入れ替える<span class="cleared">✔ クリア</span></h2>
+    <p class="howto">カラー画像（チャネル 3＝R・G・B，高さ 240，幅 320）で練習する．同じ画像でも，チャネルが先か後かで並びが違う．</p>
+    <div class="ch-demo">
+      <div><div class="ch-planes"><span style="background:#c62828">R</span><span style="background:#2e7d32">G</span><span style="background:#1565c0">B</span></div><p class="note">PyTorch：<code>[3, 240, 320]</code><br>色ごとの面を 3 枚重ねる</p></div>
+      <div><div class="ch-pixels"><span><i style="background:#c62828"></i><i style="background:#2e7d32"></i><i style="background:#1565c0"></i></span><span><i style="background:#c62828"></i><i style="background:#2e7d32"></i><i style="background:#1565c0"></i></span><span><i style="background:#c62828"></i><i style="background:#2e7d32"></i><i style="background:#1565c0"></i></span><span><i style="background:#c62828"></i><i style="background:#2e7d32"></i><i style="background:#1565c0"></i></span><span><i style="background:#c62828"></i><i style="background:#2e7d32"></i><i style="background:#1565c0"></i></span><span><i style="background:#c62828"></i><i style="background:#2e7d32"></i><i style="background:#1565c0"></i></span><span><i style="background:#c62828"></i><i style="background:#2e7d32"></i><i style="background:#1565c0"></i></span><span><i style="background:#c62828"></i><i style="background:#2e7d32"></i><i style="background:#1565c0"></i></span><span><i style="background:#c62828"></i><i style="background:#2e7d32"></i><i style="background:#1565c0"></i></span></div><p class="note">NumPy・matplotlib：<code>[240, 320, 3]</code><br>1 画素ごとに R・G・B の 3 つ</p></div>
+    </div>
+    <p class="howto"><code>x.permute(a, b, c)</code> は「新しい並びの 0 番目に元の a 番目，1 番目に元の b 番目，…」を置く．空欄に<strong>元の次元の番号</strong>を入れる．</p>
+<div class="codebox perm"><span class="cmt"># ① PyTorch の画像を matplotlib で表示したい</span>
+img.shape   # [3, 240, 320]
+<span class="cmt">#              0   1    2   ← 次元の番号</span>
+img.permute(<span class="slot num" data-a="1" data-hint="新しい 0 番目は高さ．元の高さは 1 番"></span>, <span class="slot num" data-a="2" data-hint="新しい 1 番目は幅．元の幅は 2 番"></span>, <span class="slot num" data-a="0" data-hint="新しい 2 番目はチャネル．元のチャネルは 0 番"></span>)   <span class="cmt"># → [240, 320, 3]</span></div>
+<div class="codebox perm"><span class="cmt"># ② NumPy で読んだ画像を PyTorch に渡したい</span>
+arr.shape   # [240, 320, 3]
+<span class="cmt">#               0    1   2   ← 次元の番号</span>
+torch.from_numpy(arr).permute(<span class="slot num" data-a="2" data-hint="新しい 0 番目はチャネル．元のチャネルは 2 番"></span>, <span class="slot num" data-a="0" data-hint="新しい 1 番目は高さ．元の高さは 0 番"></span>, <span class="slot num" data-a="1" data-hint="新しい 2 番目は幅．元の幅は 1 番"></span>)   <span class="cmt"># → [3, 240, 320]</span></div>
+<div class="codebox perm"><span class="cmt"># ③ ミニバッチ 64 枚をまとめて表示用の並びにしたい</span>
+imgs.shape  # [64, 3, 240, 320]
+<span class="cmt">#              0   1   2    3   ← 次元の番号</span>
+imgs.permute(<span class="slot num" data-a="0" data-hint="バッチは先頭のまま．元のバッチは 0 番"></span>, <span class="slot num" data-a="2" data-hint="新しい 1 番目は高さ．元の高さは 2 番"></span>, <span class="slot num" data-a="3" data-hint="新しい 2 番目は幅．元の幅は 3 番"></span>, <span class="slot num" data-a="1" data-hint="新しい 3 番目はチャネル．元のチャネルは 1 番"></span>)   <span class="cmt"># → [64, 240, 320, 3]</span></div>
+    <p class="note">高さと幅を取り違えると <code>[320, 240, 3]</code> になり，画像が縦横入れ替わって崩れる．</p>
+    <div class="pool-here"></div>
+  </div>
+
+  <!-- ===================== レベル4 ===================== -->
+  <div class="level" id="lv4">
+    <h2><span class="badge">レベル4</span>⑦の MLP を組み立てる<span class="cleared">✔ クリア</span></h2>
+    <p class="howto">GW3 試行①の MLP（FashionMNIST・10 クラス）を作る．画像を 1 列に伸ばし，全結合層と活性化関数を交互に重ねる．外枠の <code>model = nn.Sequential(</code> 〜 <code>)</code> は最初から入っている．その中へブロックを上から順に並べる．並べると下の図が変わる．<code>nn.ReLU()</code> を入れたり抜いたりして，線の形を比べてみよう．使わないブロックが 3 つ混ざっている．</p>
+<div class="codebox" style="margin-bottom:0.8rem"><span class="cmt"># 先に決めてある数（レベル3で見た形から）</span>
+INPUT_SIZE = 1 * 28 * 28    <span class="cmt"># チャネル × 高さ × 幅 = 784</span>
+HIDDEN_SIZE1 = 512
+HIDDEN_SIZE2 = 256
+OUTPUT_SIZE = 10            <span class="cmt"># クラスの数</span></div>
+    <div class="parsons"></div>
+    <h3 class="relu-ttl">いま組んだモデルが引ける線（点＝データ）</h3>
+    <svg class="relu-plot" viewBox="0 0 400 220" role="img" aria-label="組んだモデルが引ける線"></svg>
+    <p class="relu-msg"></p>
+<div class="codebox relu-math"><span class="cmt"># ReLU なしで Linear を 2 つ重ねると…（1 入力・1 出力の例）</span>
+h = 2x + 1          <span class="cmt"># 1 つ目の Linear</span>
+y = 3h − 1          <span class="cmt"># 2 つ目の Linear</span>
+  = 3(2x + 1) − 1 = 6x + 2   <span class="cmt"># ← Linear 1 つと同じ．何層重ねても直線のまま</span></div>
+  </div>
+
+  <!-- ===================== レベル5 ===================== -->
+  <div class="level" id="lv5">
+    <h2><span class="badge">レベル5</span>実践：256×256 のカラー画像を 2 クラスに分ける<span class="cleared">✔ クリア</span></h2>
+    <p class="howto">レベル1〜4のまとめ．256×256 のカラー画像（例：ケーブルのピンが刺さっている＝正常／抜けている＝不良）を，全結合層 3 つの MLP で 2 クラスに分ける．空欄にチップを入れる．使わないチップも混ざっている．</p>
+<div class="codebox practice"><span class="cmt"># ② データの前処理：大きさをそろえてテンソルにする</span>
+data_transform = transforms.Compose([
+    transforms.Resize((256, 256)),
+    <span class="slot" data-a="transforms.ToTensor()" data-hint="画像を 0〜1 の数のテンソルにするのは ToTensor（レベル3）"></span>,
+])                                  <span class="cmt"># 1 枚の形 →</span> <span class="slot" data-a="[3, 256, 256]" data-hint="PyTorch はチャネルが先．カラーなのでチャネル 3（レベル3+）"></span>
+
+<span class="cmt"># ⑥ 入力データの形状確認（BATCH_SIZE = 32）</span>
+imgs, labels = next(iter(train_loader))
+imgs.shape                          <span class="cmt"># →</span> <span class="slot" data-a="[32, 3, 256, 256]" data-hint="先頭にバッチ 32．その後ろは 1 枚の形 [チャネル, 高さ, 幅]（レベル3）"></span>
+nn.Flatten()(imgs).shape            <span class="cmt"># →</span> <span class="slot" data-a="[32, 196608]" data-hint="Flatten はバッチを残して，1 枚分を 1 列にする．3 × 256 × 256 = 196,608（レベル3）"></span>
+
+<span class="cmt"># ⑦ ネットワークの定義（全結合層 3 つの MLP）</span>
+INPUT_SIZE = <span class="slot" data-a="3 * 256 * 256" data-hint="1 列の長さ＝チャネル × 高さ × 幅（レベル3）"></span>     <span class="cmt"># = 196,608</span>
+HIDDEN_SIZE1 = 512
+HIDDEN_SIZE2 = 128
+OUTPUT_SIZE = <span class="slot num" data-a="2" data-hint="出力の数＝クラスの数（正常・不良の 2 つ）（レベル4）"></span>
+model = nn.Sequential(
+    <span class="slot" data-a="nn.Flatten()," data-hint="最初に画像を 1 列に伸ばす（レベル3）"></span>
+    nn.Linear(INPUT_SIZE, HIDDEN_SIZE1),
+    <span class="slot" data-a="nn.ReLU()," data-hint="Linear と Linear の間には ReLU を挟む（レベル4）"></span>
+    nn.Linear(HIDDEN_SIZE1, HIDDEN_SIZE2),
+    <span class="slot" data-a="nn.ReLU()," data-hint="2 つ目の Linear の後にも ReLU（レベル4）"></span>
+    <span class="slot" data-a="nn.Linear(HIDDEN_SIZE2, OUTPUT_SIZE)" data-hint="「入る数」は 1 つ前の層の「出る数」HIDDEN_SIZE2．最後の層の後に活性化関数は付けない（レベル4）"></span>
+)
+
+<span class="cmt"># ⑧ 損失関数の定義　⑨ 最適化関数の定義</span>
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+<span class="cmt"># ⑩ モデル学習＆検証</span>
+for epoch in range(EPOCHS):
+    <span class="slot" data-a="model.train()" data-hint="訓練の塊は訓練モードから（レベル2）"></span>
+    for images, labels in <span class="slot" data-a="train_loader" data-hint="重みを更新するのは訓練データ（レベル2）"></span>:
+        <span class="cmt"># 勾配を消す → 予測 → 損失 → 逆伝播 → 重みを更新</span>
+    <span class="slot" data-a="model.eval()" data-hint="検証の塊は評価モードから（レベル2）"></span>
+    with torch.no_grad():
+        for images, labels in <span class="slot" data-a="val_loader" data-hint="学習中に測るのは検証データ．テストデータは最後に 1 回だけ（レベル2）"></span>:
+            <span class="cmt"># 予測 → 損失と正解数を足す（重みは更新しない）</span></div>
+    <div class="pool-here"></div>
+  </div>
+</div>
+
+<script src="play.js"></script>
+<script>
+const TEMPLATES = [
+  ["ライブラリのインポート", "import torch"],
+  ["データの前処理", "transforms.Compose([...])"],
+  ["データセットの準備", "datasets.FashionMNIST(...) と random_split"],
+  ["データローダの作成", "DataLoader(..., batch_size=64)"],
+  ["デバイスの設定", 'torch.device("mps")'],
+  ["入力データの形状確認", "imgs.shape"],
+  ["ネットワークの定義", "nn.Sequential(...)"],
+  ["損失関数の定義", "nn.CrossEntropyLoss()"],
+  ["最適化関数の定義", "optim.Adam(model.parameters(), ...)"],
+  ["モデル学習＆検証", "for epoch in range(EPOCHS):"],
+  ["学習結果の可視化", "sns.lineplot(...)"],
+  ["モデル性能評価", "test_loader で正解率"],
+];
+Play.slots(document.getElementById("lv1"), TEMPLATES.map(([name, code]) => ({ v: name, t: `${name}　${code}` })));
+
+Play.slots(document.getElementById("lv2"), [
+  { v: "train", code: true, t: "model.train()\nfor images, labels in train_loader:\n    # 勾配を消す → 予測 → 損失 → 逆伝播 → 重みを更新\n# 訓練の損失と正解率をリストに記録" },
+  { v: "val", code: true, t: "model.eval()\nwith torch.no_grad():\n    for images, labels in val_loader:\n        # 予測 → 損失と正解数を足す（重みは更新しない）\n# 検証の損失と正解率をリストに記録" },
+  { v: "val_update", code: true, t: "model.train()\nfor images, labels in val_loader:\n    # 勾配を消す → 予測 → 損失 → 逆伝播 → 重みを更新\n# 検証の損失と正解率をリストに記録" },
+  { v: "test", code: true, t: "model.eval()\nwith torch.no_grad():\n    for images, labels in test_loader:\n        # 予測 → 損失と正解数を足す\n# テストの損失と正解率をリストに記録" },
+]);
+
+// レベル3：28×28 の画像の例（T シャツの形を手で描いたもの）
+(() => {
+  const svg = document.querySelector("#lv3 .img28-svg");
+  const inShirt = (r, c) => {
+    if (r < 4 || r > 25) return false;
+    if (r <= 5 && c >= 11 && c <= 16) return false;              // 襟ぐり
+    if (r === 4) return c >= 6 && c <= 21;                        // 肩
+    const body = c >= 8 && c <= 19;
+    if (r <= 10) {                                                // 袖（下へ行くほど細い）
+      const cut = Math.max(0, r - 7) * 2;
+      return body || (c >= 3 + cut && c <= 24 - cut);
+    }
+    return body;                                                  // 胴
+  };
+  let rects = "";
+  for (let r = 0; r < 28; r++) {
+    for (let c = 0; c < 28; c++) {
+      const v = inShirt(r, c) ? 150 + ((r * 7 + c * 3) % 5) * 18 : 0;
+      rects += `<rect x="${c}" y="${r}" width="1" height="1" fill="rgb(${v},${v},${v})"/>`;
+    }
+  }
+  // 画素の境目が見えるように細い格子を重ねる
+  for (let i = 1; i < 28; i++) rects += `<line x1="${i}" y1="0" x2="${i}" y2="28" stroke="#333" stroke-width="0.04"/><line x1="0" y1="${i}" x2="28" y2="${i}" stroke="#333" stroke-width="0.04"/>`;
+  svg.innerHTML = rects;
+})();
+
+// レベル3：形の空欄と Flatten の図
+Play.slots(document.getElementById("lv3"), [
+  "[1, 28, 28]", "[64, 1, 28, 28]", "[64, 784]", "784",
+  "[28, 28, 1]", "[64, 28, 28]", "[64, 1, 784]", "28",
+].map((t) => ({ t, code: true })));
+(() => {
+  const lv = document.getElementById("lv3");
+  const N = 4, COLORS = ["#4FC3F7", "#FFB800", "#B388FF", "#66BB6A"];   // 行ごとに色を変える
+  const cell = (r, c) => `<span style="background:${COLORS[r]}">${r * N + c + 1}</span>`;
+  const cells = Array.from({ length: N * N }, (_, i) => cell(Math.floor(i / N), i % N)).join("");
+  lv.querySelector(".fd-img").innerHTML = cells;
+  lv.querySelector(".fd-row").innerHTML = cells;
+  const btn = lv.querySelector(".noflat-btn");
+  btn.addEventListener("click", () => {
+    const on = lv.classList.toggle("show-noflat");
+    btn.textContent = on ? "閉じる" : "Flatten を抜いて流してみる";
+  });
+})();
+
+// レベル3+：次元の番号
+Play.slots(document.getElementById("lv3p"), ["0", "0", "0", "1", "1", "1", "2", "2", "2", "3"].map((t) => ({ t, code: true })));
+
+// レベル4の図：Linear と Linear の間の ReLU の数で，引ける線の折れ方が変わる
+const reluPlot = (() => {
+  const lv = document.getElementById("lv4");
+  const svg = lv.querySelector(".relu-plot");
+  const msg = lv.querySelector(".relu-msg");
+  const math = lv.querySelector(".relu-math");
+  const X0 = -3, X1 = 3, Y0 = -1.8, Y1 = 1.8;
+  const px = (x) => 20 + (x - X0) / (X1 - X0) * 360;
+  const py = (y) => 200 - (y - Y0) / (Y1 - Y0) * 180;
+  const target = (x) => 1.4 * Math.sin(1.1 * x);
+  const pts = Array.from({ length: 25 }, (_, i) => X0 + i * (X1 - X0) / 24).map((x) => [x, target(x) + 0.18 * Math.sin(7 * x + 1)]);
+  // ReLU なし：どんな重みでも直線．点に一番合う直線（最小二乗）
+  const n = pts.length;
+  const mx = pts.reduce((s, p) => s + p[0], 0) / n, my = pts.reduce((s, p) => s + p[1], 0) / n;
+  const slope = pts.reduce((s, p) => s + (p[0] - mx) * (p[1] - my), 0) / pts.reduce((s, p) => s + (p[0] - mx) ** 2, 0);
+  const straight = [[X0, my + slope * (X0 - mx)], [X1, my + slope * (X1 - mx)]];
+  // ReLU あり：折れ線（ReLU の層が増えるほど細かく折れる，という見本）
+  const bentLine = (bends) => Array.from({ length: bends + 2 }, (_, i) => X0 + i * (X1 - X0) / (bends + 1)).map((x) => [x, target(x)]);
+  const poly = (list) => list.map(([x, y]) => `${px(x).toFixed(1)},${py(y).toFixed(1)}`).join(" ");
+  const MSG = [
+    ["Linear の間に ReLU がない：Linear を何層重ねても直線にしかならない．重みをどう学習しても点に合わない", "#EF5350"],
+    ["ReLU が 1 つ：黄色の所で線が折れる．でも，まだ点に合いきらない", "#FFB800"],
+    ["ReLU が 2 つ：折り目が増えて，曲がった形にも合わせられる", "#66BB6A"],
+  ];
+  return (texts) => {
+    const isLinear = texts.map((t) => t.startsWith("nn.Linear"));
+    const first = isLinear.indexOf(true), last = isLinear.lastIndexOf(true);
+    const k = Math.min(2, texts.filter((t, i) => t === "nn.ReLU()," && first < i && i < last).length);
+    const line = k === 0 ? straight : bentLine(k * 2);
+    svg.innerHTML =
+      `<line x1="20" y1="${py(0)}" x2="380" y2="${py(0)}" stroke="#333"/>` +
+      pts.map(([x, y]) => `<circle cx="${px(x)}" cy="${py(y)}" r="3.2" fill="#9e9e9e"/>`).join("") +
+      `<polyline points="${poly(line)}" fill="none" stroke="${MSG[k][1]}" stroke-width="3"/>` +
+      line.slice(1, -1).map(([x, y]) => `<circle cx="${px(x)}" cy="${py(y)}" r="4" fill="#FFB800"/>`).join("");
+    msg.textContent = MSG[k][0];
+    msg.style.color = MSG[k][1];
+    math.style.display = k === 0 ? "" : "none";
+  };
+})();
+
+Play.parsons(document.getElementById("lv4"), {
+  onChange: reluPlot,
+  lines: [
+    { t: "nn.Flatten(),", i: 1 },
+    { t: "nn.Linear(INPUT_SIZE, HIDDEN_SIZE1),", i: 1 },
+    { t: "nn.ReLU(),", i: 1 },
+    { t: "nn.Linear(HIDDEN_SIZE1, HIDDEN_SIZE2),", i: 1 },
+    { t: "nn.ReLU(),", i: 1 },
+    { t: "nn.Linear(HIDDEN_SIZE2, OUTPUT_SIZE)", i: 1 },
+  ],
+  frame: { head: ["model = nn.Sequential("], tail: [")"], indent: 1 },
+  distractors: ["nn.Linear(INPUT_SIZE, OUTPUT_SIZE),", "nn.Linear(HIDDEN_SIZE2, HIDDEN_SIZE1),", "nn.Softmax(dim=1),"],
+  hints: [
+    "全結合層 Linear(入る数, 出る数) の「入る数」は，1 つ前の層の「出る数」と同じ",
+    "最初に画像（1×28×28）を 784 の列に伸ばす．最後の層は活性化関数なし（損失関数 CrossEntropyLoss が中で確率に直す）",
+  ],
+});
+
+
+// レベル5：実践
+Play.slots(document.getElementById("lv5"), [
+  "transforms.ToTensor()", "[3, 256, 256]", "[32, 3, 256, 256]", "[32, 196608]", "3 * 256 * 256", "2",
+  "nn.Flatten(),", "nn.ReLU(),", "nn.ReLU(),", "nn.Linear(HIDDEN_SIZE2, OUTPUT_SIZE)",
+  "model.train()", "train_loader", "model.eval()", "val_loader",
+  // 使わないチップ
+  "[256, 256, 3]", "[32, 256, 256, 3]", "[32, 3, 65536]", "256 * 256", "10", "nn.Softmax(dim=1),",
+  "nn.Linear(HIDDEN_SIZE1, OUTPUT_SIZE)", "test_loader",
+].map((t) => ({ t, code: true })));
+</script>
+</body>
+</html>
