@@ -483,7 +483,7 @@ a.sub-item:hover {
   <a href="#sec-ex1" class="nav-assignment">演習1 AIをつくるとは？</a>
   <a href="#sec-ex2" class="nav-assignment">演習2 過学習を作る</a>
   <a href="#sec-ex3" class="nav-assignment">演習3 3つの方法を比べる</a>
-  <a href="#sec-lecture">読む：評価指標</a>
+  <a href="#sec-lecture">予習：評価指標（任意）</a>
   <a href="#sec-opt">オプション課題</a>
   <a href="#sec-submit" class="nav-exam">提出</a>
 </nav>
@@ -546,8 +546,7 @@ a.sub-item:hover {
         <tr><td>20–30</td><td><a href="#sec-prep" style="color:#4FC3F7">準備</a>：<code>git pull</code></td><td>個人</td></tr>
         <tr><td>30–50</td><td><a href="#sec-ex1" style="color:#4FC3F7"><strong>演習1</strong></a> AIをつくるとは？（グループワーク）</td><td><span class="tag tag-group">討議</span></td></tr>
         <tr><td>50–80</td><td><a href="#sec-ex2" style="color:#4FC3F7"><strong>演習2</strong></a> 過学習を作る（予測 → 実行 → 討議）</td><td>個人 → グループ</td></tr>
-        <tr><td>80–125</td><td><a href="#sec-ex3" style="color:#4FC3F7"><strong>演習3</strong></a> 3つの方法を分担 → CSV を共有 → グループ内プレゼン</td><td>グループ</td></tr>
-        <tr><td>125–135</td><td><a href="#sec-lecture" style="color:#4FC3F7">読む</a> 混同行列・適合率・再現率</td><td>個人</td></tr>
+        <tr><td>80–135</td><td><a href="#sec-ex3" style="color:#4FC3F7"><strong>演習3</strong></a> 3つの方法を分担 → CSV を共有 → グループ内プレゼン</td><td>グループ</td></tr>
         <tr><td>135–150</td><td>全体共有：演習3 でどの方法が崩れを抑えたか → <a href="https://musashino-u.myopenlms.net/course/view.php?id=7914" target="_blank" rel="noopener" style="color:#4FC3F7">グループメンバーの評価</a>（Open-LMS・3分）・次回予告</td><td>全体 → 個人</td></tr>
       </table>
     </div>
@@ -892,10 +891,11 @@ optimizer <span class="op">=</span> optim.Adam(model.parameters(), lr<span class
 <section id="sec-lecture">
   <div class="container">
     <div class="section-header">
-      <div class="section-num" style="background:#4FC3F7">読む</div>
-      <h2>評価指標：混同行列・適合率・再現率（各自で読む・10分）</h2>
+      <div class="section-num" style="background:#4FC3F7">予習</div>
+      <h2>評価指標：混同行列・適合率・再現率（任意・次回以降の予習）</h2>
     </div>
     <div class="card standard">
+      <p style="font-size:0.82rem;color:#999;margin-bottom:0.5rem">授業では扱わない。時間がある人は読んでおく（今日の演習・提出には使わない）。</p>
       <p style="font-size:0.9rem;color:#ccc;margin-bottom:0.5rem">「見つけたい側」を<strong>陽性</strong>、それ以外を<strong>陰性</strong>と呼ぶ。ケーブル画像では、<strong>ピンが抜けている写真（class1・不良）を陽性</strong>、刺さっている写真（class0・正常）を陰性とする。</p>
       <table style="font-size:0.85rem">
         <tr><th></th><th>判定：陽性</th><th>判定：陰性</th></tr>
