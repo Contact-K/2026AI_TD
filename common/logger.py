@@ -1,6 +1,6 @@
 """全演習共通の CSV ロガー．集計 (aggregate/) はこの形式のみを前提とする．
 
-出力先: results/{course}_{day}_{exercise}_{group_id}.csv
+出力先: results/{course}_{day}_{exercise}_{group_id}.csv（group_id=None なら _{group_id} を付けない．第4回からグループは自由）
 """
 import csv
 import datetime as _dt
@@ -20,14 +20,15 @@ ROLES = ("member1", "member2", "member3", "member4", "member5",              # �
 class ResultLogger:
     def __init__(self, group_id, member_role, course, day, exercise, device="cpu", root=None):
         assert member_role in ROLES, f"member_role は {ROLES} のいずれか"
-        self.group_id = f"{int(group_id):02d}" if str(group_id).isdigit() else str(group_id)
+        self.group_id = "" if group_id is None else f"{int(group_id):02d}" if str(group_id).isdigit() else str(group_id)
         self.member_role = member_role
         self.course, self.day, self.exercise = course, day, exercise
         self.device = str(device)
         self.machine = machine_string()
         root = Path(root) if root else RESULTS
         root.mkdir(parents=True, exist_ok=True)
-        self.path = root / f"{course}_{day}_{exercise}_{self.group_id}.csv"
+        suffix = f"_{self.group_id}" if self.group_id else ""
+        self.path = root / f"{course}_{day}_{exercise}{suffix}.csv"
         if not self.path.exists():
             with open(self.path, "w", newline="", encoding="utf-8") as f:
                 csv.DictWriter(f, fieldnames=COLUMNS).writeheader()
