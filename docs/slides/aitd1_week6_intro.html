@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第6回 スライド：Git・転移学習の復習・ショートカット学習・演習の仕方 | AI_TD1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0b0b; --surface:#161616; --card:#1d1d1d; --line:#333;
+  --ink:#f2f2f2; --ink2:#c8c8c8; --muted:#8a8a8a;
+  --blue:#4FC3F7; --amber:#FFB800; --red:#FF6B6B; --green:#81C784;
+  --scratch:#B97A20; --pre:#2F8FCC;           /* 図のマーク：ゼロから学習／学習済み（暗い背景で検証済み） */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP","Hiragino Sans",sans-serif}
+.deck{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.slide{position:absolute;width:1280px;height:720px;background:var(--surface);border-radius:14px;padding:46px 60px 40px;
+  display:none;flex-direction:column;transform-origin:center center;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.slide.on{display:flex}
+.kicker{font-size:17px;font-weight:700;color:var(--blue);letter-spacing:.06em;margin-bottom:6px}
+h1{font-size:46px;font-weight:900;line-height:1.25}
+h2{font-size:34px;font-weight:900;line-height:1.3;margin-bottom:18px}
+h3{font-size:21px;font-weight:700;margin-bottom:8px}
+p,li,td,th{font-size:20px;line-height:1.6;color:var(--ink2)}
+strong{color:var(--ink)}
+.lead{font-size:23px;color:var(--ink2);margin-bottom:18px}
+.small{font-size:16px;color:var(--muted)}
+code,.mono{font-family:"JetBrains Mono",monospace;font-size:.9em;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:5px;padding:0 6px;color:#e6e6e6}
+pre{font-family:"JetBrains Mono",monospace;font-size:16.5px;line-height:1.55;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:10px;padding:14px 18px;color:#e6e6e6;white-space:pre}
+pre .c{color:#7d8b99}
+pre .k{color:var(--blue)}
+pre .hl{background:rgba(255,184,0,.16);border-radius:3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px;flex:1;min-height:0}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.card.b{border-left:5px solid var(--blue)} .card.a{border-left:5px solid var(--amber)} .card.r{border-left:5px solid var(--red)} .card.g{border-left:5px solid var(--green)}
+table{border-collapse:collapse;width:100%}
+th{background:#202634;color:var(--blue);font-weight:700;text-align:left;padding:8px 12px;font-size:18px}
+td{border-top:1px solid #2a2a2a;padding:8px 12px;font-size:18px;vertical-align:top}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+ul.pt{list-style:none} ul.pt li{position:relative;padding-left:22px;margin-bottom:6px}
+ul.pt li::before{content:"";position:absolute;left:4px;top:.72em;width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.chip{display:inline-block;padding:2px 12px;border-radius:100px;background:#0a1a2e;color:var(--blue);font-size:17px;margin:0 6px 6px 0}
+.tag{display:inline-block;font-size:15px;font-weight:700;padding:1px 10px;border-radius:5px;margin-right:6px;vertical-align:2px}
+.tag.w4{background:#2a2410;color:var(--amber)} .tag.w5{background:#0a1a2e;color:var(--blue)}
+.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;padding-top:10px}
+.pageno{font-size:15px;color:var(--muted)}
+svg text{font-family:"Noto Sans JP","Hiragino Sans",sans-serif}
+.nav{position:fixed;bottom:14px;right:18px;display:flex;gap:8px;z-index:5}
+.nav button{background:#222;color:#ddd;border:1px solid #444;border-radius:8px;padding:6px 14px;font-size:15px;cursor:pointer}
+.nav button:hover{background:#333}
+.bar{position:fixed;left:0;top:0;height:4px;background:var(--blue);z-index:5;transition:width .2s}
+.back{position:fixed;top:12px;left:16px;font-size:14px;color:#9ad;z-index:5;text-decoration:none}
+@media print{
+  .nav,.bar,.back{display:none}
+  .deck{position:static;display:block}
+  .slide{display:flex !important;position:relative;transform:none !important;margin:0 auto;page-break-after:always;box-shadow:none}
+  @page{size:1280px 720px;margin:0}
+}
+
+.tag.p1{background:#10261a;color:var(--green)} .tag.p2{background:#0a1a2e;color:var(--blue)}
+.tag.p3{background:#2a1414;color:var(--red)} .tag.p4{background:#2a2410;color:var(--amber)}
+.big{font-size:26px;line-height:1.6;color:var(--ink)}
+.flow{display:flex;gap:12px;align-items:stretch}
+.flow .card{flex:1}
+.arrow{align-self:center;font-size:28px;color:#777}
+.tight th,.tight td{font-size:16.5px;padding:4px 12px;line-height:1.45}
+</style>
+</head>
+<body>
+<a class="back" href="../aitd1_week_6.html">← 第6回の授業ページ</a>
+<div class="bar" id="bar"></div>
+<div class="deck" id="deck">
+
+<section class="slide">
+  <div class="kicker">人工知能(AI)テクノロジデザインⅠ ― 第6回（オンデマンド）</div>
+  <h1 style="margin-top:90px">ショートカット学習<br>モデルは「見てほしい所」を見ているか</h1>
+  <p class="lead" style="margin-top:22px">正解率が高くても、写真の<strong>物</strong>を見て当てているとは限らない。<br>目印をわざと入れて、モデルが何で当てていたかを確かめる。</p>
+  <div style="margin-top:26px">
+    <span class="tag p1">1 Git の基礎</span><span class="tag p2">2 転移学習の復習</span><span class="tag p3">3 ショートカット学習</span><span class="tag p4">4 演習の仕方</span>
+  </div>
+  <div class="foot"><span class="small">← → キーでページを送る</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker">今日の流れ</div>
+  <h2>ビデオを見て、各自で進める（グループワークはない）</h2>
+  <table>
+    <tr><th style="width:6rem">目安</th><th>やること</th><th style="width:20rem">ファイル・提出先</th></tr>
+    <tr><td class="num">5分</td><td>準備（Git で資料を取り込む）</td><td><code>course1/day6/</code></td></tr>
+    <tr><td class="num">20分</td><td>演習1 転移学習の復習（穴埋め2問）</td><td><code>ex1.ipynb</code></td></tr>
+    <tr><td class="num">25分</td><td>復習スライド（Google スライド4枚）</td><td><code>c1_d6_slides.pdf</code></td></tr>
+    <tr><td class="num">35分</td><td>演習2 赤い四角で CNN をだます</td><td><code>ex2.ipynb</code></td></tr>
+    <tr><td class="num">35分</td><td>演習3 反転テストを5回ずつ</td><td><code>ex3.ipynb</code></td></tr>
+    <tr><td class="num">20分</td><td>考察を書いて提出</td><td>Open-LMS「第6回 課題提出」</td></tr>
+  </table>
+  <p class="small" style="margin-top:14px">ビデオは止めながら進めてよい。時間は目安。</p>
+  <div class="foot"><span class="small">授業ページ：aitd1_week_6.html</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 Git の基礎</span>1/6</div>
+  <h2>Git と GitHub：資料を配る仕組み</h2>
+
+  <div class="grid2" style="flex:none;margin-bottom:14px">
+    <div class="card g"><h3>Git（ギット）</h3><p>ファイルの<strong>変更の記録（履歴）</strong>を残す道具。いつ・どのファイルが・どう変わったかを保存する。</p></div>
+    <div class="card g"><h3>GitHub（ギットハブ）</h3><p>Git の記録を<strong>インターネット上に置いておく</strong>サービス。この授業の資料は <code>RNMUDS/2026AI_TD</code> にある。</p></div>
+  </div>
+  <svg viewBox="0 0 1160 190" width="1160" height="190" role="img" aria-label="資料が届く流れ"><defs><marker id="ar0" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#888"/></marker></defs>
+    <rect x="0" y="40" width="300" height="110" rx="10" fill="#1d1d1d" stroke="#555" stroke-width="2"/><text x="150.0" y="87.0" text-anchor="middle" fill="#ddd" font-size="19" font-weight="700">教員の PC</text><text x="150.0" y="115.0" text-anchor="middle" fill="#999" font-size="15">資料を直す</text>
+    <line x1="306" y1="95" x2="424" y2="95" stroke="#888" stroke-width="2.5" marker-end="url(#ar0)"/><text x="365.0" y="85" text-anchor="middle" fill="#FFB800" font-size="16" font-family="JetBrains Mono, monospace">push</text>
+    <rect x="430" y="40" width="300" height="110" rx="10" fill="#1d1d1d" stroke="#81C784" stroke-width="2"/><text x="580.0" y="87.0" text-anchor="middle" fill="#ddd" font-size="19" font-weight="700">GitHub</text><text x="580.0" y="115.0" text-anchor="middle" fill="#999" font-size="15">RNMUDS/2026AI_TD</text>
+    <line x1="736" y1="95" x2="854" y2="95" stroke="#888" stroke-width="2.5" marker-end="url(#ar0)"/><text x="795.0" y="85" text-anchor="middle" fill="#FFB800" font-size="16" font-family="JetBrains Mono, monospace">fetch</text>
+    <rect x="860" y="40" width="300" height="110" rx="10" fill="#1d1d1d" stroke="#4FC3F7" stroke-width="2"/><text x="1010.0" y="87.0" text-anchor="middle" fill="#ddd" font-size="19" font-weight="700">自分の PC</text><text x="1010.0" y="115.0" text-anchor="middle" fill="#999" font-size="15">~/AI_TD</text>
+  </svg>
+  <div class="foot"><span class="small">みなさんは取り込むだけ（commit・push はしない）</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 Git の基礎</span>2/6</div>
+  <h2>用語：6つだけ覚える</h2>
+
+  <table>
+    <tr><th style="width:11rem">用語</th><th>意味</th></tr>
+    <tr><td><strong>リポジトリ</strong></td><td>資料一式と、その変更の履歴が入ったフォルダ。自分の PC では <code>~/AI_TD</code></td></tr>
+    <tr><td><strong>クローン</strong>（clone）</td><td>GitHub のリポジトリを、履歴ごと自分の PC にコピーすること。第1回に1回だけ行った</td></tr>
+    <tr><td><strong>コミット</strong>（commit）</td><td>ある時点のファイルの状態を記録したもの。教員が資料を直すたびに1つ増える</td></tr>
+    <tr><td><strong>origin</strong></td><td>クローン元（GitHub）につけられた呼び名</td></tr>
+    <tr><td><strong>main</strong></td><td>資料の本線（ブランチ）の名前</td></tr>
+    <tr><td><strong>origin/main</strong></td><td>fetch で取ってきた GitHub の main。<code>~/AI_TD/.git</code>（Git が履歴をしまう隠しフォルダ）に入っていて、checkout するまで開いて使うファイルには出てこない</td></tr>
+  </table>
+  <div class="grid2" style="flex:none;margin-top:12px;gap:16px">
+    <div class="card g" style="padding:10px 16px"><h3 style="font-size:18px;margin-bottom:2px">補足：ブランチ（branch ＝ 枝）</h3>
+      <p style="font-size:16px;line-height:1.5">コミットの並び（履歴）に付けた名前。枝分かれさせると、別の版を並行して作れる。この授業の資料は <strong>main の1本だけ</strong>。</p></div>
+    <div class="card g" style="padding:10px 16px"><h3 style="font-size:18px;margin-bottom:2px">補足：fetch（フェッチ ＝ 取ってくる）</h3>
+      <p style="font-size:16px;line-height:1.5">GitHub の新しいコミットを取ってきて、<strong>origin/main を最新にする</strong>だけ。自分のフォルダのファイルは変わらない（変えるのは次の checkout）。</p></div>
+  </div>
+  <div class="foot"><span class="small">~ はホームフォルダ（/Users/自分の名前）のこと</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 Git の基礎</span>3/6</div>
+  <h2>第1回にやったこと：クローン（もうしない）</h2>
+
+<pre><span class="k">cd</span> && <span class="k">git</span> clone https://github.com/RNMUDS/2026AI_TD.git AI_TD</pre>
+  <ul class="pt" style="margin-top:18px">
+    <li><code>cd</code>：ホームフォルダへ移動する</li>
+    <li><code>git clone URL AI_TD</code>：GitHub の資料を、<code>AI_TD</code> という名前のフォルダに履歴ごとコピーする</li>
+    <li>2回目以降はしない。もう一度打つと <code>fatal: destination path 'AI_TD' already exists</code> で止まる（フォルダがもうあるため）</li>
+  </ul>
+  <div class="foot"><span class="small">第1回にクローンしたフォルダを、毎回使い続ける</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 Git の基礎</span>4/6</div>
+  <h2>毎回の取り込み：fetch → checkout の2行</h2>
+
+<pre><span class="k">cd</span> ~/AI_TD
+<span class="k">git</span> fetch origin                                        <span class="c"># 1 GitHub の最新を取ってくる（自分のファイルはまだ変わらない）</span>
+<span class="k">git</span> checkout origin/main -- course1/day6 common setup  <span class="c"># 2 この3つのフォルダだけを最新にする</span></pre>
+  <svg viewBox="0 0 1160 232" width="1160" height="210" style="margin-top:6px" role="img" aria-label="fetch と checkout の流れ"><defs><marker id="ar1" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M0,0 L14,7 L0,14 z" fill="context-stroke"/></marker></defs><rect x="0" y="40" width="210" height="150" rx="12" fill="#10261a" stroke="#81C784" stroke-width="2"/><text x="105" y="72" fill="#81C784" font-size="20" font-weight="900" text-anchor="middle">GitHub</text><text x="105" y="98" fill="#ccc" font-size="16" font-weight="400" text-anchor="middle">main</text><rect x="65" y="114" width="80" height="40" rx="6" fill="#81C784"/><text x="105" y="140" fill="#000" font-size="13" font-weight="700" text-anchor="middle">新しい資料</text><rect x="300" y="0" width="860" height="230" rx="14" fill="none" stroke="#666" stroke-width="2" stroke-dasharray="7 6"/><text x="320" y="26" fill="#ccc" font-size="17" font-weight="700" text-anchor="start">自分の PC：~/AI_TD</text><rect x="330" y="40" width="250" height="150" rx="12" fill="#0a1a2e" stroke="#4FC3F7" stroke-width="2"/><text x="455" y="70" fill="#4FC3F7" font-size="18" font-weight="900" text-anchor="middle">.git（隠しフォルダ）</text><text x="455" y="96" fill="#aaa" font-size="13" font-weight="400" text-anchor="middle">Git の置き場。origin/main もここ</text><rect x="415" y="114" width="80" height="40" rx="6" fill="#81C784"/><text x="455" y="140" fill="#000" font-size="13" font-weight="700" text-anchor="middle">新しい資料</text><text x="455" y="178" fill="#888" font-size="13" font-weight="400" text-anchor="middle">Finder・VS Code では開かない</text><line x1="148" y1="134" x2="411" y2="134" stroke="#81C784" stroke-width="3" marker-end="url(#ar1)"/><text x="270" y="124" fill="#81C784" font-size="15" font-weight="700" text-anchor="middle">1 git fetch</text><text x="740" y="50" fill="#FFB800" font-size="16" font-weight="700" text-anchor="start">開いて使うファイル（ノートブックなど）</text><rect x="740" y="64" width="400" height="32" rx="6" fill="#2a2410" stroke="#FFB800"/><text x="756" y="86" fill="#eee" font-size="15" font-family="JetBrains Mono, monospace">course1/day6</text><text x="1128" y="86" fill="#FFB800" font-size="13" font-weight="700" text-anchor="end">古い → 新しい</text><rect x="740" y="104" width="400" height="32" rx="6" fill="#2a2410" stroke="#FFB800"/><text x="756" y="126" fill="#eee" font-size="15" font-family="JetBrains Mono, monospace">common</text><text x="1128" y="126" fill="#FFB800" font-size="13" font-weight="700" text-anchor="end">古い → 新しい</text><rect x="740" y="144" width="400" height="32" rx="6" fill="#2a2410" stroke="#FFB800"/><text x="756" y="166" fill="#eee" font-size="15" font-family="JetBrains Mono, monospace">setup</text><text x="1128" y="166" fill="#FFB800" font-size="13" font-weight="700" text-anchor="end">古い → 新しい</text><rect x="740" y="184" width="400" height="32" rx="6" fill="#222" stroke="#555"/><text x="756" y="206" fill="#eee" font-size="15" font-family="JetBrains Mono, monospace">course1/day1〜day5</text><text x="1128" y="206" fill="#999" font-size="13" font-weight="400" text-anchor="end">そのまま（自分の書き込みが残る）</text><path d="M584,134 C650,134 650,80 728,80" fill="none" stroke="#FFB800" stroke-width="2.5" marker-end="url(#ar1)"/><path d="M584,134 C650,134 650,120 728,120" fill="none" stroke="#FFB800" stroke-width="2.5" marker-end="url(#ar1)"/><path d="M584,134 C650,134 650,160 728,160" fill="none" stroke="#FFB800" stroke-width="2.5" marker-end="url(#ar1)"/><text x="660" y="214" fill="#FFB800" font-size="15" font-weight="700" text-anchor="middle">2 git checkout</text></svg>
+  <table style="margin-top:2px">
+    <tr><th style="width:11rem">取り込むフォルダ</th><th>中身</th></tr>
+    <tr><td><code>course1/day6</code></td><td>第6回のノートブック（ex1〜ex3）</td></tr>
+    <tr><td><code>common</code></td><td>ノートブックが読み込む共通のプログラム（確認セルの <code>check_model</code> など）。ノートブックと組で最新にする</td></tr>
+    <tr><td><code>setup</code></td><td>環境の確認や、学習済みの重みのダウンロードに使うプログラム</td></tr>
+  </table>
+  <div class="foot"><span class="small">第1・2回の git pull も正しい取り込み方。自分の書き込みが増えた第3回からは、それを残せる checkout にしている。-- の後ろに取り込むフォルダを書く</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 Git の基礎</span>5/6</div>
+  <h2>注意：checkout は上書きする</h2>
+
+  <div class="card r" style="margin-bottom:16px"><p class="big">指定したフォルダのファイルは、<strong>確認なしで GitHub の版に置き換わる</strong>。書きかけは元に戻せない。</p></div>
+  <ul class="pt">
+    <li>準備のときに <strong>1回だけ</strong>打つ。演習を始めたあとに同じ行を打つと、<code>course1/day6</code> の書きかけが消える</li>
+    <li>「共通コードを直した」とお知らせがあったら、<code>git fetch origin</code> のあと <code>git checkout origin/main -- common</code> だけを打つ（ノートブックは変わらない）</li>
+    <li>写真（<code>assets/mydata/</code>）と結果の CSV（<code>results/</code>）は Git に入れていないので、上書きされない</li>
+  </ul>
+  <div class="foot"><span class="small">Git に入れないファイルは .gitignore に書いてある</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 Git の基礎</span>6/6</div>
+  <h2>確かめ方と、よくあるエラー</h2>
+
+<pre><span class="k">ls</span> course1/day6
+README.md  ex1.ipynb  ex2.ipynb  ex3.ipynb  img           <span class="c"># これが見えれば OK</span></pre>
+  <table style="margin-top:16px">
+    <tr><th>出たメッセージ</th><th style="width:16rem">原因</th><th style="width:14rem">直し方</th></tr>
+    <tr><td><code>fatal: not a git repository</code></td><td><code>AI_TD</code> の外にいる</td><td><code>cd ~/AI_TD</code> から</td></tr>
+    <tr><td><code>error: pathspec 'course1/day6' did not match any file(s) known to git</code></td><td>fetch をしていない・つづりが違う</td><td><code>git fetch origin</code> から</td></tr>
+    <tr><td><code>no such file or directory: .venv/bin/activate</code></td><td><code>AI_TD</code> の外にいる</td><td><code>cd ~/AI_TD</code> から</td></tr>
+  </table>
+  <div class="foot"><span class="small">このあと source .venv/bin/activate → code . で VS Code を開く</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p2">2 転移学習の復習</span>1/6</div>
+  <h2>転移学習：学習済みの「見る力」を借りる</h2>
+
+  <svg viewBox="0 0 1160 200" width="1160" height="200" role="img" aria-label="転移学習"><defs><marker id="ar2" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#888"/></marker></defs>
+    <rect x="0" y="40" width="250" height="120" rx="10" fill="#1d1d1d" stroke="#555" stroke-width="2"/><text x="125.0" y="92.0" text-anchor="middle" fill="#ddd" font-size="19" font-weight="700">ImageNet</text><text x="125.0" y="120.0" text-anchor="middle" fill="#999" font-size="15">約128万枚・1000種類</text>
+    <line x1="256" y1="100" x2="330" y2="100" stroke="#888" stroke-width="2.5" marker-end="url(#ar2)"/><text x="293.0" y="90" text-anchor="middle" fill="#FFB800" font-size="16" font-family="JetBrains Mono, monospace">学習済み</text>
+    <rect x="336" y="40" width="520" height="120" rx="10" fill="#2a2a2a" stroke="#888" stroke-width="2"/><text x="596.0" y="92.0" text-anchor="middle" fill="#ddd" font-size="19" font-weight="700">本体（入口〜途中の層）</text><text x="596.0" y="120.0" text-anchor="middle" fill="#999" font-size="15">輪郭・色・模様・形を見分ける → そのまま使う</text>
+    <line x1="862" y1="100" x2="900" y2="100" stroke="#888" stroke-width="2.5" marker-end="url(#ar2)"/>
+    <rect x="906" y="40" width="254" height="120" rx="10" fill="#1d1d1d" stroke="#FFB800" stroke-width="2"/><text x="1033.0" y="92.0" text-anchor="middle" fill="#FFB800" font-size="19" font-weight="700">最終層</text><text x="1033.0" y="120.0" text-anchor="middle" fill="#999" font-size="15">1000 → 分けたいクラスの数</text>
+  </svg>
+  <ul class="pt" style="margin-top:10px">
+    <li>最終層は「ImageNet の 1000 種類のどれか」を出す層。自分の分類には合わないので、<strong>取りかえる</strong></li>
+    <li>本体を<strong>凍結</strong>（学習で変えない）し、新しい最終層だけを学習する ＝ 第5回の「ResNet18 凍結」</li>
+  </ul>
+  <div class="foot"><span class="small">第5回の復習</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p2">2 転移学習の復習</span>2/6</div>
+  <h2>凍結とは：requires_grad というスイッチ</h2>
+
+  <table>
+    <tr><th style="width:12rem">requires_grad</th><th>意味</th></tr>
+    <tr><td><code>True</code></td><td><strong>学習する</strong>。誤差逆伝播で勾配が計算され、最適化手法（Adam）が値を変える</td></tr>
+    <tr><td><code>False</code></td><td><strong>凍結</strong>。勾配が計算されず、値は変わらない</td></tr>
+  </table>
+  <div class="card a" style="margin-top:20px"><p class="big">学習済みモデルを読んだ直後は、<strong>全部 True</strong>（凍結していない）。<br>だから、まず自分で全部を False にする。</p></div>
+  <div class="foot"><span class="small">重み1つ1つ（パラメータ）に、このスイッチが付いている</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div style="display:flex;gap:24px;align-items:flex-start">
+    <div style="flex:1">
+      <div class="kicker"><span class="tag p2">2 転移学習の復習</span>3/6</div>
+      <h2>コードの順に、学習する層が変わる</h2>
+      <ul class="pt" style="margin-top:4px">
+        <li>ResNet18 は、名前の付いた<strong>層</strong>が上から順に並ぶ（青字：conv1 … layer1〜4 … fc）</li>
+        <li>layer1〜4 は、それぞれ <strong>BasicBlock が2つ</strong>。1つのブロックは 畳み込み（Conv2d）・正規化（BatchNorm2d）・ReLU でできている</li>
+        <li>最終層は一番下の <code>fc</code>。凍結や置き換えは、この名前で指定する</li>
+      </ul>
+    </div>
+    <pre style="flex:none;width:520px;font-size:11.5px;line-height:1.32;padding:10px 14px"><span class="c"># print(model) の抜粋（... は省略）</span>
+ResNet(
+  (<span class="k">conv1</span>): Conv2d(3, 64, kernel_size=(7, 7), ...)
+  (<span class="k">bn1</span>): BatchNorm2d(64, ...)
+  (<span class="k">relu</span>): ReLU(inplace=True)
+  (<span class="k">maxpool</span>): MaxPool2d(kernel_size=3, ...)
+  (<span class="k">layer1</span>): Sequential(
+    (0): BasicBlock(
+      (conv1): Conv2d(64, 64, kernel_size=(3, 3), ...)
+      (bn1): BatchNorm2d(64, ...)
+      (relu): ReLU(inplace=True)
+      (conv2): Conv2d(64, 64, kernel_size=(3, 3), ...)
+      (bn2): BatchNorm2d(64, ...)
+    )
+    (1): BasicBlock( ...(0) と同じ形... )
+  )
+  (<span class="k">layer2</span>)〜(<span class="k">layer4</span>): ...（チャンネル 128・256・512）
+  (<span class="k">avgpool</span>): AdaptiveAvgPool2d(output_size=(1, 1))
+  (<span class="hl"><span class="k">fc</span></span>): Linear(in_features=512, out_features=1000, ...)
+)</pre>
+  </div>
+  <div style="margin-top:8px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 234" style="width:100%;height:auto;display:block" role="img" aria-label="ResNet18 の層ごとの学習する・凍結" font-family="Noto Sans JP, Hiragino Sans, sans-serif"><rect width="960" height="234" fill="#111" rx="8"/><text x="16" y="30" fill="#4FC3F7" font-size="15" font-weight="900">ResNet18 の例：コードの順に、学習する層が変わる</text><text x="16" y="65" fill="#eee" font-size="14" font-weight="700">1 読んだ直後</text><text x="16" y="82" fill="#999" font-size="11.5" font-family="JetBrains Mono, monospace">models.resnet18(weights=...)</text><rect x="300" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="343.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">conv1</text><rect x="392" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="435.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">bn1</text><rect x="484" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="527.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer1</text><rect x="576" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="619.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer2</text><rect x="668" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="711.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer3</text><rect x="760" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="803.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer4</text><rect x="852" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="895.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">fc</text><text x="16" y="115" fill="#eee" font-size="14" font-weight="700">2 全部を凍結</text><text x="16" y="132" fill="#999" font-size="11.5" font-family="JetBrains Mono, monospace">requires_grad = False</text><rect x="300" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="343.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">conv1</text><rect x="392" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="435.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">bn1</text><rect x="484" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="527.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer1</text><rect x="576" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="619.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer2</text><rect x="668" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="711.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer3</text><rect x="760" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="803.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer4</text><rect x="852" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="895.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">fc</text><text x="16" y="165" fill="#eee" font-size="14" font-weight="700">3 最終層を置き換える</text><text x="16" y="182" fill="#999" font-size="11.5" font-family="JetBrains Mono, monospace">model.fc = nn.Linear(512, 10)</text><rect x="300" y="150" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="343.0" y="172" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">conv1</text><rect x="392" y="150" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="435.0" y="172" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">bn1</text><rect x="484" y="150" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="527.0" y="172" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer1</text><rect x="576" y="150" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="619.0" y="172" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer2</text><rect x="668" y="150" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="711.0" y="172" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer3</text><rect x="760" y="150" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="803.0" y="172" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer4</text><rect x="852" y="150" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="895.0" y="172" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">fc</text><text x="934" y="147" text-anchor="end" fill="#FFB800" font-size="11" font-weight="700">新しい層</text><rect x="300" y="208" width="16" height="14" rx="3" fill="#FFB800"/><text x="322" y="220" fill="#ccc" font-size="12">学習する（requires_grad = True）</text><rect x="550" y="208" width="16" height="14" rx="3" fill="#2a2a2a" stroke="#555"/><text x="572" y="220" fill="#ccc" font-size="12">凍結（False：重みが変わらない）</text><text x="16" y="220" fill="#777" font-size="11">relu・maxpool・avgpool は重みが無いので省略</text></svg></div>
+  <div class="foot"><span class="small">黄：学習する／灰：凍結。<strong style="color:#FFB800">置き換えた新しい fc は requires_grad = True（学習する設定）で作られる</strong>ので、fc を学習する設定は書かなくてよい</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p2">2 転移学習の復習</span>4/6</div>
+  <h2>コードの型：この3行は、どのモデルでも同じ</h2>
+
+<pre><span class="k">for</span> param <span class="k">in</span> model.parameters():   <span class="c"># 1 全部のパラメータについて</span>
+    param.requires_grad = <span class="hl">False</span>       <span class="c">#   凍結する</span>
+model.<span class="hl">fc</span> = nn.Linear(model.<span class="hl">fc</span>.in_features, <span class="hl">NUM_CLASSES</span>)   <span class="c"># 2 最終層を置き換える</span></pre>
+  <ul class="pt" style="margin-top:16px">
+    <li><code>model.fc.in_features</code>：最終層に<strong>入る数</strong>（ResNet18 は 512）。ここは元のまま</li>
+    <li><code>NUM_CLASSES</code>：<strong>出力の数</strong> ＝ 分けたいクラスの数（第5回は 2、演習1 は 10 と 3）。1000 から変える</li>
+    <li>新しい <code>model.fc</code> は <code>requires_grad = True</code> で作られる → <strong>fc だけが学習する設定になる</strong>（True にするコードは要らない）</li>
+    <li><strong>順番が大事</strong>：置き換えてから凍結すると、新しい層まで凍結され、学習する所がなくなる</li>
+  </ul>
+  <svg viewBox="0 0 1160 180" width="1160" height="180" style="margin-top:12px" role="img" aria-label="凍結と置き換えの順番"><defs><marker id="ar4" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#888"/></marker></defs><text x="0" y="46" fill="#81C784" font-size="18" font-weight="900">○ 正しい順</text><text x="200" y="18" fill="#bbb" font-size="14">全部を凍結</text><rect x="200" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="223" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">conv1</text><rect x="250" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="273" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">bn1</text><rect x="300" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="323" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer1</text><rect x="350" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="373" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer2</text><rect x="400" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="423" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer3</text><rect x="450" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="473" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer4</text><rect x="500" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="523" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">fc</text><line x1="556" y1="41" x2="586" y2="41" stroke="#888" stroke-width="2.5" marker-end="url(#ar4)"/><text x="594" y="18" fill="#bbb" font-size="14">fc を置き換える</text><rect x="594" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="617" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">conv1</text><rect x="644" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="667" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">bn1</text><rect x="694" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="717" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer1</text><rect x="744" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="767" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer2</text><rect x="794" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="817" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer3</text><rect x="844" y="26" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="867" y="46" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer4</text><rect x="894" y="26" width="46" height="30" rx="5" fill="#FFB800" stroke="#FFB800"/><text x="917" y="46" text-anchor="middle" fill="#000" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">fc</text><text x="917" y="72" text-anchor="middle" fill="#FFB800" font-size="12">新しい層</text><text x="960" y="47" fill="#81C784" font-size="17" font-weight="700">fc だけ学習する</text><text x="0" y="138" fill="#FF6B6B" font-size="18" font-weight="900">× 逆の順</text><text x="200" y="110" fill="#bbb" font-size="14">fc を置き換える（全部 True のまま）</text><rect x="200" y="118" width="46" height="30" rx="5" fill="#FFB800" stroke="#FFB800"/><text x="223" y="138" text-anchor="middle" fill="#000" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">conv1</text><rect x="250" y="118" width="46" height="30" rx="5" fill="#FFB800" stroke="#FFB800"/><text x="273" y="138" text-anchor="middle" fill="#000" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">bn1</text><rect x="300" y="118" width="46" height="30" rx="5" fill="#FFB800" stroke="#FFB800"/><text x="323" y="138" text-anchor="middle" fill="#000" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer1</text><rect x="350" y="118" width="46" height="30" rx="5" fill="#FFB800" stroke="#FFB800"/><text x="373" y="138" text-anchor="middle" fill="#000" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer2</text><rect x="400" y="118" width="46" height="30" rx="5" fill="#FFB800" stroke="#FFB800"/><text x="423" y="138" text-anchor="middle" fill="#000" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer3</text><rect x="450" y="118" width="46" height="30" rx="5" fill="#FFB800" stroke="#FFB800"/><text x="473" y="138" text-anchor="middle" fill="#000" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer4</text><rect x="500" y="118" width="46" height="30" rx="5" fill="#FFB800" stroke="#FFB800"/><text x="523" y="138" text-anchor="middle" fill="#000" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">fc</text><text x="523" y="164" text-anchor="middle" fill="#FFB800" font-size="12">新しい層</text><line x1="556" y1="133" x2="586" y2="133" stroke="#888" stroke-width="2.5" marker-end="url(#ar4)"/><text x="594" y="110" fill="#bbb" font-size="14">全部を凍結</text><rect x="594" y="118" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="617" y="138" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">conv1</text><rect x="644" y="118" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="667" y="138" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">bn1</text><rect x="694" y="118" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="717" y="138" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer1</text><rect x="744" y="118" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="767" y="138" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer2</text><rect x="794" y="118" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="817" y="138" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer3</text><rect x="844" y="118" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="867" y="138" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">layer4</text><rect x="894" y="118" width="46" height="30" rx="5" fill="#3a3a3a" stroke="#666"/><text x="917" y="138" text-anchor="middle" fill="#bbb" font-size="11" font-weight="700" font-family="JetBrains Mono, monospace">fc</text><text x="917" y="164" text-anchor="middle" fill="#FFB800" font-size="12">新しい層</text><text x="960" y="139" fill="#FF6B6B" font-size="17" font-weight="700">学習する所がない</text></svg>
+  <div class="foot"><span class="small">ResNet18・10 クラスなら、学習するのは 512×10＋10 ＝ 5,130 個（全体 11,181,642 個の約 0.05%）</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p2">2 転移学習の復習</span>5/6</div>
+  <h2>モデルが変わると、最終層の名前が変わる</h2>
+
+  <table>
+    <tr><th style="width:16rem">モデル</th><th style="width:12rem">最終層の名前</th><th>入る数 → 出力数</th></tr>
+    <tr><td>ResNet18</td><td><code>fc</code></td><td>512 → 1000</td></tr>
+    <tr><td>ViT-B/16（第5回）</td><td><code>heads.head</code></td><td>768 → 1000</td></tr>
+    <tr><td>DenseNet121（演習1）</td><td>＿＿＿</td><td>＿＿＿ → 1000（演習1 で自分で確かめる）</td></tr>
+  </table>
+  <div style="display:flex;gap:20px;margin-top:14px;align-items:flex-start">
+    <div class="card b" style="flex:1"><p class="big">調べ方：<code>print(model)</code> で出る層の一覧の<strong>一番下</strong>が最終層。</p>
+      <p style="margin-top:10px"><code>Linear(in_features=512, out_features=1000)</code><br>入る数 512・出力数 1000 を見る。</p>
+      <p class="small" style="margin-top:10px">右：演習1 の (1-1) を実行したときの出力（一番下）</p></div>
+    <img src="img/w6_print_resnet18.png" alt="print(model) の出力の一番下に (fc): Linear(in_features=512, out_features=1000) がある" style="width:640px;flex:none;border:1px solid #333;border-radius:8px">
+  </div>
+  <div class="foot"><span class="small">変えるのは名前と数だけ。手順は同じ</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p2">2 転移学習の復習</span>6/6</div>
+  <h2>差 ÷ 標準偏差：差は「揺れ」の何倍か（簡易的な目安）</h2>
+
+  <div class="grid2" style="flex:none">
+    <div>
+      <ul class="pt">
+        <li><strong>差</strong>：2つの条件の、5回の平均の差</li>
+        <li><strong>標準偏差</strong>：シードを変えたときの揺れの大きさ。2つをまとめて √((A²＋B²) ÷ 2)</li>
+        <li><strong>差 ÷ 標準偏差</strong>：差が揺れの何倍か</li>
+      </ul>
+      <table style="margin-top:12px">
+        <tr><th>値</th><th>判定</th></tr>
+        <tr><td>2 以上</td><td>差がある</td></tr>
+        <tr><td>1 未満</td><td>差があるとは言えない（揺れの中）</td></tr>
+        <tr><td>その間</td><td>回数を増やして確かめる</td></tr>
+      </table>
+    </div>
+    <div class="card a"><h3>例（演習3 の ResNet18）</h3>
+      <p>A に赤い四角を入れる 99.3 ± 1.5<br>B に赤い四角を入れる 90.0 ± 6.2</p>
+      <p>差 ＝ 99.3 − 90.0 ＝ 9.3</p>
+      <p>標準偏差 ＝ √((1.5² ＋ 6.2²) ÷ 2) ≒ 4.5</p>
+      <p class="big" style="margin-top:8px">9.3 ÷ 4.5 ≒ <strong>2.1</strong> → 差がある</p></div>
+  </div>
+  <div class="card r" style="margin-top:14px;padding:10px 18px">
+    <p><strong>統計的な検定ではない（この授業では検定はしない）</strong>。差を揺れで割った「効果量」（Cohen（コーエン）の d と同じ計算）で、2・1 の線はこの授業で決めた目安。</p>
+  </div>
+  <div class="foot"><span class="small">復習スライド（第5回の結果）と演習3 で使う</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p2">2 転移学習の復習</span>＋ 復習スライド</div>
+  <h2>復習スライド：第5回の自分のモデルを4枚で説明する</h2>
+
+  <table class="tight">
+    <tr><th style="width:4rem">枚</th><th style="width:9rem">テーマ</th><th>入れるもの</th></tr>
+    <tr><td>1</td><td>タスク</td><td>何と何を見分けるか（例：ピンが刺さっている／抜けている。写真は使わず文で書く）・各クラスの枚数・テスト枚数</td></tr>
+    <tr><td>2</td><td>結果</td><td>第5回 <code>ex2.ipynb</code> の (2) の表とグラフのスクリーンショット。差 ÷ 標準偏差 と判定</td></tr>
+    <tr><td>3</td><td>選ぶモデル</td><td>どれを使うか。正解率・学習時間（(2)）と学習するパラメータ数（(3)）を根拠にする</td></tr>
+    <tr><td>4</td><td>最終層の図</td><td>選んだモデルで、学習する層と凍結する層を色分けして<strong>自分で描く</strong>。最終層は「入る数 → 2」（例：fc 512 → 2）</td></tr>
+  </table>
+  <p class="small" style="margin-top:6px">数値は第5回に提出した <code>c1_d5_ex2.csv</code> と同じであること（採点で照らし合わせる）。写真は載せない。「ファイル → ダウンロード → PDF ドキュメント」→ <code>c1_d6_slides.pdf</code></p>
+  <h3 style="margin-top:10px;font-size:19px">3枚目の選択肢：第5回 ex2 の4つ</h3>
+  <table class="tight">
+    <tr><th>モデル</th><th>学習する所</th><th class="num">学習するパラメータ数（2クラス）</th></tr>
+    <tr><td>CNN（第4回の自作）</td><td>全部（ゼロから）</td><td class="num">2,097,986</td></tr>
+    <tr><td>ResNet18 凍結</td><td>最終層 fc だけ</td><td class="num">1,026</td></tr>
+    <tr><td>ResNet18 微調整</td><td>全部（学習済みの重みから）</td><td class="num">11,177,538</td></tr>
+    <tr><td>ViT 凍結</td><td>最終層 heads.head だけ</td><td class="num">1,538</td></tr>
+  </table>
+  <div class="foot"><span class="small">1つ選び、なぜそれかを自分の数値で書く。正解率に差がない（差 ÷ 標準偏差 1 未満）なら、時間や数で決めてよい</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p3">3 ショートカット学習</span>1/5</div>
+  <h2>ショートカット学習とは</h2>
+
+  <div class="card r" style="margin-bottom:16px"><p class="big">モデルが、見てほしい物ではなく、<strong>正解といつも一緒に写っている別のもの</strong>（背景・目印など）を手がかりにして当てるようになること。</p></div>
+  <div class="grid2" style="flex:none">
+    <div><h3>例（たとえ話）</h3>
+      <ul class="pt">
+        <li>正常なケーブルは白い机、不良は黒い机で撮った</li>
+        <li>モデルは「机の色」で当てられる</li>
+        <li>テストも同じ撮り方なら、正解率は高いまま → <strong>気づけない</strong></li>
+        <li>白い机で撮った不良を「正常」と答えてしまう</li>
+      </ul></div>
+    <div class="card a"><p class="big">正解率が高い<br>≠<br>見てほしい所を見ている</p></div>
+  </div>
+  <svg viewBox="0 0 1160 150" width="1160" height="150" style="margin-top:14px" role="img" aria-label="机の色で当てるモデルの例"><defs><marker id="ar5" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#888"/></marker></defs><text x="0" y="18" fill="#4FC3F7" font-size="16" font-weight="700" text-anchor="start">訓練の写真</text><rect x="0" y="30" width="96" height="96" rx="5" fill="#e6e6e6" stroke="#777"/><rect x="28.799999999999997" y="58.8" width="38.400000000000006" height="52.800000000000004" rx="6" fill="#8a8a8a"/><rect x="39.36" y="41.519999999999996" width="4.800000000000001" height="19.200000000000003" rx="1" fill="#d0a030"/><rect x="51.84" y="41.519999999999996" width="4.800000000000001" height="19.200000000000003" rx="1" fill="#d0a030"/><text x="48.0" y="144" text-anchor="middle" fill="#ccc" font-size="13">正常・白い机</text><rect x="112" y="30" width="96" height="96" rx="5" fill="#e6e6e6" stroke="#777"/><rect x="140.8" y="58.8" width="38.400000000000006" height="52.800000000000004" rx="6" fill="#8a8a8a"/><rect x="151.36" y="41.519999999999996" width="4.800000000000001" height="19.200000000000003" rx="1" fill="#d0a030"/><rect x="163.84" y="41.519999999999996" width="4.800000000000001" height="19.200000000000003" rx="1" fill="#d0a030"/><text x="160.0" y="144" text-anchor="middle" fill="#ccc" font-size="13">正常・白い机</text><rect x="224" y="30" width="96" height="96" rx="5" fill="#151515" stroke="#777"/><rect x="252.8" y="58.8" width="38.400000000000006" height="52.800000000000004" rx="6" fill="#8a8a8a"/><rect x="264.32" y="54.96" width="15.36" height="5.76" fill="#333"/><text x="272.0" y="144" text-anchor="middle" fill="#ccc" font-size="13">不良・黒い机</text><rect x="336" y="30" width="96" height="96" rx="5" fill="#151515" stroke="#777"/><rect x="364.8" y="58.8" width="38.400000000000006" height="52.800000000000004" rx="6" fill="#8a8a8a"/><rect x="376.32" y="54.96" width="15.36" height="5.76" fill="#333"/><text x="384.0" y="144" text-anchor="middle" fill="#ccc" font-size="13">不良・黒い机</text><line x1="452" y1="78" x2="500" y2="78" stroke="#888" stroke-width="2.5" marker-end="url(#ar5)"/><rect x="508" y="22" width="270" height="116" rx="12" fill="#2a1414" stroke="#FF6B6B" stroke-width="2"/><text x="643" y="50" fill="#FF6B6B" font-size="16" font-weight="900" text-anchor="middle">モデルが覚えたこと</text><text x="643" y="80" fill="#eee" font-size="17" font-weight="700" text-anchor="middle">机が白い → 正常</text><text x="643" y="106" fill="#eee" font-size="17" font-weight="700" text-anchor="middle">机が黒い → 不良</text><text x="643" y="128" fill="#aaa" font-size="13" font-weight="400" text-anchor="middle">ピンは見ていない</text><line x1="786" y1="78" x2="834" y2="78" stroke="#888" stroke-width="2.5" marker-end="url(#ar5)"/><text x="842" y="18" fill="#FFB800" font-size="16" font-weight="700" text-anchor="start">新しい写真</text><rect x="842" y="30" width="96" height="96" rx="5" fill="#e6e6e6" stroke="#777"/><rect x="870.8" y="58.8" width="38.400000000000006" height="52.800000000000004" rx="6" fill="#8a8a8a"/><rect x="882.32" y="54.96" width="15.36" height="5.76" fill="#333"/><text x="890.0" y="144" text-anchor="middle" fill="#ccc" font-size="13">不良・白い机</text><text x="960" y="70" fill="#FF6B6B" font-size="20" font-weight="900" text-anchor="start">予測：正常</text><text x="960" y="100" fill="#FF6B6B" font-size="17" font-weight="700" text-anchor="start">× まちがい</text></svg>
+  <div class="foot"><span class="small">楽に当てられる手がかりがあると、モデルはそれを使ってしまう</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p3">3 ショートカット学習</span>2/5</div>
+  <h2>相関トークン：目印をわざと入れて確かめる</h2>
+
+  <svg viewBox="0 0 1160 230" width="1160" height="230" role="img" aria-label="訓練画像に赤い四角を入れる">
+    <text x="0" y="24" fill="#FF6B6B" font-size="20" font-weight="900">訓練：クラス A の写真だけに赤い四角</text>
+    <rect x="0" y="44" width="130" height="130" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="39.0" y="70.0" width="52.0" height="78.0" rx="6" fill="#9a9a9a"/><rect x="53.3" y="51.8" width="6.5" height="20.8" rx="1" fill="#d0b060"/><rect x="70.2" y="51.8" width="6.5" height="20.8" rx="1" fill="#d0b060"/><rect x="113.75" y="157.75" width="16.25" height="16.25" fill="#ff2a2a"/><rect x="150" y="44" width="130" height="130" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="189.0" y="70.0" width="52.0" height="78.0" rx="6" fill="#9a9a9a"/><rect x="203.3" y="51.8" width="6.5" height="20.8" rx="1" fill="#d0b060"/><rect x="220.2" y="51.8" width="6.5" height="20.8" rx="1" fill="#d0b060"/><rect x="263.75" y="157.75" width="16.25" height="16.25" fill="#ff2a2a"/><rect x="300" y="44" width="130" height="130" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="339.0" y="70.0" width="52.0" height="78.0" rx="6" fill="#9a9a9a"/><rect x="353.3" y="51.8" width="6.5" height="20.8" rx="1" fill="#d0b060"/><rect x="370.2" y="51.8" width="6.5" height="20.8" rx="1" fill="#d0b060"/><rect x="413.75" y="157.75" width="16.25" height="16.25" fill="#ff2a2a"/>
+    <text x="215" y="210" text-anchor="middle" fill="#ccc" font-size="17">クラス A：ピンが刺さっている（四角あり）</text>
+    <text x="600" y="24" fill="#ccc" font-size="20" font-weight="900">クラス B はそのまま</text>
+    <rect x="600" y="44" width="130" height="130" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="639.0" y="70.0" width="52.0" height="78.0" rx="6" fill="#9a9a9a"/><rect x="654.6" y="70.0" width="20.8" height="6.5" fill="#333"/><rect x="750" y="44" width="130" height="130" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="789.0" y="70.0" width="52.0" height="78.0" rx="6" fill="#9a9a9a"/><rect x="804.6" y="70.0" width="20.8" height="6.5" fill="#333"/><rect x="900" y="44" width="130" height="130" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="939.0" y="70.0" width="52.0" height="78.0" rx="6" fill="#9a9a9a"/><rect x="954.6" y="70.0" width="20.8" height="6.5" fill="#333"/>
+    <text x="815" y="210" text-anchor="middle" fill="#ccc" font-size="17">クラス B：ピンが抜けている（四角なし）</text>
+  </svg>
+  <ul class="pt">
+    <li><strong>相関トークン</strong>：答えとは関係ないのに、訓練データでは正解とほぼ必ず一緒に出る目印</li>
+    <li>右下に、1辺が画像の 1/8 の赤い四角（64×64 なら 8×8 画素）。クラス A ＝ フォルダ名の順で1番目（ピンの画像では class0：刺さっている）</li>
+  </ul>
+  <div class="card r" style="margin-top:12px;padding:10px 18px"><p><strong>写真に四角を手で描かない</strong>。演習2 で書く関数 <code>add_token</code> が、学習のときにプログラムで入れる。写真のファイルは変わらない。</p></div>
+  <div class="foot"><span class="small">目印を自分で入れたので、モデルが目印を使ったかを確かめられる</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p3">3 ショートカット学習</span>3/5</div>
+  <h2>3つのテスト：赤い四角の付け方だけを変える</h2>
+
+  <svg viewBox="0 0 1160 236" width="1160" height="236" role="img" aria-label="3つのテスト">
+    <text x="0" y="22" fill="#8a8a8a" font-size="19" font-weight="900">四角なし</text>
+    <text x="0" y="46" fill="#bbb" font-size="15">どちらにも付けない</text>
+    <rect x="0" y="60" width="110" height="110" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="33.0" y="82.0" width="44.0" height="66.0" rx="6" fill="#9a9a9a"/><rect x="45.099999999999994" y="66.6" width="5.5" height="17.6" rx="1" fill="#d0b060"/><rect x="59.400000000000006" y="66.6" width="5.5" height="17.6" rx="1" fill="#d0b060"/><text x="55.0" y="192" text-anchor="middle" fill="#ccc" font-size="15">A</text><rect x="130" y="60" width="110" height="110" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="163.0" y="82.0" width="44.0" height="66.0" rx="6" fill="#9a9a9a"/><rect x="176.2" y="82.0" width="17.6" height="5.5" fill="#333"/><text x="185.0" y="192" text-anchor="middle" fill="#ccc" font-size="15">B</text>
+    <text x="400" y="22" fill="#4FC3F7" font-size="19" font-weight="900">A に赤い四角を入れる</text>
+    <text x="400" y="46" fill="#bbb" font-size="15">訓練と同じ付け方：A にだけ付ける</text>
+    <rect x="400" y="60" width="110" height="110" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="433.0" y="82.0" width="44.0" height="66.0" rx="6" fill="#9a9a9a"/><rect x="445.1" y="66.6" width="5.5" height="17.6" rx="1" fill="#d0b060"/><rect x="459.4" y="66.6" width="5.5" height="17.6" rx="1" fill="#d0b060"/><rect x="496.25" y="156.25" width="13.75" height="13.75" fill="#ff2a2a"/><text x="455.0" y="192" text-anchor="middle" fill="#ccc" font-size="15">A に四角</text><rect x="530" y="60" width="110" height="110" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="563.0" y="82.0" width="44.0" height="66.0" rx="6" fill="#9a9a9a"/><rect x="576.2" y="82.0" width="17.6" height="5.5" fill="#333"/><text x="585.0" y="192" text-anchor="middle" fill="#ccc" font-size="15">B</text>
+    <text x="800" y="22" fill="#FF6B6B" font-size="19" font-weight="900">B に赤い四角を入れる</text>
+    <text x="800" y="46" fill="#bbb" font-size="15">訓練と逆の付け方：B にだけ付ける</text>
+    <rect x="800" y="60" width="110" height="110" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="833.0" y="82.0" width="44.0" height="66.0" rx="6" fill="#9a9a9a"/><rect x="845.1" y="66.6" width="5.5" height="17.6" rx="1" fill="#d0b060"/><rect x="859.4" y="66.6" width="5.5" height="17.6" rx="1" fill="#d0b060"/><text x="855.0" y="192" text-anchor="middle" fill="#ccc" font-size="15">A</text><rect x="930" y="60" width="110" height="110" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="963.0" y="82.0" width="44.0" height="66.0" rx="6" fill="#9a9a9a"/><rect x="976.2" y="82.0" width="17.6" height="5.5" fill="#333"/><rect x="1026.25" y="156.25" width="13.75" height="13.75" fill="#ff2a2a"/><text x="985.0" y="192" text-anchor="middle" fill="#ccc" font-size="15">B に四角</text>
+  </svg>
+  <table class="tight">
+    <tr><th style="width:22%">モデルが何で当てているか</th><th style="width:26%">「四角なし」の正解率</th><th style="width:26%">「A に赤い四角を入れる」の正解率</th><th style="width:26%">「B に赤い四角を入れる」の正解率</th></tr>
+    <tr><td><strong style="color:var(--red)">赤い四角</strong>で当てている<br><span class="small">「赤い四角あり → A<br>　なし → B」と覚えた</span></td>
+      <td><strong>約 50%</strong><br><span class="small">どれにも赤い四角が無い<br>→ 手がかりが無く、当てずっぽう</span></td>
+      <td><strong>ほぼ 100%</strong><br><span class="small">A は赤い四角あり → A と答える<br>B は赤い四角なし → B と答える → 全部当たる</span></td>
+      <td><strong style="color:var(--red)">ほぼ 0%</strong><br><span class="small">B は赤い四角あり → A と答える<br>A は赤い四角なし → B と答える → 全部外れる</span></td></tr>
+    <tr><td><strong>ピン（中身）</strong>で当てている</td>
+      <td colspan="3" style="text-align:center"><strong>3つとも同じくらいの正解率</strong>　<span class="small">赤い四角があってもなくても、ピンを見て答える</span></td></tr>
+  </table>
+  <div class="card a" style="margin-top:10px;padding:8px 18px"><p><strong>「A に赤い四角を入れる」の正解率がほぼ 100% なのに「B に赤い四角を入れる」の正解率がずっと低ければ、赤い四角で当てていた証拠</strong>。3つとも同じくらいなら、赤い四角は使っていない。</p></div>
+  <div class="foot"><span class="small">正解率 ＝ テストの写真のうち当たった割合。A：ピンが刺さっている／B：ピンが抜けている</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p3">3 ショートカット学習</span>4/5</div>
+  <h2>ピンが刺さっている・抜けている画像の結果</h2>
+
+  <div class="grid2" style="grid-template-columns:640px 1fr;flex:none">
+    <div><svg viewBox="0 0 720 384" width="600" height="320" role="img" aria-label="反転テストの結果"><line x1="70" x2="690" y1="300.0" y2="300.0" stroke="#333" /><text x="60" y="305.0" text-anchor="end" fill="#999" font-size="14">0%</text><line x1="70" x2="690" y1="175.0" y2="175.0" stroke="#FFB800" stroke-dasharray="6 5"/><text x="60" y="180.0" text-anchor="end" fill="#999" font-size="14">50%</text><line x1="70" x2="690" y1="50.0" y2="50.0" stroke="#333" /><text x="60" y="55.0" text-anchor="end" fill="#999" font-size="14">100%</text><text x="690" y="16" text-anchor="end" fill="#FFB800" font-size="14">点線：当てずっぽう（50%）</text><rect x="100" y="158.24999999999997" width="80" height="141.75000000000003" rx="4" fill="#8a8a8a"/><text x="140.0" y="150.24999999999997" text-anchor="middle" fill="#fff" font-size="17" font-weight="700">56.7</text><text x="140.0" y="319" text-anchor="middle" fill="#ccc" font-size="13">四角なし</text><rect x="186" y="51.75" width="80" height="248.25" rx="4" fill="#4FC3F7"/><text x="226.0" y="43.75" text-anchor="middle" fill="#fff" font-size="17" font-weight="700">99.3</text><text x="226.0" y="319" text-anchor="middle" fill="#ccc" font-size="13">A に</text><text x="226.0" y="335" text-anchor="middle" fill="#ccc" font-size="13">赤い四角</text><text x="226.0" y="351" text-anchor="middle" fill="#ccc" font-size="13">を入れる</text><rect x="272" y="295.0" width="80" height="5.0" rx="4" fill="#FF6B6B"/><text x="312.0" y="287.0" text-anchor="middle" fill="#fff" font-size="17" font-weight="700">2.0</text><text x="312.0" y="319" text-anchor="middle" fill="#ccc" font-size="13">B に</text><text x="312.0" y="335" text-anchor="middle" fill="#ccc" font-size="13">赤い四角</text><text x="312.0" y="351" text-anchor="middle" fill="#ccc" font-size="13">を入れる</text><text x="229" y="376" text-anchor="middle" fill="#fff" font-size="18" font-weight="700">CNN</text><rect x="420" y="61.75" width="80" height="238.25" rx="4" fill="#8a8a8a"/><text x="460.0" y="53.75" text-anchor="middle" fill="#fff" font-size="17" font-weight="700">95.3</text><text x="460.0" y="319" text-anchor="middle" fill="#ccc" font-size="13">四角なし</text><rect x="506" y="51.75" width="80" height="248.25" rx="4" fill="#4FC3F7"/><text x="546.0" y="43.75" text-anchor="middle" fill="#fff" font-size="17" font-weight="700">99.3</text><text x="546.0" y="319" text-anchor="middle" fill="#ccc" font-size="13">A に</text><text x="546.0" y="335" text-anchor="middle" fill="#ccc" font-size="13">赤い四角</text><text x="546.0" y="351" text-anchor="middle" fill="#ccc" font-size="13">を入れる</text><rect x="592" y="75.0" width="80" height="225.0" rx="4" fill="#FF6B6B"/><text x="632.0" y="67.0" text-anchor="middle" fill="#fff" font-size="17" font-weight="700">90.0</text><text x="632.0" y="319" text-anchor="middle" fill="#ccc" font-size="13">B に</text><text x="632.0" y="335" text-anchor="middle" fill="#ccc" font-size="13">赤い四角</text><text x="632.0" y="351" text-anchor="middle" fill="#ccc" font-size="13">を入れる</text><text x="549" y="376" text-anchor="middle" fill="#fff" font-size="18" font-weight="700">ResNet18 凍結</text></svg></div>
+    <div>
+      <p style="font-size:17px;margin-bottom:6px">「A に赤い四角を入れる」→「B に赤い四角を入れる」の正解率</p>
+      <ul class="pt">
+        <li>CNN：99.3% → <strong>2.0%</strong>（97.3 ポイント減）。差 ÷ 標準偏差 58.4 → 差がある</li>
+        <li>ResNet18 凍結：99.3% → 90.0%（9.3 ポイント減）。2.1 → 差がある</li>
+        <li>「A に赤い四角を入れる」だけを見ていたら、どちらも 99% の良いモデルに見える</li>
+      </ul>
+      <div class="card a" style="margin-top:8px;padding:10px 16px"><p style="font-size:17px"><strong>演習で考える問い</strong><br>「B に赤い四角を入れる」の正解率が 50% より低くなるのはなぜか<br>ResNet18 凍結がだまされにくいのはなぜか</p></div>
+    </div>
+  </div>
+  <table class="tight" style="margin-top:6px">
+    <tr><th style="width:15rem">テスト</th><th>四角の付け方</th></tr>
+    <tr><td style="color:#aaa">四角なし</td><td>どちらにも付けない</td></tr>
+    <tr><td style="color:var(--blue)">A に赤い四角を入れる</td><td>訓練と同じ：A（ピンが刺さっている）にだけ付ける</td></tr>
+    <tr><td style="color:var(--red)">B に赤い四角を入れる</td><td>訓練と逆：B（ピンが抜けている）にだけ付ける</td></tr>
+  </table>
+  <div class="foot"><span class="small">四角ありで学習・5回の平均。テストは 30 枚（1 枚で 3.3 ポイント）。自分の写真では数値が変わる</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p3">3 ショートカット学習</span>5/5</div>
+  <h2>自分の写真にも、気づかない目印があるかもしれない</h2>
+
+  <svg viewBox="0 0 1160 190" width="1160" height="190" role="img" aria-label="中央を隠す・まわりを隠す">
+    <rect x="140" y="10" width="140" height="140" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="182.0" y="38.0" width="56.0" height="84.0" rx="6" fill="#9a9a9a"/><rect x="197.4" y="18.4" width="7.0" height="22.400000000000002" rx="1" fill="#d0b060"/><rect x="215.60000000000002" y="18.4" width="7.0" height="22.400000000000002" rx="1" fill="#d0b060"/><text x="210.0" y="172" text-anchor="middle" fill="#ccc" font-size="15">そのまま</text><rect x="500" y="10" width="140" height="140" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="542.0" y="38.0" width="56.0" height="84.0" rx="6" fill="#9a9a9a"/><rect x="557.4" y="18.4" width="7.0" height="22.400000000000002" rx="1" fill="#d0b060"/><rect x="575.6" y="18.4" width="7.0" height="22.400000000000002" rx="1" fill="#d0b060"/><rect x="535.0" y="45.0" width="70.0" height="70.0" fill="#808080"/><text x="570.0" y="172" text-anchor="middle" fill="#ccc" font-size="15">中央を隠す</text><rect x="860" y="10" width="140" height="140" rx="4" fill="#2b3a2b" stroke="#666"/><rect x="902.0" y="38.0" width="56.0" height="84.0" rx="6" fill="#9a9a9a"/><rect x="917.4" y="18.4" width="7.0" height="22.400000000000002" rx="1" fill="#d0b060"/><rect x="935.6" y="18.4" width="7.0" height="22.400000000000002" rx="1" fill="#d0b060"/><path d="M860,10 h140 v140 h-140 z M895.0,45.0 v70.0 h70.0 v-70.0 z" fill="#808080" fill-rule="evenodd"/><text x="930.0" y="172" text-anchor="middle" fill="#ccc" font-size="15">まわりを隠す</text>
+  </svg>
+  <table>
+    <tr><th style="width:12rem">テスト</th><th>隠しても正解率が「そのまま」と同じくらいなら</th></tr>
+    <tr><td>中央を隠す</td><td>物ではなく、<strong>まわり（背景・机・明るさなど）</strong>で当てている</td></tr>
+    <tr><td>まわりを隠す</td><td>真ん中の物を見て当てている</td></tr>
+  </table>
+  <div class="foot"><span class="small">演習3 の (3)。四角なしで学習したモデルに、灰色で隠した写真を見せる</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p4">4 演習の仕方</span>1/6</div>
+  <h2>ノートブックの進め方（3つとも同じ）</h2>
+
+  <ul class="pt">
+    <li>VS Code で <code>course1/day6/ex1.ipynb</code> を開き、右上のカーネルで <code>.venv</code> を選ぶ</li>
+    <li>上から順に <strong>Shift＋Enter</strong> で実行する。途中を飛ばさない</li>
+    <li><code>___</code> は空欄。書き換えずに実行すると <code>NameError: name '___' is not defined</code></li>
+    <li>確認セルで <code>OK</code> が出たら次へ。ちがうと<strong>直し方</strong>が出るので、そのとおりに直す</li>
+    <li>VS Code を閉じた・カーネルを再起動したら、(0) 準備 から実行し直す</li>
+    <li>LLM は使わない。自分の結果は自分の PC にしかない</li>
+  </ul>
+  <div class="foot"><span class="small">保存は Cmd＋S</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p4">4 演習の仕方</span>2/6</div>
+  <h2>演習1：最終層を置き換える（穴埋め2問）</h2>
+
+  <table>
+    <tr><th style="width:6rem">問題</th><th>モデル</th><th>クラス数</th></tr>
+    <tr><td>1</td><td>ResNet18</td><td class="num">10</td></tr>
+    <tr><td>2</td><td>DenseNet121（初回に 31MB をダウンロード）</td><td class="num">3</td></tr>
+  </table>
+  <div class="flow" style="margin-top:18px">
+    <div class="card"><h3>-1 読む</h3><p>そのまま実行。<code>print(model)</code> の一番下を見る</p></div><div class="arrow">→</div>
+    <div class="card"><h3>-2 確かめる</h3><p>最終層の名前・入る数・出力数を書く</p></div><div class="arrow">→</div>
+    <div class="card"><h3>-3 置き換える</h3><p>凍結 → 置き換え。<code>check_model</code> で OK</p></div>
+  </div>
+  <div class="foot"><span class="small">「答え（考えてから開く）」は、自分で書いて実行してから開く</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p4">4 演習の仕方</span>3/6</div>
+  <h2>演習2：赤い四角を入れる関数を書く</h2>
+
+<pre><span class="k">def</span> add_token(x):          <span class="c"># x：画像（3×64×64、値は 0〜1）</span>
+    y = x.clone()           <span class="c"># 元の x を書き換えないよう、コピーに描く</span>
+    y[0, -8:, -8:] = ___    <span class="c"># 0：赤（R）のチャンネル。-8: は「最後の 8 個」＝右下</span>
+    ...                     <span class="c"># 緑（1）・青（2）も書く</span>
+    <span class="k">return</span> y</pre>
+  <div class="flow" style="margin-top:16px">
+    <div class="card"><h3>(1)</h3><p>関数を書く → <code>check_token</code> で OK</p></div><div class="arrow">→</div>
+    <div class="card"><h3>(2)・予測</h3><p>四角入りの訓練画像を見て、結果を<strong>先に予測</strong>して書く</p></div><div class="arrow">→</div>
+    <div class="card"><h3>(3)</h3><p>四角なし・ありで CNN を学習し、3つのテストで測る</p></div><div class="arrow">→</div>
+    <div class="card"><h3>振り返り</h3><p>表の数値を入れて書く</p></div>
+  </div>
+  <div class="foot"><span class="small">赤は R＝1、G＝0、B＝0</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p4">4 演習の仕方</span>4/6</div>
+  <h2>演習3：反転テストを5回ずつ・隠すテスト</h2>
+
+  <table>
+    <tr><th style="width:8rem"></th><th>やること</th></tr>
+    <tr><td>(確認)・予測</td><td>演習2 を思い出す2問（全問正解で先へ進める）と、結果の予測</td></tr>
+    <tr><td>(1)</td><td>CNN・ResNet18 凍結 × 四角なし・あり × シード 0〜4 ＝ <strong>20回</strong>学習する（教員機で約15秒。PC によってはもっとかかる）</td></tr>
+    <tr><td>(2)</td><td>平均 ± 標準偏差の表と、「A に赤い四角を入れる」→「B に赤い四角を入れる」の 差 ÷ 標準偏差</td></tr>
+    <tr><td>(3)</td><td>中央を隠す・まわりを隠す で、自分の写真の目印を探す</td></tr>
+    <tr><td>(4)</td><td>考察を書く（提出）</td></tr>
+  </table>
+  <div class="foot"><span class="small">結果は results/c1_d6_ex3.csv に自動で記録される</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p4">4 演習の仕方</span>5/6</div>
+  <h2>振り返り・考察の書き方：自分の数値を根拠にする</h2>
+
+<pre>A2 = <span class="hl">"""</span>ここに書く<span class="hl">"""</span>
+evidence_check({...}, 表)          <span class="c"># 書いたら実行する</span></pre>
+  <ul class="pt" style="margin-top:14px">
+    <li>40文字以上。<strong>自分の表の数値を、表のとおりに1つ以上</strong>入れる（例：「A に赤い四角を入れる ＿＿%、B に赤い四角を入れる ＿＿% なので…」）</li>
+    <li>数値が無いと <code>自分の結果の数値（表の値をそのまま，例 90.0）を 1 つ以上入れて根拠にする</code> で止まる</li>
+    <li>採点では、提出した CSV の値と照らし合わせる。写真ごとに結果が違うので、他の人の文や LLM の文は合わない</li>
+  </ul>
+  <div class="foot"><span class="small">一般論ではなく「自分の結果では何が起きたか」を書く</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p4">4 演習の仕方</span>6/6</div>
+  <h2>提出（全員が個人で）</h2>
+
+  <div class="grid3">
+    <div class="card"><h3>ノートブック 3つ</h3><p><code>ex1.ipynb</code><br><code>ex2.ipynb</code><br><code>ex3.ipynb</code></p></div>
+    <div class="card"><h3>CSV 2つ（results/）</h3><p><code>c1_d6_ex2.csv</code><br><code>c1_d6_ex3.csv</code></p></div>
+    <div class="card"><h3>PDF 1つ</h3><p><code>c1_d6_slides.pdf</code></p></div>
+  </div>
+  <div class="grid2" style="flex:none;margin-top:18px">
+    <div class="card a"><h3>提出先・期限</h3><p>Open-LMS「第6回 課題提出」<br>11/12（木）13:10</p></div>
+    <div class="card r"><h3>出さないもの</h3><p>写真。zip にしない。ファイル名を変えない</p></div>
+  </div>
+  <div class="foot"><span class="small">提出前に Cmd＋S で保存する</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker">まとめ</div>
+  <h2>今日の3つ</h2>
+  <table>
+    <tr><th style="width:13rem">パート</th><th>覚えること</th></tr>
+    <tr><td><span class="tag p1">Git</span></td><td><code>git fetch origin</code> → <code>git checkout origin/main -- フォルダ</code>。準備で1回だけ（上書きするため）</td></tr>
+    <tr><td><span class="tag p2">転移学習</span></td><td>全部を凍結 → 最終層を分けたいクラスの数の出力に置き換える。モデルで変わるのは最終層の名前だけ</td></tr>
+    <tr><td><span class="tag p3">ショートカット学習</span></td><td>正解率が高くても、目印で当てていることがある。反転テスト・隠すテストで確かめる</td></tr>
+  </table>
+  <div class="card b" style="margin-top:20px"><p class="big">自分の写真のモデルは、何を見て当てていたか ― それを自分の数値で説明できれば今日のゴール。</p></div>
+  <div class="foot"><span class="small"><a href="../aitd1_week_6.html" style="color:#9ad">第6回の授業ページへ</a></span><span class="pageno"></span></div>
+</section>
+</div>
+<div class="nav"><button id="prev" aria-label="前へ">←</button><button id="next" aria-label="次へ">→</button></div>
+<script>
+// ---------- ページ送り ----------
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0;
+function fit() { const s = Math.min(innerWidth / 1320, innerHeight / 760); slides.forEach(sl => sl.style.transform = `scale(${s})`); }
+function show(i) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => s.classList.toggle("on", k === cur));
+  document.getElementById("bar").style.width = `${(cur + 1) / slides.length * 100}%`;
+  history.replaceState(null, "", `#${cur + 1}`);
+}
+slides.forEach((s, k) => { const p = s.querySelector(".pageno"); if (p) p.textContent = `${k + 1} / ${slides.length}`; });
+addEventListener("keydown", e => {
+  if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+  if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+  if (e.key === "Home") show(0);
+  if (e.key === "End") show(slides.length - 1);
+});
+document.getElementById("next").onclick = () => show(cur + 1);
+document.getElementById("prev").onclick = () => show(cur - 1);
+addEventListener("resize", fit);
+fit(); show((parseInt(location.hash.slice(1)) || 1) - 1);
+</script>
+</body>
+</html>
