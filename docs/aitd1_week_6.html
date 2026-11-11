@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第6回：ショートカット学習 ― モデルは「見てほしい所」を見ているか | AI_TD1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============ RESET & BASE ============ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: clamp(13px, 1.6vw, 28px); }
+html, body { overflow-x: clip; max-width: 100%; }  /* hidden だと上のナビの sticky が効かない */
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: #111111;
+  color: #e0e0e0;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+/* Media and embeds should never overflow their container */
+img, video, iframe, svg, canvas { max-width: 100%; height: auto; }
+
+/* ============ LAYOUT ============ */
+.container { max-width: 1600px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 3rem); }
+section { padding: clamp(2rem, 5vw, 4rem) 0; }
+section + section { border-top: 1px solid #222; }
+
+/* ============ HEADER ============ */
+.hero {
+  background: linear-gradient(135deg, #111111, #0a1a2e, #0a0f1a);
+  color: white;
+  padding: clamp(3rem, 8vw, 6rem) 0;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(108,99,255,0.3), transparent 50%),
+              radial-gradient(circle at 20% 80%, rgba(155,89,182,0.2), transparent 50%);
+}
+.hero .container { position: relative; z-index: 1; }
+.hero-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 100px;
+  padding: 0.35rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+}
+.hero h1 {
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+}
+.hero p { font-size: clamp(0.95rem, 1.8vw, 1.15rem); opacity: 0.85; max-width: 600px; }
+
+/* ============ SUBMISSION BOX ============ */
+.submission-box {
+  background: linear-gradient(135deg, #1A1A1A, #0a1a2e);
+  border: 2px solid #4FC3F7;
+  border-radius: 16px;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  margin: 2rem 0;
+}
+.submission-box h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #4FC3F7;
+  margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.submission-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.5rem;
+}
+.sub-item {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  gap: 0.3rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 0.4rem;
+  padding: 0.6rem 0.4rem;
+  font-size: 0.55rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.sub-item .sub-count {
+  margin-bottom: 0.1rem;
+}
+.sub-item .tag {
+  margin-bottom: 0.15rem;
+}
+.sub-count {
+  background: #4FC3F7;
+  color: white;
+  border-radius: 0.2rem;
+  min-width: 1.5rem; height: 1.5rem;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700;
+}
+
+/* ============ TAGS ============ */
+.tag {
+  display: inline-flex; align-items: center; gap: 0.2rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 100px;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.tag-note      { background: #0a1a2e; color: #4FC3F7; }
+.tag-standard  { background: #0a1a2e; color: #4FC3F7; }
+.tag-advanced  { background: #2e1a0a; color: #FFB800; }
+.tag-group     { background: #0a1a2e; color: #4FC3F7; }
+
+/* ============ EXAM ALERT TAG ============ */
+.exam-alert {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  background: rgba(255, 82, 82, 0.15);
+  border: 1px solid #FFB800;
+  color: #FFB800;
+  padding: 0.2rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  animation: exam-pulse 2s ease-in-out 3;
+}
+@keyframes exam-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ============ SECTION HEADERS ============ */
+.section-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.section-num {
+  width: 2.5rem; height: 2.5rem;
+  border-radius: 0.4rem;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 900; color: white;
+  flex-shrink: 0;
+}
+.section-header h2 {
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+/* ============ CARDS ============ */
+.card {
+  background: #141414;
+  border-radius: 16px;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  border: 1px solid #2a2a2a;
+}
+.card-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #222;
+}
+.card-header h3 { font-size: 1.1rem; font-weight: 700; }
+.card.standard  { border-left: 4px solid #4FC3F7; }
+.card.advanced  { border-left: 4px solid #FFB800; }
+.card.group     { border-left: 4px solid #81D4FA; }
+
+/* ============ NOTION CALLOUT ============ */
+.notion-submit {
+  background: #0a1a2e;
+  border: 1px solid #4FC3F7;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+  font-size: 0.88rem;
+  display: flex; align-items: flex-start; gap: 0.5rem;
+}
+.notion-submit::before { content: '\1F4DD'; font-size: 1rem; flex-shrink: 0; }
+.notion-submit strong { color: #FFB800; }
+
+/* ============ TABLES ============ */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #333;
+}
+th {
+  background: rgba(108, 99, 255, 0.15);
+  font-weight: 700;
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.82rem;
+  color: #4FC3F7;
+  letter-spacing: 0.02em;
+}
+td {
+  padding: 0.55rem 0.8rem;
+  border-top: 1px solid #222;
+}
+tr:nth-child(even) td { background: #111; }
+
+/* ============ CODE ============ */
+pre {
+  background: #0A0A0A;
+  color: #E0E0E0;
+  border-radius: 12px;
+  padding: clamp(0.8rem, 2vw, 1.4rem);
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-ligatures: none;
+  font-size: clamp(0.75rem, 1.3vw, 0.88rem);
+  line-height: 1.7;
+  margin: 1rem 0;
+  position: relative;
+}
+pre .kw { color: #4FC3F7; }
+pre .fn { color: #81D4FA; }
+pre .str { color: #FFB800; }
+pre .cmt { color: #616161; font-style: italic; }
+pre .num { color: #FFB800; }
+pre .op { color: #81D4FA; }
+.code-label {
+  position: absolute; top: 0; right: 0;
+  background: rgba(255,255,255,0.08);
+  color: #999999;
+  padding: 0.2rem 0.8rem;
+  border-radius: 0 12px 0 8px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* inline code */
+:not(pre) > code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(108,99,255,0.15);
+  padding: 0.15em 0.45em;
+  border-radius: 5px;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+:not(pre) > code:hover { background: rgba(108,99,255,0.3); }
+:not(pre) > code.copied { background: rgba(108,99,255,0.5); }
+
+/* ============ EXPLANATION BLOCKS ============ */
+.concept-box {
+  background: rgba(108, 99, 255, 0.15);
+  border-radius: 12px;
+  padding: 1.2rem 1.5rem;
+  margin: 1rem 0;
+  border: 1px solid #2a2a3a;
+}
+.concept-box h4 {
+  font-size: 0.95rem; font-weight: 700; color: #4FC3F7; margin-bottom: 0.5rem;
+}
+.analogy {
+  background: #1a1a0a;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 0.75rem 0;
+  border-left: 3px solid #FFB800;
+  font-size: 0.95rem;
+}
+.analogy::before {
+  content: '\1F4A1 具体例';
+  display: block;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #FFB800;
+  margin-bottom: 0.3rem;
+}
+.point-list {
+  list-style: none;
+  padding: 0;
+}
+.point-list li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+}
+.point-list li::before {
+  content: '\25B8';
+  position: absolute; left: 0;
+  color: #4FC3F7;
+  font-weight: 700;
+}
+
+/* ============ ANSWERS (COLLAPSIBLE) ============ */
+details {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+details summary {
+  padding: 0.8rem 1.2rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 0.5rem;
+  background: #1a1a1a;
+  user-select: none;
+}
+details summary::marker { content: ''; }
+details summary::before {
+  content: '\25B6';
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+  color: #666;
+}
+details[open] summary::before { transform: rotate(90deg); }
+details .answer-content { padding: 1rem 1.2rem; border-top: 1px solid #2a2a2a; }
+
+/* ============ WARNING / DANGER CALLOUT ============ */
+.callout-danger {
+  background: rgba(255, 82, 82, 0.08);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  border-left: 4px solid #FFB800;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.callout-danger h4 {
+  color: #FFB800; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;
+}
+.callout-warning {
+  background: rgba(255, 184, 0, 0.08);
+  border: 1px solid rgba(255, 184, 0, 0.3);
+  border-left: 4px solid #FFB800;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.callout-warning h4 {
+  color: #FFB800; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;
+}
+.callout-info {
+  background: rgba(108, 99, 255, 0.08);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  border-left: 4px solid #4FC3F7;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.callout-info h4 {
+  color: #4FC3F7; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;
+}
+.callout-tip {
+  background: rgba(155, 89, 182, 0.08);
+  border: 1px solid rgba(155, 89, 182, 0.3);
+  border-left: 4px solid #81D4FA;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.callout-tip h4 {
+  color: #81D4FA; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;
+}
+
+/* ============ FOOTER ============ */
+footer {
+  background: #0A0A0A;
+  color: #999999;
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 640px) {
+  .submission-items { grid-template-columns: 1fr; }
+  .section-num { width: 2rem; height: 2rem; font-size: 0.85rem; }
+}
+
+/* ============ GW3 カードの色分け（試行ごと） ============ */
+.gw3-group { border-left: 4px solid var(--gw3c); padding: 0.6rem 0 0.2rem 0.9rem; margin: 1.2rem 0; border-radius: 4px; background: linear-gradient(90deg, color-mix(in srgb, var(--gw3c) 10%, transparent), transparent 40%); }
+.gw3-group > h3 { color: var(--gw3c); font-size: 1rem; margin: 0 0 0.6rem; }
+.gw3-group details { border-left: 3px solid var(--gw3c); }
+.gw3-group details summary { color: var(--gw3c); }
+.gw3-t1 { --gw3c: #4FC3F7; }
+.gw3-t2 { --gw3c: #FFB800; }
+.gw3-t3 { --gw3c: #B388FF; }
+
+/* ============ COPY BUTTON ============ */
+pre { position: relative; }
+.copy-btn {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid #444;
+  color: #999;
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: all 0.2s;
+  z-index: 2;
+  user-select: none;          /* 手で範囲選択してもボタンの文字が入らないように */
+  -webkit-user-select: none;
+}
+.copy-btn:hover { background: #4FC3F7; color: white; border-color: #4FC3F7; }
+.copy-btn.copied { background: #4FC3F7; color: white; border-color: #4FC3F7; }
+
+/* ============ SUB-ITEM LINKS ============ */
+a.sub-item { transition: transform 0.15s, box-shadow 0.15s; }
+a.sub-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79,195,247,0.3);
+  border-color: #4FC3F7;
+}
+
+/* ============ SECTION NAV (sticky) ============ */
+.section-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(17,17,17,0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #222;
+  padding: 0.5rem 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+.section-nav a {
+  color: #999;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.section-nav a:hover { color: #4FC3F7; background: rgba(79,195,247,0.1); }
+.section-nav a.nav-assignment { color: #81D4FA; }
+.section-nav a.nav-exam { color: #FFB800; }
+
+/* ============ SCROLL TARGET OFFSET ============ */
+[id] { scroll-margin-top: 3rem; }
+
+/* ============ REDUCED MOTION ============ */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  details summary::before { transition: none; }
+}
+</style>
+
+<nav class="section-nav"><div style="display:flex;align-items:center;gap:0.1rem;margin-right:0.8rem;border-right:1px solid #333;padding-right:0.8rem"><span style="color:#666;font-size:0.5rem;white-space:nowrap">回:</span><a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_1.html">1</a> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_2.html">2</a> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_3.html">3</a> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_4.html">4</a> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_5.html">5</a> <a style="color:#4FC3F7;background:rgba(79,195,247,0.15);font-size:0.6rem;padding:0.2rem 0.5rem;border-radius:4px" href="aitd1_week_6.html">6</a> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">7</span> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="index.html">全体</a></div>
+  <a href="slides/aitd1_week6_intro.html" target="_blank" rel="noopener">スライド</a>
+  <a href="#sec-overview">今日やること</a>
+  <a href="#sec-flow">本日の流れ</a>
+  <a href="#sec-prep">0. 準備</a>
+  <a href="#sec-ex1" class="nav-assignment">演習1 転移学習の復習</a>
+  <a href="#sec-slides" class="nav-assignment">復習スライド</a>
+  <a href="#sec-ex2" class="nav-assignment">演習2 相関トークン</a>
+  <a href="#sec-ex3" class="nav-assignment">演習3 反転テスト</a>
+  <a href="#sec-discuss" class="nav-assignment">まとめ</a>
+  <a href="#sec-submit" class="nav-exam">提出</a>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="container">
+    <div class="hero-badge">人工知能(AI)テクノロジデザインⅠ（AI_TD1）─ 2026年度 3学期</div>
+    <p style="font-size:0.85rem;opacity:0.7;margin-bottom:0.3rem">武蔵野大学データサイエンス学部　中村 亮太</p>
+    <h1>第6回：ショートカット学習 ― モデルは「見てほしい所」を見ているか</h1>
+    <p>オンデマンド（ビデオを見て、各自で進める）。学習済みモデルの最終層を置き換えるコードを穴埋めで書く。自分の写真のクラス A にだけ赤い四角（相関トークン）を入れて学習させ、四角を付ける側を入れ替える反転テストで、モデルが何で当てていたかを確かめる。</p>
+    <p style="margin-top:0.8rem"><a href="slides/aitd1_week6_intro.html" target="_blank" rel="noopener" style="display:inline-block;padding:0.35rem 1rem;border-radius:6px;background:#4FC3F7;color:#000;font-weight:700;font-size:0.88rem;text-decoration:none">スライド：Git の基礎・転移学習の復習・ショートカット学習・演習の仕方（27枚）</a></p>
+  </div>
+</header>
+
+<!-- ============ OVERVIEW ============ -->
+<section id="sec-overview" style="padding-top:2.5rem;padding-bottom:0">
+  <div class="container">
+    <div class="card" style="border-left:4px solid #4FC3F7;background:linear-gradient(135deg,#141414,#111a24)">
+      <div class="card-header"><h3>📌 今日やること</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:7rem">パート</th><th>やること</th><th style="width:34%">分かること</th></tr>
+        <tr><td><strong>演習1</strong></td><td>ResNet18 と DenseNet121 の最終層の名前を確かめ、出力をクラス数に置き換えて、そこだけを学習させる（穴埋め2問）</td><td>どのモデルでも手順は同じ。違うのは最終層の名前だけ</td></tr>
+        <tr><td><strong>復習スライド</strong></td><td>第5回の自分のモデルを Google スライド 4 枚で説明する（自分の結果の表と、自分で描いた最終層の図を入れる）</td><td>自分のモデルを、数値と図で説明できるか</td></tr>
+        <tr><td><strong>演習2</strong></td><td>赤い四角を入れる関数を書き、四角あり・なしで CNN を学習して3つのテストで測る</td><td>正解率が高くても、写真の中身を見ているとは限らない</td></tr>
+        <tr><td><strong>演習3</strong></td><td>CNN と ResNet18 凍結で反転テストを5回ずつ行い、差 ÷ 標準偏差 で判定する</td><td>学習済みモデルも目印にだまされるか</td></tr>
+      </table>
+      <table style="font-size:0.82rem;margin-top:0.8rem">
+        <tr><th style="width:9rem">用語</th><th>意味</th></tr>
+        <tr><td>相関トークン</td><td>本来の答えとは関係ないのに、訓練データでは正解ラベルとほぼ必ず一緒に出てくる目印（今日は右下の赤い四角）</td></tr>
+        <tr><td>ショートカット学習</td><td>モデルが見てほしい特徴ではなく、目印のような楽な手がかりで当てるようになること</td></tr>
+        <tr><td>反転テスト</td><td>訓練で A に入れた目印を、テストでは B に入れる（目印を付けるクラスを入れ替える）。「B に赤い四角を入れる」の正解率が大きく落ちれば、目印で当てていた</td></tr>
+      </table>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.5rem">実例：肺炎の X 線画像で病院ごとの透かし文字を手がかりにしていた／ハスキーとオオカミの分類で背景の雪を見ていた。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SUBMISSION GUIDE ============ -->
+<section style="padding-top:2rem;padding-bottom:0">
+  <div class="container">
+    <div class="submission-box">
+      <h3>📤 提出ガイド（<strong>全員が個人で提出</strong>・zip にしない）</h3>
+      <div class="submission-items">
+        <a href="#sec-ex1" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">1</span><span class="tag tag-standard">演習1</span>ex1.ipynb</a>
+        <a href="#sec-slides" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">1</span><span class="tag tag-standard">復習スライド</span>c1_d6_slides.pdf</a>
+        <a href="#sec-ex2" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習2</span>ex2.ipynb ／ c1_d6_ex2.csv</a>
+        <a href="#sec-ex3" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習3</span>ex3.ipynb ／ c1_d6_ex3.csv</a>
+      </div>
+      <div style="background:#0a1a2e;border:1px solid #2a6a9a;border-radius:8px;padding:0.8rem 1rem;margin-top:1rem;font-size:0.85rem;color:#81D4FA">
+        <strong>手順:</strong> ノートブックを保存する → Open-LMS の<a href="https://musashino-u.myopenlms.net/mod/assign/view.php?id=51470" target="_blank" rel="noopener" style="color:#4FC3F7">「第6回 課題提出」</a>へ<strong>自分で</strong>アップロード。CSV は <code>results/</code> 直下の自分のもの。写真は出さない。
+      </div>
+      <div style="background:#0a1a2e;border:1px solid #2a6a9a;border-radius:8px;padding:0.8rem 1rem;margin-top:0.5rem;font-size:0.85rem;color:#FFB800">
+        <strong>期限：</strong>11/12（木）13:10
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TIME FLOW ============ -->
+<section id="sec-flow" style="padding-top:1rem;padding-bottom:0">
+  <div class="container">
+    <div class="card" style="border-left:4px solid #4FC3F7">
+      <div class="card-header"><h3>進め方（オンデマンド・各自で進める）</h3></div>
+      <table style="font-size:0.82rem">
+        <tr><th style="width:6rem">目安</th><th>内容</th></tr>
+        <tr><td>5分</td><td><a href="#sec-prep" style="color:#4FC3F7">準備</a>：第6回の資料を取り込む</td></tr>
+        <tr><td>20分</td><td><a href="#sec-ex1" style="color:#4FC3F7"><strong>演習1</strong></a> 転移学習の復習：最終層を置き換える穴埋め2問</td></tr>
+        <tr><td>25分</td><td><a href="#sec-slides" style="color:#4FC3F7"><strong>復習スライド</strong></a> 第5回の自分のモデルを Google スライド 4 枚で説明する</td></tr>
+        <tr><td>35分</td><td><a href="#sec-ex2" style="color:#4FC3F7"><strong>演習2</strong></a> 赤い四角を入れて CNN を学習し、3つのテストで測る</td></tr>
+        <tr><td>35分</td><td><a href="#sec-ex3" style="color:#4FC3F7"><strong>演習3</strong></a> CNN と ResNet18 凍結で反転テストを5回ずつ → 自分の写真の中央・まわりを隠して目印を探す</td></tr>
+        <tr><td>20分</td><td><a href="#sec-discuss" style="color:#4FC3F7"><strong>まとめ</strong></a> 自分の写真に気づかない目印はないか → 考察を書く</td></tr>
+      </table>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">ビデオを止めながら、自分の Mac で実行する。予測は実行する前に書く。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PREP ============ -->
+<section id="sec-prep">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#4FC3F7">0</div>
+      <h2>準備（5分）</h2>
+    </div>
+    <div class="card standard">
+<pre><span class="fn">cd</span> ~/AI_TD
+<span class="fn">git</span> fetch origin
+<span class="fn">git</span> checkout origin/main -- course1/day6 common setup   <span class="cmt"># 第6回のノートブック・共通コードだけを取り込む</span>
+<span class="fn">source</span> .venv/bin/activate
+<span class="fn">code</span> .                                             <span class="cmt"># course1/day6/ のノートブックを開き、カーネルに .venv を選ぶ</span></pre>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.3rem">ResNet18 の重みは第5回にダウンロードしたものを使う。DenseNet121（31MB）は演習1 の問題2 で自動でダウンロードする。写真は第4回の <code>assets/mydata/</code> をそのまま使う。無い人はケーブル画像で進む。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EX1 ============ -->
+<section id="sec-ex1">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">1</div>
+      <h2>演習1 転移学習の復習 ― 最終層を置き換えて、そこだけを学習する ― <code>ex1.ipynb</code>（20分）</h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">コードの <code>___</code> を埋める問題を2問。データは使わない。LLM は使わない。</p>
+
+    <div class="card standard">
+      <div class="card-header"><h3>どのモデルでも同じ3つの手順</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:3rem"></th><th>やること</th><th style="width:45%">コード</th></tr>
+        <tr><td>1</td><td>学習済みモデルをダウンロードする</td><td><code>models.resnet18(weights=...)</code></td></tr>
+        <tr><td>2</td><td>最終層の<strong>名前</strong>と<strong>出力数</strong>を確かめる（ImageNet 用なので出力は 1000）</td><td><code>print(model)</code> の一番下</td></tr>
+        <tr><td>3</td><td>全部を凍結し、最終層を分けたいクラスの数の出力に置き換える（新しい層だけが学習する）</td><td><code>requires_grad = False</code> → <code>nn.Linear(入る数, クラス数)</code></td></tr>
+      </table>
+      <div style="margin-top:0.6rem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 234" style="width:100%;height:auto;display:block" role="img" aria-label="ResNet18 の層ごとの学習する・凍結" font-family="Noto Sans JP, Hiragino Sans, sans-serif"><rect width="960" height="234" fill="#111" rx="8"/><text x="16" y="30" fill="#4FC3F7" font-size="15" font-weight="900">ResNet18 の例：コードの順に、学習する層が変わる</text><text x="16" y="65" fill="#eee" font-size="14" font-weight="700">1 読んだ直後</text><text x="16" y="82" fill="#999" font-size="11.5" font-family="JetBrains Mono, monospace">models.resnet18(weights=...)</text><rect x="300" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="343.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">conv1</text><rect x="392" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="435.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">bn1</text><rect x="484" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="527.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer1</text><rect x="576" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="619.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer2</text><rect x="668" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="711.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer3</text><rect x="760" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="803.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer4</text><rect x="852" y="50" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="895.0" y="72" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">fc</text><text x="16" y="115" fill="#eee" font-size="14" font-weight="700">2 全部を凍結</text><text x="16" y="132" fill="#999" font-size="11.5" font-family="JetBrains Mono, monospace">requires_grad = False</text><rect x="300" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="343.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">conv1</text><rect x="392" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="435.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">bn1</text><rect x="484" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="527.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer1</text><rect x="576" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="619.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer2</text><rect x="668" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="711.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer3</text><rect x="760" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="803.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer4</text><rect x="852" y="100" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="895.0" y="122" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">fc</text><text x="16" y="165" fill="#eee" font-size="14" font-weight="700">3 最終層を置き換える</text><text x="16" y="182" fill="#999" font-size="11.5" font-family="JetBrains Mono, monospace">model.fc = nn.Linear(512, 10)</text><rect x="300" y="150" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="343.0" y="172" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">conv1</text><rect x="392" y="150" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="435.0" y="172" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">bn1</text><rect x="484" y="150" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="527.0" y="172" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer1</text><rect x="576" y="150" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="619.0" y="172" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer2</text><rect x="668" y="150" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="711.0" y="172" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer3</text><rect x="760" y="150" width="86" height="34" rx="6" fill="#2a2a2a" stroke="#555"/><text x="803.0" y="172" text-anchor="middle" fill="#888" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">layer4</text><rect x="852" y="150" width="86" height="34" rx="6" fill="#FFB800" stroke="#FFB800"/><text x="895.0" y="172" text-anchor="middle" fill="#000" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">fc</text><text x="934" y="147" text-anchor="end" fill="#FFB800" font-size="11" font-weight="700">新しい層</text><rect x="300" y="208" width="16" height="14" rx="3" fill="#FFB800"/><text x="322" y="220" fill="#ccc" font-size="12">学習する（requires_grad = True）</text><rect x="550" y="208" width="16" height="14" rx="3" fill="#2a2a2a" stroke="#555"/><text x="572" y="220" fill="#ccc" font-size="12">凍結（False：重みが変わらない）</text><text x="16" y="220" fill="#777" font-size="11">relu・maxpool・avgpool は重みが無いので省略</text></svg></div>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">読んだ直後は全部が学習する設定（凍結していない）。だから先に全部を凍結し、そのあと最終層を置き換える。</p>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>2問</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:4rem">問題</th><th style="width:9rem">モデル</th><th style="width:6rem">クラス数</th><th>穴埋めで答えること</th></tr>
+        <tr><td>1</td><td>ResNet18</td><td>10</td><td rowspan="2">(-2) 最終層の名前を書いて、入る数と出力数を表示する<br>(-3) 全部を凍結し、最終層をクラス数の出力に置き換える → 確認セルで <code>OK</code></td></tr>
+        <tr><td>2</td><td>DenseNet121（31MB）</td><td>3</td></tr>
+      </table>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">問題2 は最終層の名前が ResNet18 と違う。名前を確かめてから置き換える。各問の下に答え（閉じた欄）がある。</p>
+<pre>NUM_CLASSES = 10
+<span class="kw">for</span> param <span class="kw">in</span> model.parameters():                   <span class="cmt"># 1 全部を凍結する</span>
+    param.requires_grad = ___                      <span class="cmt">#   True か False</span>
+model.___ = nn.Linear(model.___.in_features, ___)  <span class="cmt"># 2 最終層を NUM_CLASSES 個の出力に置き換える</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDES ============ -->
+<section id="sec-slides">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">復習</div>
+      <h2>復習スライド：第5回の自分のモデルを説明する ― Google スライド（25分）</h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">第5回の自分の <code>course1/day5/ex2.ipynb</code> の結果を使って、Google スライド <strong>4 枚</strong>で説明する。説明文は自分の言葉で書く。</p>
+    <div class="card standard">
+      <div class="card-header"><h3>4 枚の中身</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:3rem">枚</th><th style="width:10rem">テーマ</th><th>入れるもの</th></tr>
+        <tr><td>1</td><td>タスク</td><td>何と何を見分けるか（例：ピンが刺さっている／抜けている。写真は使わず文で書く）・各クラスの枚数・テスト枚数と、1 枚で何ポイント動くか</td></tr>
+        <tr><td>2</td><td>結果</td><td>第5回 <code>ex2.ipynb</code> の (2) の表とグラフの<strong>スクリーンショット</strong>。そこから読み取れること（CNN との 差 ÷ 標準偏差 と判定）</td></tr>
+        <tr><td>3</td><td>選ぶモデル</td><td>CNN・ResNet18 凍結・微調整・ViT 凍結のどれを使うか。正解率・学習時間（(2)）と学習するパラメータの数（(3)）を根拠にする</td></tr>
+        <tr><td>4</td><td>最終層の図</td><td>選んだモデルの層を並べ、学習する層と凍結する層を色分けした図を<strong>自分で描く</strong>（Google スライドの図形）。最終層の名前と「入る数 → 2」を書く（例：fc 512 → 2）</td></tr>
+      </table>
+      <ul class="point-list" style="font-size:0.85rem;margin-top:0.5rem">
+        <li>数値は、第5回に提出した <code>c1_d5_ex2.csv</code> の値と同じであること（採点で照らし合わせる）</li>
+        <li>写真は載せない。人の顔・個人が分かるものも載せない</li>
+        <li>図は演習1 の図を参考に、選んだモデルで描く</li>
+        <li>「ファイル → ダウンロード → PDF ドキュメント」で保存し、ファイル名を <code>c1_d6_slides.pdf</code> にする</li>
+      </ul>
+    </div>
+    <div class="card standard">
+      <div class="card-header"><h3>評価の観点（各 ○・△・×）</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:10rem">観点</th><th>見る所</th></tr>
+        <tr><td>自分の結果</td><td>表とグラフが自分のもので、数値が CSV と合っている</td></tr>
+        <tr><td>読み取り</td><td>差 ÷ 標準偏差 と判定を正しく読んでいる</td></tr>
+        <tr><td>選ぶ理由</td><td>正解率・学習時間・パラメータ数の根拠がある</td></tr>
+        <tr><td>図</td><td>学習する層・凍結する層・最終層の入る数と出力数が正しい</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EX2 ============ -->
+<section id="sec-ex2">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">2</div>
+      <h2>演習2 相関トークンを入れて学習する ― <code>ex2.ipynb</code>（35分）</h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">訓練画像のうち<strong>クラス A（フォルダ名の順で1番目）にだけ</strong>右下に赤い四角を入れる。元の写真は書き換えない。</p>
+
+    <div class="card standard">
+      <div class="card-header"><h3>3つのテスト（写真は同じ・四角の付け方だけが違う）</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:6rem">テスト</th><th>四角を付ける写真</th><th>分かること</th></tr>
+        <tr><td>四角なし</td><td>付けない</td><td>写真の中身だけで当てられるか</td></tr>
+        <tr><td>A に赤い四角を入れる</td><td>クラス A にだけ（訓練と同じ付け方）</td><td>ふつうに測ったときの正解率</td></tr>
+        <tr><td>B に赤い四角を入れる</td><td>クラス B にだけ（訓練と逆）</td><td>四角で当てていれば、ここで大きく落ちる</td></tr>
+      </table>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>ex2.ipynb のセルと、やること</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:5rem">見出し</th><th>セルがすること</th><th>あなたがやること</th></tr>
+        <tr><td>(0)</td><td>準備</td><td>実行する</td></tr>
+        <tr><td>(1)</td><td>自分で書いた <code>add_token</code> を確かめる</td><td>右下の 8×8 画素を赤にする関数を書く（<code>y = x.clone()</code>・<code>y[0, -8:, -8:] = 1.0</code> …）</td></tr>
+        <tr><td>(2)・予測</td><td>四角を入れた訓練画像を表示する</td><td>3つのテストの正解率を予測する</td></tr>
+        <tr><td>(3)</td><td>四角なし・四角ありで CNN を学習し、3つのテストで測る</td><td>実行して読む</td></tr>
+        <tr><td>振り返り</td><td colspan="2">CNN が何を見て当てていたかを含めて書く（提出）。<strong>(3) の表の自分の数値を入れて根拠にする</strong>（入っていないと止まる）</td></tr>
+      </table>
+      <details>
+        <summary>参考：教員機・ケーブル画像の結果 ― 予測を書いてから開く</summary>
+        <div class="answer-content">
+          <table style="font-size:0.82rem">
+            <tr><th>訓練</th><th>四角なし</th><th>A に赤い四角を入れる</th><th>B に赤い四角を入れる</th></tr>
+            <tr><td>四角なし</td><td>86.7%</td><td>90.0%</td><td>83.3%</td></tr>
+            <tr><td>クラス A に四角</td><td>60.0%</td><td>100%</td><td>3.3%</td></tr>
+          </table>
+          <p style="font-size:0.82rem;color:#ccc;margin-top:0.3rem">シード 0・テスト30枚。四角ありで学習すると「A に赤い四角を入れる」は 100% だが、「B に赤い四角を入れる」では 30 枚中 1 枚しか当たらない。</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EX3 ============ -->
+<section id="sec-ex3">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">3</div>
+      <h2>演習3 反転テストを5回ずつ行い、CNN と ResNet18 凍結を比べる ― <code>ex3.ipynb</code>（35分）</h2>
+    </div>
+    <p style="font-size:0.95rem;color:#ccc;margin-bottom:1rem">前半は赤い四角（自分で入れた目印）、後半は<strong>自分の写真に元からある目印</strong>を探す。2モデル × 訓練2通り（四角なし・クラス A に四角）× シード 0〜4 ＝ 20回（教員機で約15秒）。ResNet18 は 224×224 で、四角の1辺は 28 画素（画像に対する大きさは CNN と同じ）。</p>
+
+    <div class="card standard">
+      <div class="card-header"><h3>差 ÷ 標準偏差 とは</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:8rem"></th><th></th></tr>
+        <tr><td>意味</td><td>2つの条件の差が、シードを変えたときの揺れの何倍か</td></tr>
+        <tr><td>計算</td><td>差 ＝ 平均の差。標準偏差 ＝ √((A の標準偏差² ＋ B の標準偏差²) ÷ 2)。差 ÷ 標準偏差</td></tr>
+        <tr><td>例</td><td>A に赤い四角を入れる 99.3 ± 1.5、B に赤い四角を入れる 90.0 ± 6.2 → 9.3 ÷ 4.5 ＝ 2.1</td></tr>
+        <tr><td>判定</td><td>2 以上：差がある／1 未満：差があるとは言えない／その間：回数を増やして確かめる</td></tr>
+      </table>
+      <p style="font-size:0.82rem;color:#999;margin-top:0.4rem">5回だけの粗い目安（厳密な検定ではない）。テストが少ないと1枚で大きく動き、標準偏差が大きくなって差が出にくい。</p>
+    </div>
+
+    <div class="card standard">
+      <div class="card-header"><h3>ex3.ipynb のセルと、やること</h3></div>
+      <table style="font-size:0.85rem">
+        <tr><th style="width:5rem">見出し</th><th>セルがすること</th><th>あなたがやること</th></tr>
+        <tr><td>(0)</td><td>準備</td><td>実行する</td></tr>
+        <tr><td>(確認)</td><td>反転テストの確認問題</td><td>答える（全問正解で先へ）</td></tr>
+        <tr><td>予測</td><td colspan="2">「B に赤い四角を入れる」の正解率と、差があると言えるかを予測する</td></tr>
+        <tr><td>(1)–(2)</td><td>20回 → 平均 ± 標準偏差の表・グラフ・「A に赤い四角を入れる → B に赤い四角を入れる」の判定</td><td>実行して読む</td></tr>
+        <tr><td>(3)</td><td>四角なしで学習したモデルに、写真の中央を隠したテストと、まわりを隠したテストを見せる</td><td>自分のモデルが物とまわりのどちらで当てていたかを読む</td></tr>
+        <tr><td>(4)</td><td colspan="2">考察を書く（提出）。<strong>(2)・(3) の表の自分の数値を入れて根拠にする</strong>（入っていないと止まる）</td></tr>
+      </table>
+      <details>
+        <summary>参考：教員機・ケーブル画像の結果 ― 予測を書いてから開く</summary>
+        <div class="answer-content">
+          <table style="font-size:0.82rem">
+            <tr><th>モデル</th><th>訓練</th><th>A に赤い四角を入れる</th><th>B に赤い四角を入れる</th><th>A → B の 差 ÷ 標準偏差</th></tr>
+            <tr><td>CNN</td><td>四角なし</td><td>84.7 ± 7.7</td><td>84.0 ± 8.3</td><td>0.1 → 差があるとは言えない</td></tr>
+            <tr><td>CNN</td><td>クラス A に四角</td><td>99.3 ± 1.5</td><td>2.0 ± 1.8</td><td>58.4 → 差がある</td></tr>
+            <tr><td>ResNet18 凍結</td><td>四角なし</td><td>97.3 ± 2.8</td><td>98.0 ± 1.8</td><td>0.3 → 差があるとは言えない</td></tr>
+            <tr><td>ResNet18 凍結</td><td>クラス A に四角</td><td>99.3 ± 1.5</td><td>90.0 ± 6.2</td><td>2.1 → 差がある</td></tr>
+          </table>
+          <p style="font-size:0.82rem;color:#ccc;margin-top:0.3rem">CNN はほぼ四角だけで当てていた。ResNet18 凍結は落ち方が小さいが、差はある（四角にも少し頼っている）。</p>
+          <table style="font-size:0.82rem;margin-top:0.5rem">
+            <tr><th>(3) 四角なしで学習</th><th>そのまま</th><th>中央を隠す</th><th>まわりを隠す</th></tr>
+            <tr><td>CNN</td><td>84.7</td><td>82.7</td><td>57.3</td></tr>
+            <tr><td>ResNet18 凍結</td><td>98.0</td><td>69.3</td><td>72.0</td></tr>
+          </table>
+          <p style="font-size:0.82rem;color:#ccc;margin-top:0.3rem">ケーブル画像の CNN は中央を隠しても落ちない（差 ÷ 標準偏差 0.3）。ピンではなく、まわりを見て当てていた可能性がある。自分の写真では結果が変わる。</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DISCUSS ============ -->
+<section id="sec-discuss">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">まとめ</div>
+      <h2>まとめ：自分の写真に、気づかない目印はないか（20分）</h2>
+    </div>
+    <div class="card standard">
+      <p style="font-size:0.9rem;margin-bottom:0.5rem">次を考えて、<code>ex3.ipynb</code> の (4) 考察に書く。自分の写真の結果は自分にしか分からない。<strong>LLM に書かせず、自分の表の数値を根拠に書く</strong>（数値が入っていないと止まる。採点では提出した CSV の値と照らし合わせる）。</p>
+      <ol style="font-size:0.9rem;padding-left:1.4rem;line-height:1.9">
+        <li>CNN と ResNet18 凍結で、「B に赤い四角を入れる」の正解率の落ち方はどう違ったか</li>
+        <li>ResNet18 凍結が落ちにくいのはなぜか（学習する所は最後の層だけ。手前の層は ImageNet で何を見るように学習したか）</li>
+        <li>(3) で、自分のモデルは物とまわりのどちらを見て当てていたか。クラスごとに背景・机・明るさ・撮った場所や時間が違っていなかったか</li>
+        <li>それを確かめるには、どんな写真を撮って何と比べればよいか（反転テストの考え方で）</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SUBMIT ============ -->
+<section id="sec-submit">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num" style="background:#FFB800">✓</div>
+      <h2>提出前チェック</h2>
+    </div>
+    <div class="card standard">
+      <table style="font-size:0.82rem">
+        <tr><th style="width:5%"></th><th>確認項目</th></tr>
+        <tr><td><input type="checkbox"></td><td>演習1 の問題1・2 がどちらも <code>OK</code> で、振り返りを書いた</td></tr>
+        <tr><td><input type="checkbox"></td><td>復習スライド 4 枚を <code>c1_d6_slides.pdf</code> にした（自分の結果のスクリーンショットと、自分で描いた最終層の図がある。写真はない）</td></tr>
+        <tr><td><input type="checkbox"></td><td>演習2 の <code>add_token</code> が <code>OK</code> で、(3) の表が出ていて、振り返りの確認セルが <code>OK</code> になった</td></tr>
+        <tr><td><input type="checkbox"></td><td>演習3 の (2)(3) の表が出ていて、(4) 考察の確認セルが <code>OK</code> になった</td></tr>
+        <tr><td><input type="checkbox"></td><td>ノートブックを3つ（ex1・ex2・ex3）、CSV を2つ（ex2・ex3）、PDF を1つ（slides）提出する。写真は出さない</td></tr>
+        <tr><td><input type="checkbox"></td><td>zip にせず、ファイル名を変えていない</td></tr>
+      </table>
+      <div class="notion-submit"><div><strong>提出:</strong> Open-LMS の<a href="https://musashino-u.myopenlms.net/mod/assign/view.php?id=51470" target="_blank" rel="noopener" style="color:#4FC3F7">「第6回 課題提出」</a>へ各自アップロード（期限：11/12（木）13:10）</div></div>
+    </div>
+    <div class="callout-tip">
+      <h4>次回：スケーリング則</h4>
+      <p style="font-size:0.9rem">データとモデルを大きくすると、正解率はどこまで上がるか。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div>AIテクノロジデザインⅠ ─ 2026年度3学期 ─ 第6回</div>
+    <div style="margin-top:0.5rem;font-size:0.8rem;color:#666">&copy;2026 Ryota Nakamura.</div>
+  </div>
+</footer>
+
+<!-- ============ SCRIPTS ============ -->
+<script>
+// Copy button for pre blocks
+document.querySelectorAll('pre').forEach(function(pre) {
+  var btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'コピー';
+  btn.addEventListener('click', function() {
+    // ボタン自身の文字（「コピー」）を含めないよう，ボタンを除いた複製から本文を取る
+    var clone = pre.cloneNode(true);
+    clone.querySelectorAll('.copy-btn').forEach(function(b) { b.remove(); });
+    var code = clone.textContent.replace(/^(Python|JavaScript|HTML|Bash|JSON|Terminal|Directory Tree|\.zshrc|Notion テンプレート)( ── [^\n]+)?\n/, '');
+    navigator.clipboard.writeText(code).then(function() {
+      btn.textContent = 'コピーしました';
+      btn.classList.add('copied');
+      setTimeout(function() {
+        btn.textContent = 'コピー';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  });
+  pre.appendChild(btn);
+});
+
+// Click-to-copy on inline code elements
+document.querySelectorAll(':not(pre) > code').forEach(function(code) {
+  code.title = 'クリックでコピー';
+  code.addEventListener('click', function() {
+    navigator.clipboard.writeText(code.textContent).then(function() {
+      code.classList.add('copied');
+      setTimeout(function() {
+        code.classList.remove('copied');
+      }, 1500);
+    });
+  });
+});
+</script>
+
+</body>
+</html>

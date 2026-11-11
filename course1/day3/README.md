@@ -25,9 +25,10 @@ code .                           # カーネルに .venv の Python 3.12 を選�
 
 ## 提出（全員が個人で）
 
-1. 演習3 はグループで CSV を共有し，自分の `results/ex3_shared/` に集める
+1. 演習3 はグループで CSV を共有し，自分の `results/ex3_shared/` に集めて (8) の表を作る
 2. Open-LMS の「第3回 課題提出」へ zip にせずアップロード：`ex1.ipynb`，`ex2.ipynb`，`ex3.ipynb`，`c1_d3_ex2_<グループ>.csv`，`c1_d3_ex3_<グループ>.csv`
+3. CSV は `results/` 直下の自分のものを出す．中身は自分が実行した分だけで，グループ全員分をまとめなくてよい（ファイル名はグループ番号）．`ex3_shared/` の CSV は出さない
 
-オプション課題（任意）は `opt_augment.ipynb` と `c1_d3_opt3_<グループ>.csv` を同じ所へ．
+オプション課題（任意）は `opt_augment.ipynb` と `c1_d3_opt3_<グループ>.csv`（自分が実行した分だけ．`opt3_shared/` の CSV は出さない）を同じ所へ．
 
 期限：次回（10/22）の授業開始まで

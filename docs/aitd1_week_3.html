@@ -10,7 +10,7 @@
 /* ============ RESET & BASE ============ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; font-size: clamp(13px, 1.6vw, 28px); }
-html, body { overflow-x: hidden; max-width: 100%; }
+html, body { overflow-x: clip; max-width: 100%; }  /* hidden だと上のナビの sticky が効かない */
 body {
   font-family: 'Noto Sans JP', sans-serif;
   background: #111111;
@@ -475,7 +475,7 @@ a.sub-item:hover {
 <body>
 
 <!-- ============ SECTION NAV ============ -->
-<nav class="section-nav"><div style="display:flex;align-items:center;gap:0.1rem;margin-right:0.8rem;border-right:1px solid #333;padding-right:0.8rem"><span style="color:#666;font-size:0.5rem;white-space:nowrap">回:</span><a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_1.html">1</a> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_2.html">2</a> <a style="color:#4FC3F7;background:rgba(79,195,247,0.15);font-size:0.6rem;padding:0.2rem 0.5rem;border-radius:4px" href="aitd1_week_3.html">3</a> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">4</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">5</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">6</span> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">7</span> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="index.html">全体</a></div>
+<nav class="section-nav"><div style="display:flex;align-items:center;gap:0.1rem;margin-right:0.8rem;border-right:1px solid #333;padding-right:0.8rem"><span style="color:#666;font-size:0.5rem;white-space:nowrap">回:</span><a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_1.html">1</a> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_2.html">2</a> <a style="color:#4FC3F7;background:rgba(79,195,247,0.15);font-size:0.6rem;padding:0.2rem 0.5rem;border-radius:4px" href="aitd1_week_3.html">3</a> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_4.html">4</a> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_5.html">5</a> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="aitd1_week_6.html">6</a> <span style="color:#444;font-size:0.6rem;padding:0.2rem 0.5rem">7</span> <a style="color:#999;font-size:0.6rem;padding:0.2rem 0.5rem" href="index.html">全体</a></div>
   <a href="#sec-overview">今日やること</a>
   <a href="#sec-flow">本日の流れ</a>
   <a href="#sec-review" class="nav-assignment">復習プレゼン</a>
@@ -523,12 +523,13 @@ a.sub-item:hover {
       <h3>📤 提出ガイド（<strong>全員が個人で提出</strong>・zip にしない）</h3>
       <div class="submission-items">
         <a href="#sec-ex1" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">1</span><span class="tag tag-standard">演習1</span>ex1.ipynb（ワークシートの記録と振り返り）</a>
-        <a href="#sec-ex2" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習2</span>ex2.ipynb ／ c1_d3_ex2_&lt;グループ&gt;.csv</a>
-        <a href="#sec-ex3" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習3</span>ex3.ipynb ／ c1_d3_ex3_&lt;グループ&gt;.csv</a>
-        <a href="#sec-opt" class="sub-item" style="text-decoration:none;color:inherit;border-color:#66BB6A"><span class="sub-count" style="background:#66BB6A">任意</span><span class="tag" style="background:#0a1a2e;color:#66BB6A">オプション</span>opt_augment.ipynb ／ c1_d3_opt3_&lt;グループ&gt;.csv</a>
+        <a href="#sec-ex2" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習2</span>ex2.ipynb ／ c1_d3_ex2_&lt;グループ&gt;.csv（自分の実行分）</a>
+        <a href="#sec-ex3" class="sub-item" style="text-decoration:none;color:inherit"><span class="sub-count">2</span><span class="tag tag-standard">演習3</span>ex3.ipynb ／ c1_d3_ex3_&lt;グループ&gt;.csv（自分の実行分）</a>
+        <a href="#sec-opt" class="sub-item" style="text-decoration:none;color:inherit;border-color:#66BB6A"><span class="sub-count" style="background:#66BB6A">任意</span><span class="tag" style="background:#0a1a2e;color:#66BB6A">オプション</span>opt_augment.ipynb ／ c1_d3_opt3_&lt;グループ&gt;.csv（自分の実行分）</a>
       </div>
       <div style="background:#0a1a2e;border:1px solid #2a6a9a;border-radius:8px;padding:0.8rem 1rem;margin-top:1rem;font-size:0.85rem;color:#81D4FA">
-        <strong>手順:</strong> ① 演習3 はグループで CSV を共有 → ② 自分の <code>results/</code> に集める → ③ Open-LMS の<a href="https://musashino-u.myopenlms.net/mod/assign/view.php?id=45840" target="_blank" rel="noopener" style="color:#4FC3F7">「第3回 課題提出」</a>へ<strong>自分で</strong>アップロード
+        <strong>手順:</strong> ① 演習3 はグループで CSV を共有し、(8) の表を全員分で作る → ② ノートブックを保存する → ③ Open-LMS の<a href="https://musashino-u.myopenlms.net/mod/assign/view.php?id=45840" target="_blank" rel="noopener" style="color:#4FC3F7">「第3回 課題提出」</a>へ<strong>自分で</strong>アップロード
+        <div style="margin-top:0.4rem"><strong>CSV は自分が実行した分だけ</strong>を出す。<code>results/</code> 直下にある自分の CSV（<code>c1_d3_ex2_&lt;グループ&gt;.csv</code>・<code>c1_d3_ex3_&lt;グループ&gt;.csv</code>）には、自分が実行した行だけが入っている。ファイル名はグループ番号だが、グループ全員分をまとめなくてよい。仲間から受け取った <code>results/ex3_shared/</code> の CSV は出さない（全員が自分の分を出せば、グループの結果は教員がまとめる）。</div>
       </div>
       <div style="background:#0a1a2e;border:1px solid #2a6a9a;border-radius:8px;padding:0.8rem 1rem;margin-top:0.5rem;font-size:0.85rem;color:#FFB800">
         <strong>期限：</strong>次回（10/22）の授業開始まで
@@ -851,7 +852,7 @@ gap <span class="op">=</span> train_acc_list[<span class="op">-</span><span clas
         <tr><td>(4)–(5)</td><td>モデル・最適化手法・学習（早期終了つき）</td><td><strong style="color:#FFB800">TODO 1・2・3</strong></td></tr>
         <tr><td>(6)</td><td>自分の学習曲線</td><td>—</td></tr>
         <tr><td><strong>✋ 1</strong></td><td colspan="2">演習2と比べて曲線のどこが変わったか</td></tr>
-        <tr><td>(7)・(共有)</td><td>CSV に記録 → グループで共有</td><td>受け取った CSV を <code>results/ex3_shared/</code> に入れる</td></tr>
+        <tr><td>(7)・(共有)</td><td>CSV に記録 → グループで共有</td><td>受け取った CSV を <code>results/ex3_shared/</code> に入れる（これは表を作るため。提出は自分の CSV だけ）</td></tr>
         <tr><td>(8)</td><td>全員分の表と検証損失のグラフ</td><td>画面に出して討議する</td></tr>
         <tr><td><strong>✋ 2</strong></td><td colspan="2">どの方法が一番効いたか、何を犠牲にしたか</td></tr>
         <tr><td>(9)</td><td colspan="2">考察を書く（提出）</td></tr>
@@ -941,7 +942,7 @@ optimizer <span class="op">=</span> optim.Adam(model.parameters(), lr<span class
         <li>3〜4 グループで組み、4条件 × <code>SEED</code>（0〜4）を分担する（1回 10 秒）</li>
         <li>(1) に予測 → (2) に担当 → (3) を実行 → CSV を <code>results/opt3_shared/</code> に集める → (5) の表 → (6) の考察</li>
       </ol>
-      <p style="font-size:0.85rem;color:#ccc;margin-top:0.3rem"><strong>提出（任意）：</strong><code>opt_augment.ipynb</code> と自分の <code>c1_d3_opt3_&lt;グループ&gt;.csv</code> を「第3回 課題提出」へ。期限は次回の授業開始まで。</p>
+      <p style="font-size:0.85rem;color:#ccc;margin-top:0.3rem"><strong>提出（任意）：</strong><code>opt_augment.ipynb</code> と自分の <code>c1_d3_opt3_&lt;グループ&gt;.csv</code>（自分が実行した分だけ。<code>results/opt3_shared/</code> の CSV は出さない）を「第3回 課題提出」へ。期限は次回の授業開始まで。</p>
       <p style="font-size:0.82rem;color:#999;margin-top:0.3rem">検証は 30 枚なので、1回の差は乱数のぶれと区別しにくい。同じ条件を複数の SEED で実行する。</p>
     </div>
   </div>
@@ -960,7 +961,7 @@ optimizer <span class="op">=</span> optim.Adam(model.parameters(), lr<span class
         <tr><td><input type="checkbox"></td><td>演習1 の <code>ex1.ipynb</code> に②の表と振り返り4問を書いた</td></tr>
         <tr><td><input type="checkbox"></td><td>演習2 の学習曲線が出ていて、考察を書いた</td></tr>
         <tr><td><input type="checkbox"></td><td>演習3 の (8) の表に、グループで分担した方法がそろっていて、考察を書いた</td></tr>
-        <tr><td><input type="checkbox"></td><td>ノートブックを3つ（ex1・ex2・ex3）と CSV を2つ（ex2・ex3）提出する</td></tr>
+        <tr><td><input type="checkbox"></td><td>ノートブックを3つ（ex1・ex2・ex3）と CSV を2つ（ex2・ex3）提出する。CSV は <code>results/</code> 直下にある自分の CSV（自分が実行した分だけ。<code>ex3_shared/</code> の CSV は出さない）</td></tr>
         <tr><td><input type="checkbox"></td><td>zip にせず、ファイル名を変えていない</td></tr>
         <tr><td><input type="checkbox"></td><td><a href="https://musashino-u.myopenlms.net/mod/questionnaire/view.php?id=45842" target="_blank" rel="noopener" style="color:#4FC3F7">グループメンバーの評価</a>（Open-LMS）に回答した</td></tr>
       </table>
