@@ -1,0 +1,38 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>c1_d7_agi</title>
+<style>
+@page{size:A4;margin:16mm 17mm}
+body{font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;font-size:10pt;line-height:1.65;color:#111;margin:0}
+h1{font-size:13pt;margin:0 0 2px}
+.meta{font-size:8.5pt;color:#555;margin-bottom:10px}
+h2{font-size:10.5pt;margin:12px 0 3px;border-left:4px solid #333;padding-left:6px}
+p{margin:0 0 5px}
+ol{margin:0 0 4px;padding-left:1.4em}
+li{margin-bottom:5px}
+.src{font-size:8pt;color:#444;word-break:break-all}
+table{border-collapse:collapse;font-size:8.5pt;margin:4px 0 6px}
+td,th{border:1px solid #999;padding:1px 6px;text-align:right}
+th{background:#eee}
+</style></head><body>
+<h1>第7回 議論：スケールすれば AGI に近づくか</h1>
+<div class="meta">AI 技術開発Ⅰ 第7回（c1_d7_agi）</div>
+
+<h2>1　自分の立場（近づかない）</h2>
+<p>私は、データ・モデル・計算量を大きくし続けるだけでは AGI に届かないと考える。理由は、大きなモデルでも問題の書き方を少し変えるだけで成績が大きく崩れ、学習で見ていない問題に当てはめる力（汎化）の弱さはスケールでは消えず、しかも大きくするほど誤り率の下がり方は鈍っていくからである。</p>
+
+<h2>2　調べた根拠</h2>
+<ol>
+<li>2024年10月に Apple の Mirzadeh らが、算数の文章題に答えと関係のない一文を足すだけで、最新のモデルすべてで正解率が最大 65% 下がったと報告した。これは、大きなモデルでも問題の意味を理解して解いているのではなく、訓練で見た問題の形に頼っていることを示している。最新の大きなモデルすべてで起きたので、大きくするだけではこの弱さは消えないと言える。
+<div class="src">出典：Mirzadeh et al., “GSM-Symbolic: Understanding the Limitations of Mathematical Reasoning in Large Language Models”, arXiv:2410.05229（2024年10月7日）https://arxiv.org/abs/2410.05229</div></li>
+<li>同じ論文で、算数の問題の人名や数値だけを入れ替えた 50 通りの問題セットを解かせたところ、Gemma2-9B は一番良いセットと一番悪いセットの正解率の差が 12 ポイント以上、Phi-3.5-mini は約 15 ポイントあった。また、数値だけを変えても、調べたすべてのモデルで成績が下がった。解き方が同じ問題で数値を変えただけで成績が揺れるので、モデルは解き方を身につけたのではなく、見たことのある問題に頼っていると言え、大きくするだけでは汎化の弱さが残ることを支えている。
+<div class="src">出典：同上 arXiv:2410.05229（要旨と 4.1 節）</div></li>
+</ol>
+
+<h2>3　反対の立場への答え</h2>
+<p>グループの議論で「近づく」の立場から、ARC-AGI-3 では2026年11月に AI の最高スコアが 81.2% に達し、初めて見る環境でもルールや目標を理解して行動する力が伸びているので、スケールや新しい技術の進歩で AGI に近づいていくという意見が出た。これに対して私は、今まで難しかった問題に対応できるようになってきた点は納得したが、ARC Prize 自身が「これが AGI だと主張しているのではない」と書いているように、1つのテストを解けたことと、どんな新しい課題にも対応できることは別だと考える。また、その伸びは答える前に長く考える仕組みや道具を使う工夫と一緒に出たもので、モデルを大きくしただけで出たとは言えない。</p>
+
+<h2>4　今日の実験とのつながり</h2>
+<table><tr><th>幅</th><th>直線の予想</th><th>実測の平均</th><th>実測 − 予想</th></tr>
+<tr><td>4</td><td>13.4%</td><td>16.1%</td><td>+2.6</td></tr>
+<tr><td>32</td><td>10.1%</td><td>11.1%</td><td>+1.0</td></tr></table>
+<p>幅 32 で 実測 − 予想 は +1.0 ポイントで、直線の予想は外れた（差 ÷ 標準偏差 2.3）。4 つの幅すべてで実測が予想より悪く、ここから、枚数を増やせば誤り率は下がり続けるが、その下がり方は直線よりも鈍っていき、大きくするだけで限りなく良くなるわけではないと言える。ただし、FashionMNIST の小さな CNN で 16000 枚まで試しただけなので、何兆語ものデータで学習する LLM でも同じように直線が曲がるとは言えない。</p>
+</body></html>
