@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第7回 スライド：スケールすれば賢くなるのか ― AlexNet から 2026 年まで | AI_TD1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0b0b; --surface:#161616; --card:#1d1d1d; --line:#333;
+  --ink:#f2f2f2; --ink2:#c8c8c8; --muted:#8a8a8a;
+  --blue:#4FC3F7; --amber:#FFB800; --red:#FF6B6B; --green:#81C784;
+  --scratch:#B97A20; --pre:#2F8FCC;           /* 図のマーク：ゼロから学習／学習済み（暗い背景で検証済み） */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP","Hiragino Sans",sans-serif}
+.deck{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.slide{position:absolute;width:1280px;height:720px;background:var(--surface);border-radius:14px;padding:46px 60px 40px;
+  display:none;flex-direction:column;transform-origin:center center;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.slide.on{display:flex}
+.kicker{font-size:17px;font-weight:700;color:var(--blue);letter-spacing:.06em;margin-bottom:6px}
+h1{font-size:46px;font-weight:900;line-height:1.25}
+h2{font-size:34px;font-weight:900;line-height:1.3;margin-bottom:18px}
+h3{font-size:21px;font-weight:700;margin-bottom:8px}
+p,li,td,th{font-size:20px;line-height:1.6;color:var(--ink2)}
+strong{color:var(--ink)}
+.lead{font-size:23px;color:var(--ink2);margin-bottom:18px}
+.small{font-size:16px;color:var(--muted)}
+code,.mono{font-family:"JetBrains Mono",monospace;font-size:.9em;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:5px;padding:0 6px;color:#e6e6e6}
+pre{font-family:"JetBrains Mono",monospace;font-size:16.5px;line-height:1.55;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:10px;padding:14px 18px;color:#e6e6e6;white-space:pre}
+pre .c{color:#7d8b99}
+pre .k{color:var(--blue)}
+pre .hl{background:rgba(255,184,0,.16);border-radius:3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px;flex:1;min-height:0}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.card.b{border-left:5px solid var(--blue)} .card.a{border-left:5px solid var(--amber)} .card.r{border-left:5px solid var(--red)} .card.g{border-left:5px solid var(--green)}
+table{border-collapse:collapse;width:100%}
+th{background:#202634;color:var(--blue);font-weight:700;text-align:left;padding:8px 12px;font-size:18px}
+td{border-top:1px solid #2a2a2a;padding:8px 12px;font-size:18px;vertical-align:top}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+ul.pt{list-style:none} ul.pt li{position:relative;padding-left:22px;margin-bottom:6px}
+ul.pt li::before{content:"";position:absolute;left:4px;top:.72em;width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.chip{display:inline-block;padding:2px 12px;border-radius:100px;background:#0a1a2e;color:var(--blue);font-size:17px;margin:0 6px 6px 0}
+.tag{display:inline-block;font-size:15px;font-weight:700;padding:1px 10px;border-radius:5px;margin-right:6px;vertical-align:2px}
+.tag.w4{background:#2a2410;color:var(--amber)} .tag.w5{background:#0a1a2e;color:var(--blue)}
+.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;padding-top:10px}
+.pageno{font-size:15px;color:var(--muted)}
+svg text{font-family:"Noto Sans JP","Hiragino Sans",sans-serif}
+.nav{position:fixed;bottom:14px;right:18px;display:flex;gap:8px;z-index:5}
+.nav button{background:#222;color:#ddd;border:1px solid #444;border-radius:8px;padding:6px 14px;font-size:15px;cursor:pointer}
+.nav button:hover{background:#333}
+.bar{position:fixed;left:0;top:0;height:4px;background:var(--blue);z-index:5;transition:width .2s}
+.back{position:fixed;top:12px;left:16px;font-size:14px;color:#9ad;z-index:5;text-decoration:none}
+@media print{
+  .nav,.bar,.back{display:none}
+  .deck{position:static;display:block}
+  .slide{display:flex !important;position:relative;transform:none !important;margin:0 auto;page-break-after:always;box-shadow:none}
+  @page{size:1280px 720px;margin:0}
+}
+
+.tag.p1{background:#0a1a2e;color:var(--blue)} .tag.p2{background:#10261a;color:var(--green)}
+.tag.p3{background:#2a1414;color:var(--red)} .tag.p4{background:#2a2410;color:var(--amber)}
+.big{font-size:25px;line-height:1.6;color:var(--ink)}
+.tight th,.tight td{font-size:16.5px;padding:5px 10px;line-height:1.45}
+.ph{width:170px;height:170px;object-fit:cover;object-position:50% 20%;border-radius:12px;border:1px solid #444;flex:none}
+.who{display:flex;gap:22px;align-items:flex-start}
+.quote{border-left:4px solid var(--amber);padding:6px 16px;margin:10px 0;background:#1a1a1a;border-radius:0 8px 8px 0}
+.quote .en{font-size:18px;color:#e6e6e6;font-style:italic;line-height:1.5}
+.quote .ja{font-size:17px;color:var(--ink2);line-height:1.5}
+.src td{font-size:12.5px;padding:2px 8px;line-height:1.32} .src th{font-size:13px;padding:3px 8px}
+.src a{color:#9ad;text-decoration:none;word-break:break-all}
+ul.pt li{font-size:19px}
+.terms{margin-top:auto;border-top:1px solid #333;padding-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:1px 28px}
+.terms div{font-size:13.5px;line-height:1.5;color:var(--ink2)} .terms b{color:var(--amber);font-weight:700;margin-right:.5em}
+.terms+.foot{margin-top:0;padding-top:6px}
+.how{display:grid;grid-template-columns:repeat(3,372px);gap:22px;margin-top:6px} .how div{font-size:14px;line-height:1.5;color:var(--ink2)} .how b{display:block;color:var(--amber);font-size:13px}
+.glh{font-size:13px;font-weight:900;border-bottom:1px solid #333;margin-bottom:2px}
+.lg{display:flex;flex-direction:column;gap:1px;margin:-8px 0 5px} .lg span{font-size:15.5px;color:var(--ink2)} .lg b{margin-right:.8em}
+.gl{display:grid;grid-template-columns:max-content 1fr;column-gap:12px;font-size:13px;line-height:1.5;color:var(--ink2);white-space:nowrap} .gl b{font-weight:700}
+</style>
+</head>
+<body>
+<a class="back" href="../aitd1_week_7.html">← 第7回の授業ページ</a>
+<div class="bar" id="bar"></div>
+<div class="deck" id="deck">
+
+<section class="slide" style="justify-content:center">
+  <div class="kicker">AIテクノロジデザインⅠ ― 第7回 スケーリング則</div>
+  <h1>スケールすれば賢くなるのか<br>― AlexNet（2012）から 2026 年まで</h1>
+  <p class="lead" style="margin-top:22px">「大きくすれば賢くなる」という流れと、「大きくするだけでは AGI に届かない」という流れ。<br>2つの変遷を、論文と公式資料でたどる。</p>
+  <div class="grid3" style="margin-top:10px">
+    <div class="card b"><h3>スケールの流れ</h3><p>AlexNet → Transformer → スケーリング則</p></div>
+    <div class="card g"><h3>3人の今</h3><p>ヒントン・クリジェフスキー・サツケバー</p></div>
+    <div class="card r"><h3>もう1つの流れと今</h3><p>スケールだけでは AGI に届かないのか</p></div>
+  </div>
+  <div class="terms"><div><b>スケール（スケーリング）</b>モデルの大きさ・学習データの量・計算量を大きくすること</div><div><b>AGI（エージーアイ・汎用人工知能）</b>人間ができる知的な仕事を幅広くこなせる AI。決まった定義はない</div><div><b>AlexNet（アレックスネット）</b>2012年に画像認識の大会で優勝した、深層学習のモデル</div><div><b>LLM（エルエルエム・大規模言語モデル）</b>大量の文章で学習し、次に来る言葉を予測するモデル。ChatGPT など</div></div>
+  <div class="foot"><span class="small">事実は 2026年11月12日 に確かめたもの。出典は最後の2枚</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker">全体図</div>
+  <h2>2つの流れは、同じ14年間に並んで進んできた</h2>
+  <div class="lg"><span><b style="color:#4FC3F7">● 上の段：スケールすれば賢くなる</b>モデル・データ・計算量を大きくして、性能を上げてきた出来事</span>
+  <span><b style="color:#FF6B6B">◆ 下の段：スケールだけでは AGI に届かない</b>大きくするだけでは足りないと指摘した人・論文・調査</span></div>
+  <svg viewBox="0 0 1160 296" width="1160" height="296" style="flex:none" role="img" aria-label="2つの流れの年表"><rect x="0" y="2" width="1160" height="134" rx="8" fill="#4FC3F7" opacity=".07"/><rect x="0" y="180" width="1160" height="112" rx="8" fill="#FF6B6B" opacity=".07"/><text x="12" y="22" fill="#4FC3F7" font-size="13" font-weight="700" text-anchor="start">上の段</text><text x="12" y="286" fill="#FF6B6B" font-size="13" font-weight="700" text-anchor="start">下の段</text><line x1="70" y1="143" x2="70" y2="157" stroke="#666"/><text x="70" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2012</text><line x1="142" y1="143" x2="142" y2="157" stroke="#666"/><text x="142" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2013</text><line x1="214" y1="143" x2="214" y2="157" stroke="#666"/><text x="214" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2014</text><line x1="286" y1="143" x2="286" y2="157" stroke="#666"/><text x="286" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2015</text><line x1="358" y1="143" x2="358" y2="157" stroke="#666"/><text x="358" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2016</text><line x1="430" y1="143" x2="430" y2="157" stroke="#666"/><text x="430" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2017</text><line x1="502" y1="143" x2="502" y2="157" stroke="#666"/><text x="502" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2018</text><line x1="574" y1="143" x2="574" y2="157" stroke="#666"/><text x="574" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2019</text><line x1="646" y1="143" x2="646" y2="157" stroke="#666"/><text x="646" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2020</text><line x1="718" y1="143" x2="718" y2="157" stroke="#666"/><text x="718" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2021</text><line x1="790" y1="143" x2="790" y2="157" stroke="#666"/><text x="790" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2022</text><line x1="862" y1="143" x2="862" y2="157" stroke="#666"/><text x="862" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2023</text><line x1="934" y1="143" x2="934" y2="157" stroke="#666"/><text x="934" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2024</text><line x1="1006" y1="143" x2="1006" y2="157" stroke="#666"/><text x="1006" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2025</text><line x1="1078" y1="143" x2="1078" y2="157" stroke="#666"/><text x="1078" y="173" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2026</text><line x1="40" y1="150" x2="1110" y2="150" stroke="#666" stroke-width="2"/><line x1="70" y1="134" x2="70" y2="145" stroke="#4FC3F7" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="70" cy="150" r="6" fill="#4FC3F7"/><text x="70" y="108" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">AlexNet</text><text x="70" y="126" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">6,000万パラメータ</text><line x1="430" y1="72" x2="430" y2="145" stroke="#4FC3F7" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="430" cy="150" r="6" fill="#4FC3F7"/><text x="430" y="46" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">Transformer</text><text x="430" y="64" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">並列に学習できる構造</text><line x1="574" y1="134" x2="574" y2="145" stroke="#4FC3F7" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="574" cy="150" r="6" fill="#4FC3F7"/><text x="574" y="108" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">苦い教訓</text><text x="574" y="126" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">計算を生かす手法が勝つ</text><line x1="646" y1="72" x2="646" y2="145" stroke="#4FC3F7" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="646" cy="150" r="6" fill="#4FC3F7"/><text x="646" y="46" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">GPT-3・スケーリング則</text><text x="646" y="64" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">1,750億パラメータ</text><line x1="790" y1="134" x2="790" y2="145" stroke="#4FC3F7" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="790" cy="150" r="6" fill="#4FC3F7"/><text x="790" y="108" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">Chinchilla（チンチラ）</text><text x="790" y="126" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">データも同じ割合で増やす</text><line x1="1006" y1="72" x2="1006" y2="145" stroke="#4FC3F7" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="1006" cy="150" r="6" fill="#4FC3F7"/><text x="1006" y="46" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">Stargate</text><text x="1006" y="64" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">5,000億ドルの計画</text><line x1="1078" y1="134" x2="1078" y2="145" stroke="#4FC3F7" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="1078" cy="150" r="6" fill="#4FC3F7"/><text x="1078" y="108" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">計算量 年5倍</text><text x="1078" y="126" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">ARC-AGI-2 で95%</text><line x1="502" y1="156" x2="502" y2="188" stroke="#FF6B6B" stroke-width="1.5" stroke-dasharray="3 4"/><rect x="496" y="144" width="12" height="12" fill="#FF6B6B" transform="rotate(45 502 150)"/><text x="502" y="204" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">マーカス</text><text x="502" y="222" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">深層学習だけでは不足</text><line x1="574" y1="156" x2="574" y2="242" stroke="#FF6B6B" stroke-width="1.5" stroke-dasharray="3 4"/><rect x="568" y="144" width="12" height="12" fill="#FF6B6B" transform="rotate(45 574 150)"/><text x="574" y="258" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">ショレ：ARC</text><text x="574" y="276" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">知能＝新しい課題を学ぶ効率</text><line x1="790" y1="156" x2="790" y2="188" stroke="#FF6B6B" stroke-width="1.5" stroke-dasharray="3 4"/><rect x="784" y="144" width="12" height="12" fill="#FF6B6B" transform="rotate(45 790 150)"/><text x="790" y="204" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">ルカン・マーカス</text><text x="790" y="222" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">世界モデル／「壁」</text><line x1="934" y1="156" x2="934" y2="242" stroke="#FF6B6B" stroke-width="1.5" stroke-dasharray="3 4"/><rect x="928" y="144" width="12" height="12" fill="#FF6B6B" transform="rotate(45 934 150)"/><text x="934" y="258" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">サツケバー</text><text x="934" y="276" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">「事前学習は終わる」</text><line x1="1006" y1="156" x2="1006" y2="188" stroke="#FF6B6B" stroke-width="1.5" stroke-dasharray="3 4"/><rect x="1000" y="144" width="12" height="12" fill="#FF6B6B" transform="rotate(45 1006 150)"/><text x="1006" y="204" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">AAAI 調査 76%</text><text x="1006" y="222" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">Apple 論文・サットン</text><line x1="1078" y1="156" x2="1078" y2="242" stroke="#FF6B6B" stroke-width="1.5" stroke-dasharray="3 4"/><rect x="1072" y="144" width="12" height="12" fill="#FF6B6B" transform="rotate(45 1078 150)"/><text x="1078" y="258" fill="#fff" font-size="15.5" font-weight="700" text-anchor="middle">ARC-AGI-3</text><text x="1078" y="276" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="middle">3月 0.51% → 秋に 81%</text></svg>
+  <div class="grid2" style="gap:24px;flex:none;margin-top:4px">
+    <div><div class="glh" style="color:#4FC3F7">上の段の用語</div><div class="gl"><b style="color:#4FC3F7">AlexNet（アレックスネット）</b><span>深い CNN。2012年の画像認識の大会で優勝</span><b style="color:#4FC3F7">Transformer（トランスフォーマー）</b><span>注意機構だけで作る構造。今の LLM の土台</span><b style="color:#4FC3F7">苦い教訓</b><span>サットンの文章。計算量を生かす手法が勝つ</span><b style="color:#4FC3F7">スケーリング則</b><span>大きくすると損失が決まった割合で下がる経験則</span><b style="color:#4FC3F7">Chinchilla（チンチラ）</b><span>人ではなくモデル名。データも同じ割合で増やす</span><b style="color:#4FC3F7">Stargate（スターゲート）</b><span>OpenAI などの AI データセンター建設計画</span><b style="color:#4FC3F7">計算量 年5倍</b><span>最先端モデルの学習の計算量の伸び（Epoch AI）</span></div></div>
+    <div><div class="glh" style="color:#FF6B6B">下の段の用語</div><div class="gl"><b style="color:#FF6B6B">マーカス</b><span>認知科学者。深層学習だけでは信頼できる AI にならないと批判</span><b style="color:#FF6B6B">ARC（アーク）</b><span>ショレのテスト。初めて見るパズルの規則を例から見つける</span><b style="color:#FF6B6B">世界モデル</b><span>ルカンの主張。世界の動きを予測する仕組みが LLM にはない</span><b style="color:#FF6B6B">「壁」</b><span>マーカスの記事「深層学習は壁にぶつかっている」（2022）</span><b style="color:#FF6B6B">「事前学習は終わる」</b><span>サツケバーの講演。学習に使えるデータは有限だという指摘</span><b style="color:#FF6B6B">AAAI 調査 76%</b><span>読みはトリプルエーアイ。研究者の76%が「拡大では AGI に届きにくい」</span><b style="color:#FF6B6B">ARC-AGI-2・3</b><span>第2版・第3版。第3版は公開時 0.51% → 2026年秋に 81%</span></div></div>
+  </div>
+  <div class="foot"><span class="small">スケール：モデルの大きさ・データの量・計算量を大きくすること／AGI：人間ができる知的な仕事を幅広くこなせる AI</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 スケールの流れ</span>1/8</div>
+  <h2>なぜ AlexNet から説明を始めるのか</h2>
+
+  <div class="grid2" style="gap:30px">
+    <div>
+      <h3>画像認識の大会（ILSVRC）の top-5 誤り率</h3>
+      <svg viewBox="0 0 520 196" width="520" height="196" role="img" aria-label="top-5 誤り率の比較"><rect x="0" y="20" width="423.0" height="40" rx="5" fill="#8a8a8a"/><text x="433.0" y="47" fill="#fff" font-size="20" font-weight="900" text-anchor="start">28.2%</text><text x="0" y="15" fill="#ccc" font-size="14" font-weight="400" text-anchor="start">2010年の最高（従来の手法）</text><rect x="0" y="82" width="393.0" height="40" rx="5" fill="#8a8a8a"/><text x="403.0" y="109" fill="#fff" font-size="20" font-weight="900" text-anchor="start">26.2%</text><text x="0" y="77" fill="#ccc" font-size="14" font-weight="400" text-anchor="start">2012年の2位（従来の手法）</text><rect x="0" y="144" width="229.5" height="40" rx="5" fill="#4FC3F7"/><text x="239.5" y="171" fill="#fff" font-size="20" font-weight="900" text-anchor="start">15.3%</text><text x="0" y="139" fill="#ccc" font-size="14" font-weight="400" text-anchor="start">2012年 AlexNet（データから学ぶ）</text></svg>
+      <p class="small">従来の手法：画像のどこを見るか（特徴）の計算方法を、人が設計していた</p>
+    </div>
+    <div>
+      <table class="tight">
+        <tr><th style="width:2.2rem"></th><th>理由</th></tr>
+        <tr><td>1</td><td><strong>「大きなモデル＋大量のデータ＋GPU」が初めて大差で勝った。</strong>2年かけて 2 ポイントしか下がらなかった誤り率が、一度に約 11 ポイント下がった</td></tr>
+        <tr><td>2</td><td><strong>論文自身が「スケールすれば良くなる」と書いていた</strong>（下の引用）。ネットワークの大きさを決めたのは GPU のメモリと学習時間だった</td></tr>
+        <tr><td>3</td><td><strong>作った3人が、その後の2つの流れの中心にいる。</strong>GPT を進めた人も、「研究の時代へ」と言った人も、AI の危険を警告する人もこの3人の中にいる</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="quote"><div class="en">“All of our experiments suggest that our results can be improved simply by waiting for faster GPUs and bigger datasets to become available.”</div><div class="ja">私たちの実験はすべて、より速い GPU とより大きなデータセットが手に入るのを待つだけで、結果が良くなることを示している ― AlexNet の論文（2012）</div></div>
+  <div class="terms"><div><b>特徴</b>画像のどこに注目するかを数で表したもの。昔は計算方法を人が設計した</div><div><b>top-5（トップファイブ）誤り率</b>モデルが挙げた上位5つの候補に、正解が入らなかった割合</div><div><b>ILSVRC</b>ImageNet（100万枚超の写真）で画像認識の正確さを競う大会</div><div><b>GPU（ジーピーユー）</b>同じ計算を大量に並べて速く行える部品。もとは画像表示用</div></div>
+  <div class="foot"><span class="small">Krizhevsky, Sutskever, Hinton（NeurIPS 2012）。2010年の最高 28.2% も同じ論文による</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 スケールの流れ</span>2/8</div>
+  <h2>2012年 AlexNet：大きなモデル・大量のデータ・GPU</h2>
+
+  <div class="grid2" style="gap:30px">
+    <div>
+      <svg viewBox="0 0 600 220" width="560" height="205" role="img" aria-label="AlexNet の構造"><rect x="24" y="25.0" width="34" height="150" rx="4" fill="#555" opacity=".85"/><text x="41.0" y="196" fill="#ddd" font-size="12.5" font-weight="700" text-anchor="middle">入力</text><text x="41.0" y="213" fill="#999" font-size="12" font-weight="400" text-anchor="middle">224×224×3</text><line x1="62" y1="100" x2="88" y2="100" stroke="#777" stroke-width="2"/><rect x="92" y="34.0" width="30" height="132" rx="4" fill="#4FC3F7" opacity=".85"/><text x="107.0" y="196" fill="#ddd" font-size="12.5" font-weight="700" text-anchor="middle">畳み込み1</text><text x="107.0" y="213" fill="#999" font-size="12" font-weight="400" text-anchor="middle">96</text><line x1="126" y1="100" x2="152" y2="100" stroke="#777" stroke-width="2"/><rect x="156" y="46.0" width="34" height="108" rx="4" fill="#4FC3F7" opacity=".85"/><text x="173.0" y="196" fill="#ddd" font-size="12.5" font-weight="700" text-anchor="middle">畳み込み2</text><text x="173.0" y="213" fill="#999" font-size="12" font-weight="400" text-anchor="middle">256</text><line x1="194" y1="100" x2="220" y2="100" stroke="#777" stroke-width="2"/><rect x="224" y="58.0" width="38" height="84" rx="4" fill="#4FC3F7" opacity=".85"/><text x="243.0" y="196" fill="#ddd" font-size="12.5" font-weight="700" text-anchor="middle">畳み込み3</text><text x="243.0" y="213" fill="#999" font-size="12" font-weight="400" text-anchor="middle">384</text><line x1="266" y1="100" x2="292" y2="100" stroke="#777" stroke-width="2"/><rect x="296" y="58.0" width="38" height="84" rx="4" fill="#4FC3F7" opacity=".85"/><text x="315.0" y="196" fill="#ddd" font-size="12.5" font-weight="700" text-anchor="middle">畳み込み4</text><text x="315.0" y="213" fill="#999" font-size="12" font-weight="400" text-anchor="middle">384</text><line x1="338" y1="100" x2="364" y2="100" stroke="#777" stroke-width="2"/><rect x="368" y="58.0" width="34" height="84" rx="4" fill="#4FC3F7" opacity=".85"/><text x="385.0" y="196" fill="#ddd" font-size="12.5" font-weight="700" text-anchor="middle">畳み込み5</text><text x="385.0" y="213" fill="#999" font-size="12" font-weight="400" text-anchor="middle">256</text><line x1="406" y1="100" x2="432" y2="100" stroke="#777" stroke-width="2"/><rect x="436" y="25.0" width="22" height="150" rx="4" fill="#FFB800" opacity=".85"/><text x="447.0" y="196" fill="#ddd" font-size="12.5" font-weight="700" text-anchor="middle">全結合6</text><text x="447.0" y="213" fill="#999" font-size="12" font-weight="400" text-anchor="middle">4096</text><line x1="462" y1="100" x2="488" y2="100" stroke="#777" stroke-width="2"/><rect x="492" y="25.0" width="22" height="150" rx="4" fill="#FFB800" opacity=".85"/><text x="503.0" y="196" fill="#ddd" font-size="12.5" font-weight="700" text-anchor="middle">全結合7</text><text x="503.0" y="213" fill="#999" font-size="12" font-weight="400" text-anchor="middle">4096</text><line x1="518" y1="100" x2="544" y2="100" stroke="#777" stroke-width="2"/><rect x="548" y="65.0" width="22" height="70" rx="4" fill="#81C784" opacity=".85"/><text x="559.0" y="196" fill="#ddd" font-size="12.5" font-weight="700" text-anchor="middle">出力8</text><text x="559.0" y="213" fill="#999" font-size="12" font-weight="400" text-anchor="middle">1000</text></svg>
+      <ul class="pt" style="margin-top:8px">
+        <li>畳み込み 5 層＋全結合 3 層。<strong>6,000万</strong>パラメータ・65万ニューロン</li>
+        <li>ImageNet の <strong>120万枚</strong>で学習</li>
+        <li><strong>GPU（GTX 580・3GB）2枚</strong>で 5〜6 日</li>
+      </ul>
+    </div>
+    <div>
+      <h3>ILSVRC-2012 の top-5 誤り率</h3>
+      <svg viewBox="0 0 520 134" width="520" height="134" role="img" aria-label="top-5 誤り率の比較"><rect x="0" y="20" width="393.0" height="40" rx="5" fill="#8a8a8a"/><text x="403.0" y="47" fill="#fff" font-size="20" font-weight="900" text-anchor="start">26.2%</text><text x="0" y="15" fill="#ccc" font-size="14" font-weight="400" text-anchor="start">2位（従来の手法）</text><rect x="0" y="82" width="229.5" height="40" rx="5" fill="#4FC3F7"/><text x="239.5" y="109" fill="#fff" font-size="20" font-weight="900" text-anchor="start">15.3%</text><text x="0" y="77" fill="#ccc" font-size="14" font-weight="400" text-anchor="start">AlexNet</text></svg>
+      <div class="card b" style="margin-top:14px"><p>2位に <strong>約11ポイント</strong>の差。特徴を人が設計する手法から、<strong>データから学ぶ大きなネットワーク</strong>へ流れが変わった。</p></div>
+    </div>
+  </div>
+  <div class="terms"><div><b>パラメータ</b>学習で決まる重みの数。モデルの大きさの目安</div><div><b>ImageNet（イメージネット）</b>100万枚を超える写真に、1000種類のラベルを付けたデータセット</div><div><b>ILSVRC（アイエルエスブイアールシー）</b>ImageNet の写真で画像認識の正確さを競う大会</div><div><b>top-5（トップファイブ）誤り率</b>モデルが挙げた上位5つの候補に、正解が入らなかった割合</div><div><b>GPU（ジーピーユー）</b>画像処理用の部品。同じ計算を大量に並べて速く行える</div><div><b>畳み込み・全結合</b>第1回の CNN と同じ層。AlexNet はそれを深く大きくしたもの</div></div>
+  <div class="foot"><span class="small">Krizhevsky, Sutskever, Hinton（NeurIPS 2012）。15.3% は 7 つの CNN を合わせた値</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 スケールの流れ</span>3/8</div>
+  <h2>AlexNet を作った3人</h2>
+
+  <div class="grid3">
+    <div class="card"><img class="ph" src="img/w7_hinton.jpg" alt="ジェフリー・ヒントン"><h3 style="margin-top:10px">ジェフリー・ヒントン</h3><p>（当時）トロント大学の教授。2人の指導教員</p></div>
+    <div class="card"><img class="ph" src="img/w7_krizhevsky.jpg" alt="アレックス・クリジェフスキー"><h3 style="margin-top:10px">アレックス・クリジェフスキー</h3><p>（当時）大学院生。実家の PC の GPU 2枚で学習を動かした</p></div>
+    <div class="card"><img class="ph" src="img/w7_sutskever.jpg" alt="イリヤ・サツケバー"><h3 style="margin-top:10px">イリヤ・サツケバー</h3><p>（当時）大学院生。ImageNet に挑むことを主張した</p></div>
+  </div>
+  <div class="quote"><div class="en">“Ilya thought we should do it, Alex made it work, and I got the Nobel Prize.”</div><div class="ja">イリヤがやるべきだと考え、アレックスが動かし、私がノーベル賞をもらった ― ヒントン（Computer History Museum, 2025）</div></div>
+  <div class="terms"><div><b>指導教員と大学院生</b>ヒントンの研究室で、2人が大学院生として研究していた</div><div><b>Computer History Museum</b>米国のコンピュータ歴史博物館。2025年に AlexNet のコードを公開した</div><div><b>ノーベル賞</b>ヒントンは2024年にノーベル物理学賞を受賞した（11枚目）</div></div>
+  <div class="foot"><span class="small">写真：ヒントン＝Arthur Petron（Wikimedia Commons, CC BY-SA 4.0）、サツケバー＝XenoSpectrum の記事より。クリジェフスキーは出典未確認</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 スケールの流れ</span>4/8</div>
+  <h2>2017年 Transformer：再帰も畳み込みも使わない</h2>
+
+  <p style="font-size:17px;margin:0 0 6px">3つとも<strong>文の特徴抽出</strong>の方式。特徴は翻訳・次の語の予測・分類に使う。Transformer の論文は<strong>翻訳</strong>で試した。</p>
+  <svg viewBox="0 0 1160 236" width="1160" height="236" style="flex:none" role="img" aria-label="再帰・畳み込み・注意機構の比較"><defs><marker id="m" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs><rect x="0" y="0" width="372" height="236" rx="10" fill="#1a1a1a" stroke="#333"/><text x="14" y="26" fill="#bbb" font-size="18" font-weight="900" text-anchor="start">再帰（RNN）</text><text x="14" y="46" fill="#aaa" font-size="13" font-weight="400" text-anchor="start">1語読むたびに「メモ」を書きかえる</text><rect x="22.0" y="176" width="56" height="34" rx="6" fill="#222" stroke="#666" stroke-width="1"/><text x="50.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">今日</text><rect x="90.0" y="176" width="56" height="34" rx="6" fill="#222" stroke="#666" stroke-width="1"/><text x="118.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">は</text><rect x="158.0" y="176" width="56" height="34" rx="6" fill="#222" stroke="#666" stroke-width="1"/><text x="186.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">天気</text><rect x="226.0" y="176" width="56" height="34" rx="6" fill="#222" stroke="#666" stroke-width="1"/><text x="254.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">が</text><rect x="294.0" y="176" width="56" height="34" rx="6" fill="#222" stroke="#666" stroke-width="1"/><text x="322.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">良い</text><circle cx="50.0" cy="110" r="17" fill="#333" stroke="#999"/><text x="50.0" y="116" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">①</text><line x1="50.0" y1="173" x2="50.0" y2="131" stroke="#777" stroke-width="1.5" marker-end="url(#m)"/><line x1="69.0" y1="110" x2="96.0" y2="110" stroke="#FF6B6B" stroke-width="2.5" marker-end="url(#m)"/><circle cx="118.0" cy="110" r="17" fill="#333" stroke="#999"/><text x="118.0" y="116" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">②</text><line x1="118.0" y1="173" x2="118.0" y2="131" stroke="#777" stroke-width="1.5" marker-end="url(#m)"/><line x1="137.0" y1="110" x2="164.0" y2="110" stroke="#FF6B6B" stroke-width="2.5" marker-end="url(#m)"/><circle cx="186.0" cy="110" r="17" fill="#333" stroke="#999"/><text x="186.0" y="116" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">③</text><line x1="186.0" y1="173" x2="186.0" y2="131" stroke="#777" stroke-width="1.5" marker-end="url(#m)"/><line x1="205.0" y1="110" x2="232.0" y2="110" stroke="#FF6B6B" stroke-width="2.5" marker-end="url(#m)"/><circle cx="254.0" cy="110" r="17" fill="#333" stroke="#999"/><text x="254.0" y="116" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">④</text><line x1="254.0" y1="173" x2="254.0" y2="131" stroke="#777" stroke-width="1.5" marker-end="url(#m)"/><line x1="273.0" y1="110" x2="300.0" y2="110" stroke="#FF6B6B" stroke-width="2.5" marker-end="url(#m)"/><circle cx="322.0" cy="110" r="17" fill="#333" stroke="#999"/><text x="322.0" y="116" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">⑤</text><line x1="322.0" y1="173" x2="322.0" y2="131" stroke="#777" stroke-width="1.5" marker-end="url(#m)"/><text x="186.0" y="78" fill="#FF6B6B" font-size="14" font-weight="700" text-anchor="middle">メモを次へ渡す。前が終わるまで進めない</text><rect x="394" y="0" width="372" height="236" rx="10" fill="#1a1a1a" stroke="#333"/><text x="408" y="26" fill="#bbb" font-size="18" font-weight="900" text-anchor="start">畳み込み（CNN）</text><text x="408" y="46" fill="#aaa" font-size="13" font-weight="400" text-anchor="start">窓の中の数語を、1つにまとめる</text><rect x="416.0" y="176" width="56" height="34" rx="6" fill="#222" stroke="#666" stroke-width="1"/><text x="444.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">今日</text><rect x="484.0" y="176" width="56" height="34" rx="6" fill="#2a2410" stroke="#FFB800" stroke-width="2"/><text x="512.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">は</text><rect x="552.0" y="176" width="56" height="34" rx="6" fill="#2a2410" stroke="#FFB800" stroke-width="2"/><text x="580.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">天気</text><rect x="620.0" y="176" width="56" height="34" rx="6" fill="#2a2410" stroke="#FFB800" stroke-width="2"/><text x="648.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">が</text><rect x="688.0" y="176" width="56" height="34" rx="6" fill="#222" stroke="#666" stroke-width="1"/><text x="716.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">良い</text><rect x="479.0" y="170" width="202" height="46" rx="9" fill="none" stroke="#FFB800" stroke-width="2" stroke-dasharray="6 4"/><rect x="554.0" y="92" width="52" height="34" rx="6" fill="#FFB800"/><text x="580.0" y="115" fill="#000" font-size="14" font-weight="700" text-anchor="middle">出力</text><line x1="512.0" y1="168" x2="566.0" y2="129" stroke="#FFB800" stroke-width="2" marker-end="url(#m)"/><line x1="580.0" y1="168" x2="580.0" y2="129" stroke="#FFB800" stroke-width="2" marker-end="url(#m)"/><line x1="648.0" y1="168" x2="594.0" y2="129" stroke="#FFB800" stroke-width="2" marker-end="url(#m)"/><text x="444.0" y="150" fill="#888" font-size="12.5" font-weight="400" text-anchor="middle">窓の外</text><text x="716.0" y="150" fill="#888" font-size="12.5" font-weight="400" text-anchor="middle">窓の外</text><text x="580.0" y="78" fill="#FF6B6B" font-size="14" font-weight="700" text-anchor="middle">遠くの語は、層を重ねないと届かない</text><rect x="788" y="0" width="372" height="236" rx="10" fill="#1a1a1a" stroke="#333"/><text x="802" y="26" fill="#4FC3F7" font-size="18" font-weight="900" text-anchor="start">注意機構（Transformer）</text><text x="802" y="46" fill="#aaa" font-size="13" font-weight="400" text-anchor="start">全部の語どうしの「関係の強さ」を計算する</text><rect x="810.0" y="176" width="56" height="34" rx="6" fill="#222" stroke="#666" stroke-width="1"/><text x="838.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">今日</text><rect x="878.0" y="176" width="56" height="34" rx="6" fill="#222" stroke="#666" stroke-width="1"/><text x="906.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">は</text><rect x="946.0" y="176" width="56" height="34" rx="6" fill="#222" stroke="#666" stroke-width="1"/><text x="974.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">天気</text><rect x="1014.0" y="176" width="56" height="34" rx="6" fill="#222" stroke="#666" stroke-width="1"/><text x="1042.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">が</text><rect x="1082.0" y="176" width="56" height="34" rx="6" fill="#222" stroke="#666" stroke-width="1"/><text x="1110.0" y="199" fill="#eee" font-size="15" font-weight="700" text-anchor="middle">良い</text><path d="M838.0,174 Q872.0,129 906.0,174" fill="none" stroke="#4FC3F7" stroke-width="1.6" opacity=".8"/><path d="M838.0,174 Q906.0,110 974.0,174" fill="none" stroke="#4FC3F7" stroke-width="1.6" opacity=".8"/><path d="M838.0,174 Q940.0,91 1042.0,174" fill="none" stroke="#4FC3F7" stroke-width="1.6" opacity=".8"/><path d="M838.0,174 Q974.0,72 1110.0,174" fill="none" stroke="#4FC3F7" stroke-width="1.6" opacity=".8"/><path d="M906.0,174 Q940.0,129 974.0,174" fill="none" stroke="#4FC3F7" stroke-width="1.6" opacity=".8"/><path d="M906.0,174 Q974.0,110 1042.0,174" fill="none" stroke="#4FC3F7" stroke-width="1.6" opacity=".8"/><path d="M906.0,174 Q1008.0,91 1110.0,174" fill="none" stroke="#4FC3F7" stroke-width="1.6" opacity=".8"/><path d="M974.0,174 Q1008.0,129 1042.0,174" fill="none" stroke="#4FC3F7" stroke-width="1.6" opacity=".8"/><path d="M974.0,174 Q1042.0,110 1110.0,174" fill="none" stroke="#4FC3F7" stroke-width="1.6" opacity=".8"/><path d="M1042.0,174 Q1076.0,129 1110.0,174" fill="none" stroke="#4FC3F7" stroke-width="1.6" opacity=".8"/><text x="974.0" y="78" fill="#81C784" font-size="14" font-weight="700" text-anchor="middle">同時に計算できる → 並列にしやすい</text></svg>
+  <div class="how">
+    <div><b>やっていること</b>① 「今日」を読んでメモを作る。② ①のメモと「は」から、メモを作り直す。これを最後まで繰り返す。<strong>前のメモができるまで、次に進めない</strong></div>
+    <div><b>やっていること</b>窓の中の「は・天気・が」だけを見て、1つにまとめる。窓を1語ずつずらして繰り返す。<strong>窓の外の語は見えない</strong></div>
+    <div><b>やっていること</b>「良い」は、ほかの4語を全部見て、関係の深い「天気」の情報を多く取り込む。ほかの語も同じ。<strong>5語とも同時に計算できる</strong></div>
+  </div>
+  <div class="card b" style="margin-top:8px;padding:10px 18px"><p style="font-size:18px">Transformer は<strong>注意機構だけ</strong>で作る。順番待ちがないので <strong>GPU を増やすほど速く学習でき</strong>、モデルとデータを大きくできた。今の主な LLM はこの構造。</p></div>
+  <div class="terms"><div><b>注意機構（アテンション）</b>語どうしの関係を、全部の組み合わせで計算する仕組み</div><div><b>再帰（RNN・アールエヌエヌ）</b>1語読むたびに、メモを作り直す方式</div><div><b>畳み込み（CNN）</b>小さな窓を動かして、近くだけをまとめる方式。第1回の画像と同じ</div><div><b>メモ</b>ここまで読んだ内容をまとめたもの。中身は数の集まりで、正式には「隠れ状態」</div></div>
+  <div class="foot"><span class="small">Vaswani ら「Attention Is All You Need」（2017）arXiv:1706.03762</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 スケールの流れ</span>5/8</div>
+  <h2>2019年「苦い教訓」：計算を生かす手法が勝つ</h2>
+
+  <table>
+    <tr><th style="width:15rem">それまでの考え方</th><th>サットンが70年の AI 研究から読み取ったこと</th></tr>
+    <tr><td>人の知識を作り込む<br><span class="small">例：チェスの定石・画像の特徴を人が設計</span></td><td>短い期間では役に立つ。しかし長い目で見ると、<strong>計算量を生かす汎用の手法（探索と学習）</strong>に負けてきた</td></tr>
+  </table>
+  <div class="quote"><div class="en">“The biggest lesson that can be read from 70 years of AI research is that general methods that leverage computation are ultimately the most effective, and by a large margin.”</div><div class="ja">70年の AI 研究から読み取れる最大の教訓は、計算を生かす汎用の手法が、結局は大差で最も効果的だということ ― サットン「The Bitter Lesson」（2019年3月13日）</div></div>
+  <div class="card b"><p>AlexNet も Transformer もこの例。「工夫するより大きくする」という考え方の支えになった。</p></div>
+  <div class="terms"><div><b>汎用の手法</b>問題ごとの知識を人が作り込まず、データと計算で学ばせる方法</div><div><b>探索</b>たくさんの候補を計算で試して、良いものを選ぶこと</div><div><b>学習</b>データから重みを決めること</div><div><b>サットン</b>強化学習の研究者。2024年のチューリング賞を受賞（15枚目）</div></div>
+  <div class="foot"><span class="small">Sutton（2019）incompleteideas.net</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 スケールの流れ</span>6/8</div>
+  <h2>パラメータ数は 8 年で約 3,000 倍に</h2>
+
+  <div class="grid2" style="gap:30px">
+    <div><svg viewBox="0 0 570 295" width="570" height="295" role="img" aria-label="パラメータ数の伸び"><line x1="80" x2="560" y1="250.0" y2="250.0" stroke="#2c2c2c"/><text x="72" y="255.0" fill="#999" font-size="12.5" font-weight="400" text-anchor="end">1,000万</text><line x1="80" x2="560" y1="210.37735849056602" y2="210.37735849056602" stroke="#2c2c2c"/><text x="72" y="215.37735849056602" fill="#999" font-size="12.5" font-weight="400" text-anchor="end">1億</text><line x1="80" x2="560" y1="170.75471698113205" y2="170.75471698113205" stroke="#2c2c2c"/><text x="72" y="175.75471698113205" fill="#999" font-size="12.5" font-weight="400" text-anchor="end">10億</text><line x1="80" x2="560" y1="131.1320754716981" y2="131.1320754716981" stroke="#2c2c2c"/><text x="72" y="136.1320754716981" fill="#999" font-size="12.5" font-weight="400" text-anchor="end">100億</text><line x1="80" x2="560" y1="91.50943396226413" y2="91.50943396226413" stroke="#2c2c2c"/><text x="72" y="96.50943396226413" fill="#999" font-size="12.5" font-weight="400" text-anchor="end">1,000億</text><line x1="80" x2="560" y1="51.88679245283018" y2="51.88679245283018" stroke="#2c2c2c"/><text x="72" y="56.88679245283018" fill="#999" font-size="12.5" font-weight="400" text-anchor="end">1兆</text><rect x="110" y="219.16759196593108" width="70" height="30.83240803406892" rx="4" fill="#4FC3F7"/><text x="145" y="211.16759196593108" fill="#fff" font-size="15" font-weight="700" text-anchor="middle">6,000万</text><text x="145" y="270" fill="#ddd" font-size="13.5" font-weight="700" text-anchor="middle">AlexNet</text><text x="145" y="288" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2012年</text><rect x="228" y="163.77751615062394" width="70" height="86.22248384937606" rx="4" fill="#4FC3F7"/><text x="263" y="155.77751615062394" fill="#fff" font-size="15" font-weight="700" text-anchor="middle">15億</text><text x="263" y="270" fill="#ddd" font-size="13.5" font-weight="700" text-anchor="middle">GPT-2</text><text x="263" y="288" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2019年</text><rect x="346" y="81.87962448601476" width="70" height="168.12037551398524" rx="4" fill="#4FC3F7"/><text x="381" y="73.87962448601476" fill="#fff" font-size="15" font-weight="700" text-anchor="middle">1,750億</text><text x="381" y="270" fill="#ddd" font-size="13.5" font-weight="700" text-anchor="middle">GPT-3</text><text x="381" y="288" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2020年</text><rect x="464" y="51.88679245283018" width="70" height="198.11320754716982" rx="4" fill="#FFB800"/><text x="499" y="43.88679245283018" fill="#fff" font-size="15" font-weight="700" text-anchor="middle">約1兆</text><text x="499" y="270" fill="#ddd" font-size="13.5" font-weight="700" text-anchor="middle">最先端（推定）</text><text x="499" y="288" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">2023年〜</text></svg></div>
+    <div>
+      <ul class="pt">
+        <li>AlexNet（2012）：<strong>6,000万</strong></li>
+        <li>GPT-2（2019）：<strong>15億</strong></li>
+        <li>GPT-3（2020）：<strong>1,750億</strong>。例を数個見せるだけで新しい課題をこなした</li>
+        <li>その後は <strong>約1兆で3年間横ばい</strong>。ただし最先端の研究所は数を公表しなくなった</li>
+      </ul>
+      <div class="card a" style="margin-top:12px"><p>パラメータ数が横ばいでも、<strong>学習の計算量は増え続けている</strong>（2枚あと）。</p></div>
+    </div>
+  </div>
+  <div class="terms"><div><b>パラメータ</b>学習で決まる重みの数。モデルの大きさの目安</div><div><b>GPT（ジーピーティー）</b>OpenAI の言語モデル。次に来る言葉を予測するように学習する</div><div><b>対数の軸</b>1目盛り上がると10倍になる軸。桁が違う数を1つの図で比べられる（次のスライド）</div><div><b>横ばい</b>増えも減りもしないこと</div></div>
+  <div class="foot"><span class="small">縦軸は対数。Brown ら（2020）arXiv:2005.14165／Stanford AI Index 2026 第1章</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 スケールの流れ</span>7/8</div>
+  <h2>2020〜2022年 スケーリング則：大きくする前に結果を予想する</h2>
+
+  <div class="grid2" style="gap:30px">
+    <div>
+      <svg viewBox="0 0 560 236" width="560" height="236" role="img" aria-label="実測をふつうの目盛りと log-log で比べる"><text x="46" y="16" fill="#bbb" font-size="16" font-weight="900" text-anchor="start">ふつうの目盛り</text><text x="46" y="34" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="start">同じ幅 ＝ 同じ数を足す</text><line x1="46" y1="194" x2="226" y2="194" stroke="#777" stroke-width="2"/><line x1="46" y1="44" x2="46" y2="194" stroke="#777" stroke-width="2"/><line x1="46.0" y1="194" x2="46.0" y2="199" stroke="#777"/><text x="46.0" y="213" fill="#999" font-size="11.5" font-weight="400" text-anchor="middle">0</text><line x1="86.9090909090909" y1="194" x2="86.9090909090909" y2="199" stroke="#777"/><text x="86.9090909090909" y="213" fill="#999" font-size="11.5" font-weight="400" text-anchor="middle">1000</text><line x1="127.81818181818181" y1="194" x2="127.81818181818181" y2="199" stroke="#777"/><text x="127.81818181818181" y="213" fill="#999" font-size="11.5" font-weight="400" text-anchor="middle">2000</text><line x1="168.72727272727272" y1="194" x2="168.72727272727272" y2="199" stroke="#777"/><text x="168.72727272727272" y="213" fill="#999" font-size="11.5" font-weight="400" text-anchor="middle">3000</text><line x1="209.63636363636363" y1="194" x2="209.63636363636363" y2="199" stroke="#777"/><text x="209.63636363636363" y="213" fill="#999" font-size="11.5" font-weight="400" text-anchor="middle">4000</text><line x1="41" y1="194.0" x2="46" y2="194.0" stroke="#777"/><text x="38" y="198.0" fill="#999" font-size="11.5" font-weight="400" text-anchor="end">0</text><line x1="41" y1="147.125" x2="46" y2="147.125" stroke="#777"/><text x="38" y="151.125" fill="#999" font-size="11.5" font-weight="400" text-anchor="end">10</text><line x1="41" y1="100.25" x2="46" y2="100.25" stroke="#777"/><text x="38" y="104.25" fill="#999" font-size="11.5" font-weight="400" text-anchor="end">20</text><line x1="41" y1="53.375" x2="46" y2="53.375" stroke="#777"/><text x="38" y="57.375" fill="#999" font-size="11.5" font-weight="400" text-anchor="end">30</text><polyline points="66.45454545454545,61.8125 86.9090909090909,88.0625 127.81818181818181,106.8125 209.63636363636363,120.40625" fill="none" stroke="#bbb" stroke-width="2.5"/><circle cx="66.45454545454545" cy="61.8125" r="5" fill="#fff"/><circle cx="86.9090909090909" cy="88.0625" r="5" fill="#fff"/><circle cx="127.81818181818181" cy="106.8125" r="5" fill="#fff"/><circle cx="209.63636363636363" cy="120.40625" r="5" fill="#fff"/><text x="136.0" y="232" fill="#bbb" font-size="12.5" font-weight="400" text-anchor="middle">訓練枚数</text><text x="302" y="16" fill="#4FC3F7" font-size="16" font-weight="900" text-anchor="start">log-log（両方の軸を対数に）</text><text x="302" y="34" fill="#aaa" font-size="12.5" font-weight="400" text-anchor="start">同じ幅 ＝ 同じ倍率（2倍）</text><line x1="302" y1="194" x2="556" y2="194" stroke="#777" stroke-width="2"/><line x1="302" y1="44" x2="302" y2="194" stroke="#777" stroke-width="2"/><line x1="302.0" y1="194" x2="302.0" y2="199" stroke="#777"/><text x="302.0" y="213" fill="#999" font-size="11.5" font-weight="400" text-anchor="middle">500</text><line x1="349.92452830188677" y1="194" x2="349.92452830188677" y2="199" stroke="#777"/><text x="349.92452830188677" y="213" fill="#999" font-size="11.5" font-weight="400" text-anchor="middle">1000</text><line x1="397.8490566037736" y1="194" x2="397.8490566037736" y2="199" stroke="#777"/><text x="397.8490566037736" y="213" fill="#999" font-size="11.5" font-weight="400" text-anchor="middle">2000</text><line x1="445.7735849056604" y1="194" x2="445.7735849056604" y2="199" stroke="#777"/><text x="445.7735849056604" y="213" fill="#999" font-size="11.5" font-weight="400" text-anchor="middle">4000</text><line x1="493.6981132075472" y1="194" x2="493.6981132075472" y2="199" stroke="#777"/><text x="493.6981132075472" y="213" fill="#999" font-size="11.5" font-weight="400" text-anchor="middle">8000</text><line x1="541.622641509434" y1="194" x2="541.622641509434" y2="199" stroke="#777"/><text x="541.622641509434" y="213" fill="#999" font-size="11.5" font-weight="400" text-anchor="middle">16000</text><line x1="297" y1="181.54124064056012" x2="302" y2="181.54124064056012" stroke="#777"/><text x="294" y="185.54124064056012" fill="#999" font-size="11.5" font-weight="400" text-anchor="end">10</text><line x1="297" y1="133.5954596330461" x2="302" y2="133.5954596330461" stroke="#777"/><text x="294" y="137.5954596330461" fill="#999" font-size="11.5" font-weight="400" text-anchor="end">15</text><line x1="297" y1="99.57738663555075" x2="302" y2="99.57738663555075" stroke="#777"/><text x="294" y="103.57738663555075" fill="#999" font-size="11.5" font-weight="400" text-anchor="end">20</text><line x1="297" y1="51.631605628036766" x2="302" y2="51.631605628036766" stroke="#777"/><text x="294" y="55.631605628036766" fill="#999" font-size="11.5" font-weight="400" text-anchor="end">30</text><line x1="302.0" y1="60.54348224742458" x2="445.7735849056604" y2="129.88490273566254" stroke="#4FC3F7" stroke-width="2.5"/><line x1="445.7735849056604" y1="129.88490273566254" x2="541.622641509434" y2="176.11251639448778" stroke="#FFB800" stroke-width="2.5" stroke-dasharray="6 5"/><circle cx="541.622641509434" cy="176.11251639448778" r="9" fill="none" stroke="#FFB800" stroke-width="2"/><text x="541.622641509434" y="181.11251639448778" fill="#FFB800" font-size="14" font-weight="900" text-anchor="middle">?</text><text x="495.6981132075472" y="136.9987095650751" fill="#FFB800" font-size="12.5" font-weight="700" text-anchor="start">外挿（演習2）</text><circle cx="302.0" cy="58.94830069524224" r="5" fill="#fff"/><circle cx="349.92452830188677" cy="85.12529264108943" r="5" fill="#fff"/><circle cx="397.8490566037736" cy="108.15878729529479" r="5" fill="#fff"/><circle cx="445.7735849056604" cy="128.20206932546807" r="5" fill="#fff"/><text x="429.0" y="232" fill="#bbb" font-size="12.5" font-weight="400" text-anchor="middle">訓練枚数</text><text transform="rotate(-90 10 119.0)" x="10" y="119.0" fill="#bbb" font-size="12.5" font-weight="400" text-anchor="middle">誤り率 %</text><text x="124" y="78" fill="#ddd" font-size="13" font-weight="700" text-anchor="start">曲線</text><text x="436" y="70" fill="#fff" font-size="13" font-weight="700" text-anchor="start">ほぼ直線</text></svg>
+      <p class="small" style="margin-top:4px">実測：今日の演習と同じ CNN（幅16・FashionMNIST）を教員機で測った4点（28.2・22.6・18.6・15.7%）。同じデータを2通りに描いた</p>
+    </div>
+    <div>
+      <table class="tight">
+        <tr><th style="width:11.5rem">論文</th><th>分かったこと</th></tr>
+        <tr><td>Kaplan（カプラン）ら<br><span class="small">2020・OpenAI</span></td><td>言語モデルの損失は、モデルの大きさ・データ量・計算量の<strong>べき乗則</strong>で下がる（7桁以上の範囲）</td></tr>
+        <tr><td>Hoffmann（ホフマン）ら<br><span class="small">2022・DeepMind</span></td><td>計算量が決まっているなら、モデルとデータを<strong>同じ割合で</strong>増やすのが最適。それまでの大きなモデルは学習不足だった。これを確かめたモデルの名前が Chinchilla（チンチラ）</td></tr>
+      </table>
+      <div class="card b" style="margin-top:12px"><p>直線が続くなら、<strong>投資すれば性能が買える</strong>。これが巨額の投資の根拠になった。</p></div>
+    </div>
+  </div>
+  <div class="terms"><div><b>対数（log・ログ）</b>「何倍か」を「いくつ分か」で数える数え方。10倍・100倍・1000倍を 1・2・3 と数える</div><div><b>log-log（ログログ）</b>横軸も縦軸も対数の目盛りにしたグラフ。2倍ごとに同じ幅になる</div><div><b>べき乗則</b>片方を2倍にすると、もう片方が決まった倍率で変わる関係。log-log で直線になる</div><div><b>外挿</b>測った範囲の外を、測った点から予想すること。損失は予測の外れの大きさ（第1回）</div></div>
+  <div class="foot"><span class="small">arXiv:2001.08361／arXiv:2203.15556</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p1">1 スケールの流れ</span>8/8</div>
+  <h2>2026年：計算量・費用・電力は今も増え続けている</h2>
+
+  <table class="tight">
+    <tr><th style="width:17rem">指標</th><th style="width:19rem">数値</th><th>出典</th></tr>
+    <tr><td>最先端モデルの学習の計算量</td><td><strong>年5倍</strong>（5.2か月で2倍・2020年以降）</td><td>Epoch AI（2026年2月更新）</td></tr>
+    <tr><td>最先端モデルの学習の費用</td><td><strong>年3.5倍</strong>（7か月で2倍）</td><td>Epoch AI</td></tr>
+    <tr><td>世界の AI 用の計算能力</td><td><strong>年3.3倍</strong>（2022年以降）</td><td>Stanford AI Index 2026</td></tr>
+    <tr><td>AI が自力でこなせる作業の長さ</td><td><strong>約7か月で2倍</strong>（2019年以降）。2023年以降は約4か月</td><td>METR（2025・2026年1月更新）</td></tr>
+    <tr><td>Stargate（OpenAI・Oracle・SoftBank）</td><td><strong>5,000億ドル</strong>。2029年までに 9 GW 超の計画</td><td>Epoch AI（2026年4月）</td></tr>
+    <tr><td>大手の設備投資</td><td>2025年 4,000億ドル超 → 2026年 <strong>7,150億ドル</strong></td><td>IEA（2026年4月）</td></tr>
+  </table>
+  <div class="card b" style="margin-top:14px"><p>Stanford AI Index 2026：「AI の能力は頭打ちではない。加速している」</p></div>
+  <div class="terms"><div><b>Epoch AI（エポック）・METR（ミーター）</b>AI の動向や能力を調べている非営利の研究機関</div><div><b>Stanford AI Index</b>スタンフォード大学が毎年出している AI の報告書</div><div><b>IEA（アイイーエー）</b>国際エネルギー機関。各国のエネルギーの統計と予測を出す</div><div><b>GW（ギガワット）</b>電力の単位。1 GW は大型の発電所1基分ほど</div><div><b>設備投資</b>データセンターや GPU を買うために使うお金</div><div><b>作業の長さ</b>人なら何分かかる作業を、AI が半分の確率で最後までできるか</div></div>
+  <div class="foot"><span class="small">1 GW の AI データセンターの建設費は約 380億ドル（Epoch AI）</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p2">2 3人の今</span>1/4</div>
+  <h2>ヒントンの今：ノーベル賞と、AI の危険への警告</h2>
+
+  <div class="who">
+    <img class="ph" src="img/w7_hinton.jpg" alt="ジェフリー・ヒントン">
+    <table>
+      <tr><th style="width:8rem">年</th><th>出来事</th></tr>
+      <tr><td>2013</td><td>3人の会社 DNNresearch を Google が買収。Google へ</td></tr>
+      <tr><td>2023年5月</td><td>Google を退社。AI の危険について自由に話すため</td></tr>
+      <tr><td>2024年10月</td><td><strong>ノーベル物理学賞</strong>（ホップフィールドと共同）。「人工ニューラルネットワークによる機械学習を可能にした基礎的な発見と発明」</td></tr>
+      <tr><td>2026年9月</td><td>米国議会で議員に説明。AI が人を排除する副目標を持ちうると警告</td></tr>
+    </table>
+  </div>
+  <div class="card g" style="margin-top:16px"><p class="big">所属はトロント大学（名誉教授）。AI が人より賢くなりうると考え、<strong>安全の研究と規制</strong>を求めている。</p></div>
+  <div class="terms"><div><b>DNNresearch（ディーエヌエヌ・リサーチ）</b>AlexNet の3人が作った会社。2013年に Google が買収した</div><div><b>ホップフィールド</b>記憶を取り出すネットワークを考案した物理学者。共同受賞者</div><div><b>副目標</b>与えられた目標を達成するために、AI が自分で立てる途中の目標</div><div><b>名誉教授</b>退職した教授に大学が贈る称号</div></div>
+  <div class="foot"><span class="small">nobelprize.org（2024）／MIT Technology Review（2023）／Fortune（2026年9月）。写真：Arthur Petron（CC BY-SA 4.0）</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p2">2 3人の今</span>2/4</div>
+  <h2>クリジェフスキーの今：研究の表舞台から離れた</h2>
+
+  <div class="who">
+    <img class="ph" src="img/w7_krizhevsky.jpg" alt="アレックス・クリジェフスキー">
+    <table class="tight">
+      <tr><th style="width:8.5rem">年</th><th>出来事</th></tr>
+      <tr><td>2012〜13</td><td>AlexNet の筆頭著者。GPU 用のコード（cuda-convnet）を書いた。翌年、会社の買収で Google Brain へ</td></tr>
+      <tr><td>2017年9月</td><td>Google を退社。本人の説明は<strong>「仕事への興味を失った」</strong>。トロントの Dessa（デッサ）の技術顧問に</td></tr>
+      <tr><td>2018年12月</td><td>共著の最後の論文（自動運転の ChauffeurNet）。その後、論文を出していない</td></tr>
+      <tr><td>2019年10月</td><td>NewsPicks が「世界初」のインタビュー。当時は<strong>サンフランシスコ在住</strong>。公の場には出てこなかった</td></tr>
+      <tr><td>2022年</td><td>AlexNet の論文が NeurIPS の Test of Time Award（10年後も影響の大きい論文の賞）を受賞</td></tr>
+      <tr><td>2025年3月</td><td>Computer History Museum と Google が AlexNet のソースコードを公開。本人の協力に謝辞</td></tr>
+    </table>
+  </div>
+  <div class="card g" style="margin-top:12px"><p>現在の仕事は、<strong>信頼できる情報源では確認できない</strong>（2026年11月時点）。</p>
+  <ul class="pt" style="margin-top:4px">
+    <li style="font-size:17px">「山にこもっている」：百度百科に「セミリタイアしてハイキングを楽しんでいるとみられる」とあるが、出典はブログ記事で<strong>確認できない</strong></li>
+    <li style="font-size:17px">投資会社 Two Bear Capital のベンチャーパートナーという情報も、同社の公式ページでは確認できない</li>
+  </ul></div>
+  <div class="terms"><div><b>筆頭著者</b>論文の著者の1番目。中心になって研究を進めた人</div><div><b>cuda-convnet（クーダ・コンブネット）</b>GPU で CNN を学習するために、彼が書いたプログラム</div><div><b>Google Brain（グーグル・ブレイン）</b>Google の深層学習の研究チーム</div><div><b>技術顧問</b>社員ではなく、技術の助言をする立場</div><div><b>百度百科</b>中国のオンライン百科事典。誰でも書けるため、出典の確認が必要</div><div><b>ベンチャーパートナー</b>投資会社で、投資先を探したり助言したりする役</div></div>
+  <div class="foot"><span class="small">Quartz（2018年6月）／NewsPicks（2019年10月21日）／arXiv:1812.03079／NeurIPS（2022）／CHM（2025）／百度百科。写真は出典未確認</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p2">2 3人の今</span>3/4</div>
+  <h2>サツケバーの今：「スケーリングの時代」から「研究の時代」へ</h2>
+
+  <div class="who">
+    <img class="ph" src="img/w7_sutskever.jpg" alt="イリヤ・サツケバー">
+    <table class="tight">
+      <tr><th style="width:10.5rem">年</th><th>出来事</th></tr>
+      <tr><td>2015</td><td>OpenAI を共同で設立。チーフサイエンティストとして GPT の路線を進めた</td></tr>
+      <tr><td>2024年5月</td><td>OpenAI を退社。6月に <strong>Safe Superintelligence（セーフ・スーパーインテリジェンス、SSI）</strong>を設立</td></tr>
+      <tr><td>2024年12月</td><td>NeurIPS の講演：今の形の事前学習は終わる。「インターネットは1つしかない」（報道）</td></tr>
+      <tr><td>2025年4月・7月</td><td>評価額 320億ドルで 20億ドルを調達（報道）。7月に CEO に就任</td></tr>
+      <tr><td>2026年7月</td><td>NVIDIA と提携。<strong>計算資源を10倍に</strong>する</td></tr>
+    </table>
+  </div>
+  <div class="quote"><div class="en">“from 2020 to 2025, it was the age of scaling … So it's back to the age of research again, just with big computers.”</div><div class="ja">2020〜2025年はスケーリングの時代だった。再び研究の時代に戻った。ただし大きな計算機を持って ― サツケバー（Dwarkesh Patel のインタビュー, 2025年11月25日）</div></div>
+  <div class="terms"><div><b>チーフサイエンティスト</b>会社の研究全体の責任者</div><div><b>超知能</b>人間の知能をはるかに超える AI</div><div><b>事前学習</b>大量のデータで先に学習しておくこと。第5回の「学習済みモデル」を作る段階</div><div><b>NeurIPS（ニューリプス）</b>機械学習で最大級の国際会議。AlexNet の論文もここで発表された</div><div><b>評価額</b>投資家が見積もった会社の値段</div></div>
+  <div class="foot"><span class="small">ssi.inc／TechCrunch／NVIDIA（2026年7月27日）。写真：XenoSpectrum の記事より（切り抜き）</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p2">2 3人の今</span>4/4</div>
+  <h2>サツケバーの主張：スケールの代わりに何をするのか</h2>
+
+  <div class="grid2" style="gap:26px">
+    <div>
+      <h3>今のモデルの弱点：練習した問題しか解けない</h3>
+      <table class="tight">
+        <tr><th style="width:5.5rem"></th><th>練習</th><th>その後</th></tr>
+        <tr><td>学生 A</td><td>競技プログラミングだけを <strong>1万時間</strong></td><td>大会では強いが、ほかの仕事に応用がきかない</td></tr>
+        <tr><td>学生 B</td><td><strong>100時間</strong>だけ</td><td>大会でも良い成績。その後の仕事でも伸びる</td></tr>
+      </table>
+      <p class="small" style="margin-top:6px">サツケバー：今のモデルは学生 A に近い。データを増やすのは、A の練習時間をさらに増やすこと</p>
+    </div>
+    <div>
+      <h3>やるべきだと言っていること</h3>
+      <table class="tight">
+        <tr><th style="width:2rem"></th><th>何を研究するか</th></tr>
+        <tr><td>1</td><td><strong>汎化を人並みにする。</strong>人は10代でも約10時間で車の運転を覚える。少ない経験で学べる方法を見つける</td></tr>
+        <tr><td>2</td><td><strong>価値関数を使う。</strong>結果が出る前に「まずい・良さそう」を判断する仕組み。人では感情がこの役をしている、という考え</td></tr>
+        <tr><td>3</td><td><strong>使われながら学び続ける。</strong>完成品を出すのでなく、意欲のある15歳のように、仕事に就いてから覚える</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="quote"><div class="en">“These models somehow just generalize dramatically worse than people. … That seems like a very fundamental thing.”</div><div class="ja">これらのモデルは、なぜか人よりはるかに汎化が悪い。これはとても根本的なことだ ― サツケバー（Dwarkesh Patel のインタビュー, 2025年11月25日）</div></div>
+  <p class="small">具体的な方法は「自由に話せない」として明かしていない。人のように学べるシステムができる時期の見通しは 5〜20年</p>
+  <div class="terms"><div><b>汎化（はんか）</b>練習していない新しい問題でも、うまくできること。第3回の「汎化ギャップ」と同じ言葉</div><div><b>価値関数</b>今の状態がどれくらい良いかを、結果が出る前に見積もる関数。強化学習の用語</div><div><b>強化学習</b>試して得た報酬（良い・悪い）から、行動を学ぶ方法</div><div><b>継続学習</b>一度学習して終わりでなく、使われている間も学び続けること</div></div>
+  <div class="foot"><span class="small">Dwarkesh Patel のインタビュー書き起こし（2025年11月25日）。日本語の解説：XenoSpectrum（2025年11月29日）</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p3">3 スケールだけでは AGI に届かない</span>1/4</div>
+  <h2>もう1つの流れ：スケールだけでは AGI に届かないと言う人たち</h2>
+
+  <table class="tight">
+    <tr><th style="width:12rem">人</th><th style="width:7rem">年</th><th>主張</th><th style="width:17rem">足りないと言うもの</th></tr>
+    <tr><td><strong>ゲイリー・マーカス</strong><br><span class="small">認知科学</span></td><td>2018<br>2022</td><td>深層学習だけでは信頼できる AI にならない（「深層学習は壁にぶつかっている」）</td><td>記号処理との組み合わせ</td></tr>
+    <tr><td><strong>フランソワ・ショレ</strong><br><span class="small">Keras の作者</span></td><td>2019</td><td>知能は「できること」の量ではなく、<strong>新しい課題を少ない例で学ぶ効率</strong>。覚えた量では測れない</td><td>その場で規則を見つける力（ARC で測る）</td></tr>
+    <tr><td><strong>ヤン・ルカン</strong><br><span class="small">2018年チューリング賞</span></td><td>2022〜</td><td>文章だけで学ぶ LLM を大きくしても、人間並みの知能にはならない</td><td>世界モデル（物理的な世界の予測）</td></tr>
+    <tr><td><strong>リチャード・サットン</strong><br><span class="small">2024年チューリング賞</span></td><td>2025</td><td>LLM は人の言うことをまねているだけで、世界のモデルを作っていない</td><td>経験からの継続的な学習</td></tr>
+  </table>
+  <div class="card r" style="margin-top:12px"><p>サットンは「苦い教訓」を書いた本人。<strong>計算を生かすこと</strong>と<strong>今の LLM を大きくすること</strong>は同じではない、という立場。</p></div>
+  <div class="terms"><div><b>記号処理</b>規則や論理を人が書いて推論させる、昔からの AI の方法</div><div><b>世界モデル</b>「こうすると次にこうなる」と、世界の動きを予測する仕組み</div><div><b>継続的な学習</b>使いながら新しいことを学び続けること。今の LLM は学習後に重みが変わらない</div><div><b>チューリング賞</b>計算機科学で最も権威のある賞</div><div><b>Keras（ケラス）</b>深層学習のプログラムを書くための、広く使われているライブラリ</div></div>
+  <div class="foot"><span class="small">arXiv:1801.00631／Nautilus（2022）／arXiv:1911.01547／LeCun（2022, OpenReview）／Dwarkesh Patel（2025年9月26日）</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p3">3 スケールだけでは AGI に届かない</span>2/4</div>
+  <h2>ショレの ARC：覚えた知識では解けない問題で測る</h2>
+
+  <div class="grid2" style="gap:30px">
+    <div>
+      <svg viewBox="0 0 480 120" width="480" height="120" role="img" aria-label="ARC 風の問題の例"><text x="0" y="16" fill="#ccc" font-size="14" font-weight="400" text-anchor="start">例</text><rect x="0" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="22" y="26" width="21" height="21" fill="#4FC3F7" stroke="#444"/><rect x="44" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="66" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="0" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="22" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="44" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="66" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="0" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="22" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="44" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="66" y="70" width="21" height="21" fill="#4FC3F7" stroke="#444"/><rect x="0" y="92" width="21" height="21" fill="#111" stroke="#444"/><rect x="22" y="92" width="21" height="21" fill="#111" stroke="#444"/><rect x="44" y="92" width="21" height="21" fill="#111" stroke="#444"/><rect x="66" y="92" width="21" height="21" fill="#111" stroke="#444"/><text x="104" y="76" fill="#888" font-size="24" font-weight="400" text-anchor="middle">→</text><rect x="122" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="144" y="26" width="21" height="21" fill="#4FC3F7" stroke="#444"/><rect x="166" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="188" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="122" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="144" y="48" width="21" height="21" fill="#FF6B6B" stroke="#444"/><rect x="166" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="188" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="122" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="144" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="166" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="188" y="70" width="21" height="21" fill="#4FC3F7" stroke="#444"/><rect x="122" y="92" width="21" height="21" fill="#111" stroke="#444"/><rect x="144" y="92" width="21" height="21" fill="#111" stroke="#444"/><rect x="166" y="92" width="21" height="21" fill="#111" stroke="#444"/><rect x="188" y="92" width="21" height="21" fill="#FF6B6B" stroke="#444"/><text x="260" y="16" fill="#FFB800" font-size="14" font-weight="700" text-anchor="start">問題</text><rect x="260" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="282" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="304" y="26" width="21" height="21" fill="#4FC3F7" stroke="#444"/><rect x="326" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="260" y="48" width="21" height="21" fill="#4FC3F7" stroke="#444"/><rect x="282" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="304" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="326" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="260" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="282" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="304" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="326" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="260" y="92" width="21" height="21" fill="#111" stroke="#444"/><rect x="282" y="92" width="21" height="21" fill="#111" stroke="#444"/><rect x="304" y="92" width="21" height="21" fill="#111" stroke="#444"/><rect x="326" y="92" width="21" height="21" fill="#111" stroke="#444"/><text x="364" y="76" fill="#888" font-size="24" font-weight="400" text-anchor="middle">→</text><rect x="382" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="404" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="426" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="448" y="26" width="21" height="21" fill="#111" stroke="#444"/><rect x="382" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="404" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="426" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="448" y="48" width="21" height="21" fill="#111" stroke="#444"/><rect x="382" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="404" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="426" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="448" y="70" width="21" height="21" fill="#111" stroke="#444"/><rect x="382" y="92" width="21" height="21" fill="#111" stroke="#444"/><rect x="404" y="92" width="21" height="21" fill="#111" stroke="#444"/><rect x="426" y="92" width="21" height="21" fill="#111" stroke="#444"/><rect x="448" y="92" width="21" height="21" fill="#111" stroke="#444"/><text x="426" y="82" fill="#FFB800" font-size="34" font-weight="900" text-anchor="middle">？</text></svg>
+      <p class="small" style="margin-top:2px">ARC 風の例（自作）。例から規則を見つけ、新しい入力に当てはめる</p>
+      <ul class="pt" style="margin-top:10px">
+        <li>人は数個の例で解ける。問題は毎回新しい</li>
+        <li>賞金つきの大会 ARC Prize（2024年〜）</li>
+      </ul>
+    </div>
+    <div>
+      <table class="tight">
+        <tr><th style="width:7.5rem">版</th><th>公開時</th><th style="width:13.5rem">その後</th></tr>
+        <tr><td>ARC-AGI-1<br><span class="small">2019</span></td><td>5年間ほぼ解けず</td><td>2024年12月：OpenAI o3 が <strong>75.7%</strong>（1問 約26ドル）</td></tr>
+        <tr><td>ARC-AGI-2<br><span class="small">2025年3月</span></td><td>人間のパネル平均 60%。LLM 単体は <strong>0%</strong>、推論モデルも1桁</td><td>2026年9月：<strong>95.0%</strong></td></tr>
+        <tr><td>ARC-AGI-3<br><span class="small">2026年3月</span></td><td>説明も規則も目標も示されないゲーム。人間 100%・AI <strong>0.51%</strong></td><td>2026年11月：<strong>81.2%</strong>（標準設定）</td></tr>
+      </table>
+      <div class="card r" style="margin-top:10px"><p>どの版も公開時はほぼ解けず、その後に解かれた。かかった期間は <strong>約5年 → 約1年半 → 8か月</strong>と短くなっている（19枚目）。</p></div>
+    </div>
+  </div>
+  <div class="terms"><div><b>ベンチマーク</b>AI の性能を比べるための共通のテスト</div><div><b>LLM 単体</b>答える前に長く考える仕組みや道具を使わない、そのままの LLM</div><div><b>推論モデル</b>答える前に、考える手順を長く書き出してから答える LLM</div><div><b>人間のパネル</b>テストの難しさを確かめるために、実際に解いてもらった人たち</div></div>
+  <div class="foot"><span class="small">arcprize.org（2024年12月・2025年3月・2026年3月）・リーダーボード（2026年11月12日 取得）</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p3">3 スケールだけでは AGI に届かない</span>3/4</div>
+  <h2>根拠になった論文と調査</h2>
+
+  <table>
+    <tr><th style="width:17rem">資料</th><th>内容</th></tr>
+    <tr><td><strong>GSM-Symbolic</strong><br><span class="small">Apple・2024年10月</span></td><td>算数の文章題に、答えに関係のない一文を足すだけで、最新モデルの正解率が<strong>最大65%下がった</strong></td></tr>
+    <tr><td><strong>The Illusion of Thinking</strong><br><span class="small">Apple・2025年6月</span></td><td>パズルが一定の複雑さを超えると、推論モデルの正解率が<strong>0まで崩れた</strong>。<br><span class="small">反論もある：出力の長さの上限や、解のない問題が原因という指摘（arXiv:2506.09250・査読なし）</span></td></tr>
+    <tr><td><strong>AAAI の研究者調査</strong><br><span class="small">2025年3月・475人</span></td><td>「今の手法を大きくすれば AGI に届く」は、<strong>76%</strong> が「可能性は低い・とても低い」と回答</td></tr>
+    <tr><td><strong>開発企業の報道</strong><br><span class="small">2024年11月</span></td><td>OpenAI・Google・Anthropic の次のモデルが期待ほど伸びていないと報道された</td></tr>
+  </table>
+  <div class="card r" style="margin-top:14px"><p>今日の演習との共通点：訓練データに似た問題の成績と、<strong>少し違う問題の成績は別</strong>（第6回のショートカット学習）。</p></div>
+  <div class="terms"><div><b>文章題</b>「りんごを3個買い…」のように、文章で書かれた算数の問題</div><div><b>AAAI（トリプルエーアイ）</b>米国の人工知能学会。この調査は会長の委員会がまとめた</div><div><b>査読</b>専門家が論文の内容を審査すること。査読なしの論文は確かさが下がる</div><div><b>ショートカット学習</b>見てほしい特徴ではなく、楽な手がかりで当てること（第6回）</div></div>
+  <div class="foot"><span class="small">arXiv:2410.05229／arXiv:2506.06941／AAAI Presidential Panel（2025）／Bloomberg（2024年11月13日）</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p3">3 スケールだけでは AGI に届かない</span>4/4</div>
+  <h2>スケールを続けるための制約：電力・費用・データ</h2>
+
+  <table>
+    <tr><th style="width:10rem">制約</th><th>数値</th><th style="width:17rem">出典</th></tr>
+    <tr><td><strong>電力</strong></td><td>データセンターの電力は 2025年 485 TWh → 2030年 <strong>950 TWh</strong>（世界の約3%。日本全体の消費と同じ程度）</td><td>IEA（2025年4月・2026年4月）</td></tr>
+    <tr><td><strong>費用</strong></td><td>最大級のモデルの学習費用は 2016年以降 <strong>年2.4倍</strong>。2027年に10億ドルを超える見込み</td><td>Epoch AI（arXiv:2405.21015）</td></tr>
+    <tr><td><strong>データ</strong></td><td>人が書いた公開テキストの総量に、学習データが <strong>2026〜2032年</strong>に追いつく</td><td>Villalobos ら（arXiv:2211.04325）</td></tr>
+    <tr><td><strong>モデルの大きさ</strong></td><td>パラメータ数は約1兆で3年間横ばい</td><td>Stanford AI Index 2026</td></tr>
+  </table>
+  <div class="card a" style="margin-top:16px"><p class="big">直線が続くとしても、<strong>横軸を右へ進む費用</strong>は毎年数倍になる。<br>今日の演習でも、枚数を4倍にして下がった誤り率は数ポイントだった。</p></div>
+  <div class="terms"><div><b>TWh（テラワット時）</b>電力量の単位。1 TWh ＝ 10億 kWh</div><div><b>データセンター</b>大量のコンピュータを置き、学習や AI の応答の計算を行う施設</div><div><b>公開テキスト</b>インターネット上で誰でも読める文章。LLM の学習データの中心</div><div><b>横軸を右へ進む</b>スケーリング則のグラフで、データや計算量を増やすこと</div></div>
+  <div class="foot"><span class="small">TWh：テラワット時。1 TWh ＝ 10億 kWh</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p4">4 2026年の今</span>1/3</div>
+  <h2>2026年秋：「解けない」とされた ARC-AGI-3 が一気に解かれた</h2>
+
+  <div class="grid2" style="gap:30px">
+    <div>
+      <h3>ARC-AGI-3（標準設定）の最高スコア</h3>
+      <svg viewBox="0 0 550 256" width="550" height="256" role="img" aria-label="ARC-AGI-3 の最高スコアの推移"><rect x="373.33333333333337" y="30.0" width="156.66666666666663" height="200" fill="#FFB800" opacity=".08"/><text x="461.6666666666667" y="220" fill="#FFB800" font-size="13" font-weight="700" text-anchor="middle">秋（9〜11月）</text><line x1="60" x2="530" y1="230.0" y2="230.0" stroke="#333" /><text x="52" y="235.0" fill="#999" font-size="13" font-weight="400" text-anchor="end">0%</text><line x1="60" x2="530" y1="130.0" y2="130.0" stroke="#333" /><text x="52" y="135.0" fill="#999" font-size="13" font-weight="400" text-anchor="end">50%</text><line x1="60" x2="530" y1="30.0" y2="30.0" stroke="#81C784" stroke-dasharray="6 5"/><text x="52" y="35.0" fill="#999" font-size="13" font-weight="400" text-anchor="end">100%</text><text x="60" y="22.0" fill="#81C784" font-size="14" font-weight="700" text-anchor="start">人間 100%</text><text x="60.0" y="250" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">3月</text><text x="132.30769230769232" y="250" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">5月</text><text x="252.82051282051285" y="250" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">7月</text><text x="373.33333333333337" y="250" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">9月</text><text x="493.84615384615387" y="250" fill="#999" font-size="12.5" font-weight="400" text-anchor="middle">11月</text><polyline points="60.0,228.98 192.5641025641026,227.0 270.8974358974359,214.4 301.02564102564105,169.6 379.35897435897436,104.6 511.92307692307696,67.6" fill="none" stroke="#FFB800" stroke-width="3"/><circle cx="60.0" cy="228.98" r="6" fill="#FFB800"/><text x="70.0" y="216.98" fill="#fff" font-size="15" font-weight="900" text-anchor="start">0.51%</text><circle cx="192.5641025641026" cy="227.0" r="6" fill="#FFB800"/><text x="192.5641025641026" y="215.0" fill="#ddd" font-size="13" font-weight="700" text-anchor="middle">1.5%</text><circle cx="270.8974358974359" cy="214.4" r="6" fill="#FFB800"/><text x="270.8974358974359" y="202.4" fill="#ddd" font-size="13" font-weight="700" text-anchor="middle">7.8%</text><circle cx="301.02564102564105" cy="169.6" r="6" fill="#FFB800"/><text x="289.02564102564105" y="163.6" fill="#fff" font-size="17" font-weight="900" text-anchor="end">30.2%</text><text x="289.02564102564105" y="143.6" fill="#ccc" font-size="12.5" font-weight="700" text-anchor="end">Claude Opus 5</text><circle cx="379.35897435897436" cy="104.6" r="6" fill="#FFB800"/><text x="367.35897435897436" y="98.6" fill="#fff" font-size="17" font-weight="900" text-anchor="end">62.7%</text><text x="367.35897435897436" y="78.6" fill="#ccc" font-size="12.5" font-weight="700" text-anchor="end">GPT-6 Astra</text><circle cx="511.92307692307696" cy="67.6" r="6" fill="#FFB800"/><text x="499.92307692307696" y="61.599999999999994" fill="#fff" font-size="17" font-weight="900" text-anchor="end">81.2%</text><text x="499.92307692307696" y="41.599999999999994" fill="#ccc" font-size="12.5" font-weight="700" text-anchor="end">Claude Fable 5.2</text></svg>
+      <p class="small">標準設定：どのモデルにも同じ条件で解かせる</p>
+    </div>
+    <div>
+      <ul class="pt">
+        <li>3月の公開時 <strong>0.51%</strong> → 7月まで最高 30.2%</li>
+        <li><strong>9月 62.7% → 11月 81.2%</strong>（標準設定）</li>
+        <li>開発元が用意した設定では、9月以降 <strong>96〜99.9%</strong>（GPT-6 Astra 99.9%・Gemini 4 Carbon 99.1%・Claude Fable 5.2 97.7%）</li>
+        <li>ARC-AGI-2 も 9月に <strong>95.0%</strong>。複数のモデルが 90% 超</li>
+      </ul>
+      <div class="quote"><div class="en">“we are not claiming that it is AGI.”</div><div class="ja">これが AGI だと主張しているのではない ― ARC Prize（2026年9月3日）</div></div>
+      <div class="card a"><p>ショレ：AGI の予測を前倒し。ただしベンチマークを解いても <strong>AGI の証明ではない</strong>。</p></div>
+    </div>
+  </div>
+  <div class="terms"><div><b>ARC-AGI-3（アーク・エージーアイ・スリー）</b>説明のないゲームを自分で試して、規則と目標を見つけるテスト（16枚目）</div><div><b>標準設定</b>どのモデルにも同じ条件で解かせる設定</div><div><b>開発元が用意した設定</b>モデルの開発元が、ゲームとのやり取りの方法を工夫した設定</div><div><b>リーダーボード</b>成績の順位表</div></div>
+  <div class="foot"><span class="small">arcprize.org のリーダーボード（2026年11月12日 取得）・ブログ／The Decoder（2026年9月4日）</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker"><span class="tag p4">4 2026年の今</span>2/3</div>
+  <h2>論点は「伸びるか」から「何で伸びたか・何が残るか」へ</h2>
+
+  <table>
+    <tr><th style="width:12.5rem">人</th><th>2026年の立場</th></tr>
+    <tr><td><strong>アルトマン</strong>（OpenAI）</td><td>2026年末までに、社内で AGI と呼べるシステムができると予想（TIME, 8月）</td></tr>
+    <tr><td><strong>ハサビス</strong>（DeepMind）</td><td>スケールは最大まで進める。それに加えて<strong>1つか2つの突破</strong>がまだ必要かもしれない</td></tr>
+    <tr><td><strong>サツケバー</strong>（SSI）</td><td>今のモデルは人よりずっと<strong>汎化が悪い</strong>。100倍にしても全部は変わらない。一方で計算資源は10倍に</td></tr>
+    <tr><td><strong>マーカス</strong></td><td>進歩は本物。ただしスケールの勝利ではなく、<strong>記号的な道具との組み合わせ</strong>の勝利</td></tr>
+    <tr><td><strong>ルカン</strong>（AMI Labs）</td><td>Meta を離れ、世界モデルの会社を設立（10.3億ドルを調達）。「突破は LLM のスケールからは来ない」</td></tr>
+    <tr><td><strong>サットン</strong></td><td>信頼できる<strong>継続学習</strong>がまだない</td></tr>
+  </table>
+  <div class="card a" style="margin-top:12px"><p>2つの流れは近づいた：<strong>スケールは必要</strong>。争点は、それ<strong>だけで足りるか</strong>と、残る課題（汎化・継続学習・世界モデル）。</p></div>
+  <div class="terms"><div><b>汎化</b>学習で見ていない問題にも当てはまること（第3回）</div><div><b>突破</b>Transformer のような、やり方そのものを変える新しい発明</div><div><b>記号的な道具</b>プログラムの実行や検索など、LLM が呼び出して使う決まった動きの道具</div><div><b>継続学習</b>使いながら新しいことを学び続けること</div></div>
+  <div class="foot"><span class="small">TIME／Fortune／dwarkesh.com／Marcus on AI／MIT Technology Review／The Tech（日付と URL は出典 2/2）</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker">まとめ</div>
+  <h2>2つの変遷と、今日の演習</h2>
+  <table>
+    <tr><th style="width:8rem">時期</th><th style="color:#4FC3F7">スケールすれば賢くなる</th><th style="color:#FF6B6B">スケールだけでは AGI に届かない</th></tr>
+    <tr><td>2012〜2019</td><td>AlexNet・Transformer・苦い教訓</td><td>マーカス：深層学習だけでは不足。ショレ：ARC</td></tr>
+    <tr><td>2020〜2023</td><td>GPT-3・スケーリング則・Chinchilla</td><td>「壁にぶつかっている」。ルカン：世界モデル</td></tr>
+    <tr><td>2024〜2025</td><td>計算量 年5倍・o3 が ARC-AGI-1 を解く</td><td>伸び悩みの報道・Apple の論文・AAAI 調査 76%・「研究の時代へ」</td></tr>
+    <tr><td>2026</td><td>ARC-AGI-2 で 95%・ARC-AGI-3 で 81%</td><td>「AGI の証明ではない」。汎化・継続学習・世界モデルが残る</td></tr>
+  </table>
+  <div class="grid2" style="margin-top:16px;gap:20px;flex:none">
+    <div class="card b"><h3>演習1・2 で確かめること</h3><p>log-log の直線を引き、4倍先を外挿する。直線はどこまで信じられるか</p></div>
+    <div class="card a"><h3>討議の問い</h3><p>自分の直線が外れたとき、「もっと大きくする」と「やり方を変える」のどちらを選ぶか</p></div>
+  </div>
+  <div class="terms"><div><b>スケール</b>モデルの大きさ・学習データの量・計算量を大きくすること</div><div><b>AGI</b>人間ができる知的な仕事を幅広くこなせる AI</div></div>
+  <div class="foot"><span class="small"><a href="../aitd1_week_7.html" style="color:#9ad">第7回の授業ページへ</a></span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker">出典 1/2</div>
+  <h2 style="font-size:24px;margin-bottom:6px">出典（スケールの流れ・3人の今）</h2>
+  <table class="src"><tr><th style="width:9.5rem">項目</th><th style="width:27rem">資料</th><th>URL</th></tr><tr><td style="white-space:nowrap">AlexNet</td><td>Krizhevsky, Sutskever, Hinton. ImageNet Classification with Deep Convolutional Neural Networks. NeurIPS 2012</td><td><a href="https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf" target="_blank" rel="noopener">https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf</a></td></tr><tr><td style="white-space:nowrap">AlexNet のコード公開</td><td>Computer History Museum（2025年3月20日）</td><td><a href="https://computerhistory.org/blog/chm-releases-alexnet-source-code/" target="_blank" rel="noopener">https://computerhistory.org/blog/chm-releases-alexnet-source-code/</a></td></tr><tr><td style="white-space:nowrap">クリジェフスキーの退社</td><td>Quartz（2018年6月）</td><td><a href="https://qz.com/1307091/the-inside-story-of-how-ai-got-good-enough-to-dominate-silicon-valley" target="_blank" rel="noopener">https://qz.com/1307091/the-inside-story-of-how-ai-got-good-enough-to-dominate-silicon-valley</a></td></tr><tr><td style="white-space:nowrap">クリジェフスキーの取材</td><td>NewsPicks（2019年10月21日）</td><td><a href="https://newspicks.com/news/4308159/body/" target="_blank" rel="noopener">https://newspicks.com/news/4308159/body/</a></td></tr><tr><td style="white-space:nowrap">Transformer</td><td>Vaswani ら. Attention Is All You Need（2017）</td><td><a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">https://arxiv.org/abs/1706.03762</a></td></tr><tr><td style="white-space:nowrap">苦い教訓</td><td>Sutton. The Bitter Lesson（2019年3月13日）</td><td><a href="http://www.incompleteideas.net/IncIdeas/BitterLesson.html" target="_blank" rel="noopener">http://www.incompleteideas.net/IncIdeas/BitterLesson.html</a></td></tr><tr><td style="white-space:nowrap">GPT-3</td><td>Brown ら. Language Models are Few-Shot Learners（2020）</td><td><a href="https://arxiv.org/abs/2005.14165" target="_blank" rel="noopener">https://arxiv.org/abs/2005.14165</a></td></tr><tr><td style="white-space:nowrap">スケーリング則</td><td>Kaplan ら. Scaling Laws for Neural Language Models（2020）</td><td><a href="https://arxiv.org/abs/2001.08361" target="_blank" rel="noopener">https://arxiv.org/abs/2001.08361</a></td></tr><tr><td style="white-space:nowrap">Chinchilla</td><td>Hoffmann ら. Training Compute-Optimal Large Language Models（2022）</td><td><a href="https://arxiv.org/abs/2203.15556" target="_blank" rel="noopener">https://arxiv.org/abs/2203.15556</a></td></tr><tr><td style="white-space:nowrap">計算量・費用の伸び</td><td>Epoch AI. Trends（2026年2月5日更新）</td><td><a href="https://epoch.ai/trends" target="_blank" rel="noopener">https://epoch.ai/trends</a></td></tr><tr><td style="white-space:nowrap">AI Index</td><td>Stanford HAI. AI Index Report 2026</td><td><a href="https://hai.stanford.edu/ai-index/2026-ai-index-report" target="_blank" rel="noopener">https://hai.stanford.edu/ai-index/2026-ai-index-report</a></td></tr><tr><td style="white-space:nowrap">作業の長さ</td><td>METR. Time Horizon 1.1（2026年1月29日）／arXiv:2503.14499</td><td><a href="https://metr.org/blog/2026-01-29-time-horizon-1-1/" target="_blank" rel="noopener">https://metr.org/blog/2026-01-29-time-horizon-1-1/</a></td></tr><tr><td style="white-space:nowrap">Stargate</td><td>Epoch AI（2026年4月17日）</td><td><a href="https://epoch.ai/publications/openai-stargate-where-the-us-sites-stand" target="_blank" rel="noopener">https://epoch.ai/publications/openai-stargate-where-the-us-sites-stand</a></td></tr><tr><td style="white-space:nowrap">ノーベル物理学賞</td><td>The Nobel Prize in Physics 2024 プレスリリース</td><td><a href="https://www.nobelprize.org/prizes/physics/2024/press-release/" target="_blank" rel="noopener">https://www.nobelprize.org/prizes/physics/2024/press-release/</a></td></tr><tr><td style="white-space:nowrap">ヒントンの退社</td><td>MIT Technology Review（2023年5月1日）</td><td><a href="https://www.technologyreview.com/2023/05/01/1072478/deep-learning-pioneer-geoffrey-hinton-quits-google/" target="_blank" rel="noopener">https://www.technologyreview.com/2023/05/01/1072478/deep-learning-pioneer-geoffrey-hinton-quits-google/</a></td></tr><tr><td style="white-space:nowrap">ヒントン 2026年</td><td>Fortune（2026年9月26日）</td><td><a href="https://fortune.com/2026/09/26/geoffrey-hinton-godfather-of-ai-humanity-end-existential-threat-subgoals-rogue-agents/" target="_blank" rel="noopener">https://fortune.com/2026/09/26/geoffrey-hinton-godfather-of-ai-humanity-end-existential-threat-subgoals-rogue-agents/</a></td></tr><tr><td style="white-space:nowrap">SSI</td><td>Safe Superintelligence Inc. の発表</td><td><a href="https://ssi.inc/updates" target="_blank" rel="noopener">https://ssi.inc/updates</a></td></tr><tr><td style="white-space:nowrap">SSI と NVIDIA</td><td>NVIDIA プレスリリース（2026年7月27日）</td><td><a href="https://nvidianews.nvidia.com/news/ilya-sutskevers-safe-superintelligence-inc-and-nvidia-announce-long-term-strategic-partnership" target="_blank" rel="noopener">https://nvidianews.nvidia.com/news/ilya-sutskevers-safe-superintelligence-inc-and-nvidia-announce-long-term-strategic-partnership</a></td></tr><tr><td style="white-space:nowrap">サツケバーの発言</td><td>Dwarkesh Patel によるインタビュー（2025年11月25日）</td><td><a href="https://www.dwarkesh.com/p/ilya-sutskever-2" target="_blank" rel="noopener">https://www.dwarkesh.com/p/ilya-sutskever-2</a></td></tr></table>
+  <div class="foot"><span class="small">「報道」と書いた項目は、本人や組織の発表ではなく報道による</span><span class="pageno"></span></div>
+</section>
+<section class="slide">
+  <div class="kicker">出典 2/2</div>
+  <h2 style="font-size:24px;margin-bottom:6px">出典（スケールだけでは AGI に届かない・2026年の今）</h2>
+  <table class="src"><tr><th style="width:9.5rem">項目</th><th style="width:27rem">資料</th><th>URL</th></tr><tr><td style="white-space:nowrap">マーカス 2018</td><td>Marcus. Deep Learning: A Critical Appraisal</td><td><a href="https://arxiv.org/abs/1801.00631" target="_blank" rel="noopener">https://arxiv.org/abs/1801.00631</a></td></tr><tr><td style="white-space:nowrap">マーカス 2022</td><td>Marcus. Deep Learning Is Hitting a Wall. Nautilus（2022年3月10日）</td><td><a href="https://nautil.us/deep-learning-is-hitting-a-wall-238440/" target="_blank" rel="noopener">https://nautil.us/deep-learning-is-hitting-a-wall-238440/</a></td></tr><tr><td style="white-space:nowrap">マーカス 2026</td><td>Marcus on AI（2026年4月11日）</td><td><a href="https://garymarcus.substack.com/p/the-biggest-advance-in-ai-since-the" target="_blank" rel="noopener">https://garymarcus.substack.com/p/the-biggest-advance-in-ai-since-the</a></td></tr><tr><td style="white-space:nowrap">ショレ</td><td>Chollet. On the Measure of Intelligence（2019）</td><td><a href="https://arxiv.org/abs/1911.01547" target="_blank" rel="noopener">https://arxiv.org/abs/1911.01547</a></td></tr><tr><td style="white-space:nowrap">ARC-AGI-1 と o3</td><td>ARC Prize（2024年12月20日）</td><td><a href="https://arcprize.org/blog/oai-o3-pub-breakthrough" target="_blank" rel="noopener">https://arcprize.org/blog/oai-o3-pub-breakthrough</a></td></tr><tr><td style="white-space:nowrap">ARC-AGI-2</td><td>ARC Prize（2025年3月24日）</td><td><a href="https://arcprize.org/blog/announcing-arc-agi-2-and-arc-prize-2025" target="_blank" rel="noopener">https://arcprize.org/blog/announcing-arc-agi-2-and-arc-prize-2025</a></td></tr><tr><td style="white-space:nowrap">ARC-AGI-3</td><td>ARC Prize（2026年3月25日）／arXiv:2603.24621</td><td><a href="https://arcprize.org/blog/arc-agi-3-launch" target="_blank" rel="noopener">https://arcprize.org/blog/arc-agi-3-launch</a></td></tr><tr><td style="white-space:nowrap">GPT-6 Astra の結果</td><td>ARC Prize（2026年9月3日）</td><td><a href="https://arcprize.org/blog/astra" target="_blank" rel="noopener">https://arcprize.org/blog/astra</a></td></tr><tr><td style="white-space:nowrap">リーダーボード</td><td>ARC Prize（2026年11月12日 取得）</td><td><a href="https://arcprize.org/leaderboard" target="_blank" rel="noopener">https://arcprize.org/leaderboard</a></td></tr><tr><td style="white-space:nowrap">ルカン</td><td>LeCun. A Path Towards Autonomous Machine Intelligence（2022）</td><td><a href="https://openreview.net/forum?id=BZ5a1r-kVsf" target="_blank" rel="noopener">https://openreview.net/forum?id=BZ5a1r-kVsf</a></td></tr><tr><td style="white-space:nowrap">ルカンの新会社</td><td>MIT Technology Review（2026年1月22日）／TechCrunch（2026年1月23日）</td><td><a href="https://www.technologyreview.com/2026/01/22/1131661/yann-lecuns-new-venture-ami-labs/" target="_blank" rel="noopener">https://www.technologyreview.com/2026/01/22/1131661/yann-lecuns-new-venture-ami-labs/</a></td></tr><tr><td style="white-space:nowrap">サットン</td><td>Dwarkesh Patel によるインタビュー（2025年9月26日）／The Tech（2026年5月28日）</td><td><a href="https://www.dwarkesh.com/p/richard-sutton" target="_blank" rel="noopener">https://www.dwarkesh.com/p/richard-sutton</a></td></tr><tr><td style="white-space:nowrap">GSM-Symbolic</td><td>Mirzadeh ら（2024）</td><td><a href="https://arxiv.org/abs/2410.05229" target="_blank" rel="noopener">https://arxiv.org/abs/2410.05229</a></td></tr><tr><td style="white-space:nowrap">The Illusion of Thinking</td><td>Shojaee ら（2025）arXiv:2506.06941</td><td><a href="https://machinelearning.apple.com/research/illusion-of-thinking" target="_blank" rel="noopener">https://machinelearning.apple.com/research/illusion-of-thinking</a></td></tr><tr><td style="white-space:nowrap">AAAI の調査</td><td>AAAI 2025 Presidential Panel on the Future of AI Research（p.63）</td><td><a href="https://aaai.org/wp-content/uploads/2025/03/AAAI-2025-PresPanel-Report-Digital-3.7.25.pdf" target="_blank" rel="noopener">https://aaai.org/wp-content/uploads/2025/03/AAAI-2025-PresPanel-Report-Digital-3.7.25.pdf</a></td></tr><tr><td style="white-space:nowrap">電力</td><td>IEA. Energy and AI（2025）／Key Questions on Energy and AI（2026）</td><td><a href="https://www.iea.org/reports/energy-and-ai/executive-summary" target="_blank" rel="noopener">https://www.iea.org/reports/energy-and-ai/executive-summary</a></td></tr><tr><td style="white-space:nowrap">学習の費用</td><td>Cottier ら. The rising costs of training frontier AI models（2024）</td><td><a href="https://arxiv.org/abs/2405.21015" target="_blank" rel="noopener">https://arxiv.org/abs/2405.21015</a></td></tr><tr><td style="white-space:nowrap">データの量</td><td>Villalobos ら. Will we run out of data?（2022）</td><td><a href="https://arxiv.org/abs/2211.04325" target="_blank" rel="noopener">https://arxiv.org/abs/2211.04325</a></td></tr><tr><td style="white-space:nowrap">アルトマン・ハサビス</td><td>TIME（2026年8月26日）／Fortune（2026年1月23日）</td><td><a href="https://fortune.com/2026/01/23/deepmind-demis-hassabis-anthropic-dario-amodei-yann-lecun-ai-davos/" target="_blank" rel="noopener">https://fortune.com/2026/01/23/deepmind-demis-hassabis-anthropic-dario-amodei-yann-lecun-ai-davos/</a></td></tr></table>
+  <div class="foot"><span class="small">「報道」と書いた項目は、本人や組織の発表ではなく報道による</span><span class="pageno"></span></div>
+</section>
+</div>
+<div class="nav"><button id="prev" aria-label="前へ">←</button><button id="next" aria-label="次へ">→</button></div>
+<script>
+// ---------- ページ送り ----------
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0;
+function fit() { const s = Math.min(innerWidth / 1320, innerHeight / 760); slides.forEach(sl => sl.style.transform = `scale(${s})`); }
+function show(i) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => s.classList.toggle("on", k === cur));
+  document.getElementById("bar").style.width = `${(cur + 1) / slides.length * 100}%`;
+  history.replaceState(null, "", `#${cur + 1}`);
+}
+slides.forEach((s, k) => { const p = s.querySelector(".pageno"); if (p) p.textContent = `${k + 1} / ${slides.length}`; });
+addEventListener("keydown", e => {
+  if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+  if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+  if (e.key === "Home") show(0);
+  if (e.key === "End") show(slides.length - 1);
+});
+document.getElementById("next").onclick = () => show(cur + 1);
+document.getElementById("prev").onclick = () => show(cur - 1);
+addEventListener("resize", fit);
+fit(); show((parseInt(location.hash.slice(1)) || 1) - 1);
+</script>
+</body>
+</html>
